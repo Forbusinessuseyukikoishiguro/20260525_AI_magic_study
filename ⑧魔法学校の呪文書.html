@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>魔法学校の呪文書 — The Enchanted Codex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Cinzel+Decorative:wght@700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=IM+Fell+English:ital@0;1&family=Shippori+Mincho:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#1a1410;--night-2:#0e0a07;
+  --parch:#e9d8b0;--parch-2:#dcc596;--parch-edge:#c2a672;
+  --ink:#2c2013;--ink-2:#4a371f;
+  --wax:#7a1420;--wax-l:#a52436;
+  --brass:#b6893f;--brass-l:#e7c878;--brass-xl:#fff0c6;--brass-d:#8a6326;
+  --house1:#6c1420;/* 紅 */ --house2:#0e4d3c;/* 緑 */ --house3:#1d3b66;/* 青 */ --house4:#caa12a;/* 黄金 */
+  --candle:#ffb347;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:"Shippori Mincho",serif;color:var(--ink);
+  background:radial-gradient(120% 110% at 50% -10%,#241a12 0%,#140d09 55%,#080503 100%);
+  position:relative;-webkit-tap-highlight-color:transparent}
+#motes{position:fixed;inset:0;z-index:1;pointer-events:none}
+/* aurora ribbons (behind the book, above base bg) */
+.aurora{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 1.4s ease}
+.aurora.show{opacity:.55}
+.aurora span{position:absolute;left:-30%;width:160%;height:46%;filter:blur(46px);mix-blend-mode:screen;border-radius:50%;
+  transform:rotate(-8deg);animation:auroraflow 14s ease-in-out infinite}
+.aurora span:nth-child(1){top:2%;background:radial-gradient(closest-side,rgba(90,220,170,.7),transparent 70%);animation-delay:0s}
+.aurora span:nth-child(2){top:16%;background:radial-gradient(closest-side,rgba(120,170,255,.6),transparent 70%);animation-delay:-3s;animation-duration:18s}
+.aurora span:nth-child(3){top:30%;background:radial-gradient(closest-side,rgba(200,140,255,.55),transparent 70%);animation-delay:-6s;animation-duration:16s}
+.aurora span:nth-child(4){top:8%;background:radial-gradient(closest-side,rgba(255,210,120,.5),transparent 70%);animation-delay:-9s;animation-duration:20s}
+@keyframes auroraflow{0%,100%{transform:translateX(-8%) translateY(0) rotate(-8deg) scaleY(1)}
+  33%{transform:translateX(6%) translateY(-3%) rotate(-5deg) scaleY(1.18)}
+  66%{transform:translateX(-4%) translateY(2%) rotate(-10deg) scaleY(.9)}}
+#opensparkle{position:fixed;inset:0;z-index:14;pointer-events:none}
+
+/* ============ BOOK / DESK ============ */
+.hall{position:fixed;inset:0;z-index:2;display:flex;align-items:center;justify-content:center}
+.desk{position:relative;width:min(94vw,1000px);height:min(88vh,660px);perspective:2400px}
+
+/* ornate enchanted frame */
+.frame{position:absolute;inset:0;border-radius:16px;background:linear-gradient(180deg,#241910,#120c07);
+  padding:clamp(14px,2.4vw,26px);box-shadow:0 46px 100px -28px rgba(0,0,0,.85)}
+.frame::before{content:"";position:absolute;inset:clamp(9px,1.6vw,16px);border-radius:11px;border:3px solid transparent;
+  background:linear-gradient(135deg,var(--brass-d),var(--brass-l) 25%,var(--brass-xl) 50%,var(--brass) 75%,var(--brass-d)) border-box;
+  -webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+  box-shadow:0 0 22px rgba(182,137,63,.3),inset 0 0 22px rgba(182,137,63,.25);pointer-events:none}
+/* crest at top: a generic owl/key sigil, no franchise */
+.sigil-top{position:absolute;top:-3px;left:50%;transform:translate(-50%,-50%);z-index:12;
+  width:clamp(64px,11vw,98px);height:clamp(56px,9vw,80px);filter:drop-shadow(0 4px 8px rgba(0,0,0,.55))}
+.sigil-top svg{width:100%;height:100%}
+
+/* candles flanking */
+.candle{position:absolute;bottom:clamp(12px,2vw,22px);width:14px;height:64px;z-index:7;border-radius:4px;
+  background:linear-gradient(180deg,#f3e3c0,#d8bd8c);box-shadow:0 0 0 1px rgba(0,0,0,.2)}
+.candle.l{left:6%}.candle.r{right:6%}
+.candle .flame{position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:12px;height:20px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  background:radial-gradient(circle at 50% 70%,#fff3c4,var(--candle) 55%,transparent 75%);
+  box-shadow:0 -8px 26px 6px rgba(255,160,60,.4);animation:flick 2.6s ease-in-out infinite}
+@keyframes flick{0%,100%{transform:translateX(-50%) scaleY(1);opacity:.95}50%{transform:translateX(-52%) scaleY(1.12);opacity:1}}
+
+/* page spread */
+.stage{position:absolute;inset:clamp(26px,3.6vw,46px);z-index:5;display:flex;align-items:center;justify-content:center}
+.page{position:relative;width:100%;height:100%;border-radius:7px;
+  background:radial-gradient(130% 120% at 50% 0%,var(--parch),var(--parch-2) 62%,var(--parch-edge));
+  box-shadow:inset 0 0 64px rgba(120,85,35,.42),inset 0 0 10px rgba(50,33,15,.5),0 0 0 6px rgba(0,0,0,.22),0 0 0 8px var(--brass-d);
+  overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;padding:clamp(22px,4.4vw,54px);
+  transition:opacity .42s ease,transform .5s cubic-bezier(.2,.7,.3,1)}
+.page.leaving{opacity:0;transform:rotateY(-12deg) translateX(-12px) scale(.985);transform-origin:left center}
+.page::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 18% 22%,rgba(140,95,40,.14),transparent 42%),radial-gradient(circle at 84% 80%,rgba(140,95,40,.14),transparent 42%)}
+.page::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 80px rgba(85,52,12,.45)}
+
+.corner{position:absolute;width:60px;height:60px;opacity:.6;z-index:4}
+.corner svg{width:100%;height:100%;stroke:var(--brass-d);fill:none;stroke-width:1.5}
+.c-tl{top:13px;left:13px}.c-tr{top:13px;right:13px;transform:scaleX(-1)}
+.c-bl{bottom:13px;left:13px;transform:scaleY(-1)}.c-br{bottom:13px;right:13px;transform:scale(-1)}
+
+.content{position:relative;z-index:5;width:100%;max-width:660px}
+.kicker{font-family:"Cinzel",serif;letter-spacing:.4em;font-size:clamp(.58rem,1.5vw,.76rem);color:var(--brass-d);text-transform:uppercase;margin-bottom:.6rem;font-weight:700}
+.lesson{font-family:"IM Fell English",serif;font-style:italic;font-size:clamp(1rem,2.6vw,1.4rem);color:var(--wax);letter-spacing:.04em;margin-bottom:.15rem}
+.flourish{width:130px;height:16px;margin:.35rem auto .7rem;opacity:.75}
+.flourish svg{width:100%;height:100%;stroke:var(--brass-d);fill:none;stroke-width:1.4}
+.title-grand{font-family:"Cinzel Decorative",serif;font-weight:900;line-height:1.05;letter-spacing:.03em;
+  font-size:clamp(1.9rem,6vw,3.4rem);color:transparent;background:linear-gradient(180deg,#5a3c18,#2c2013 65%);-webkit-background-clip:text;background-clip:text;text-shadow:0 1px 0 rgba(255,255,255,.28)}
+.subtitle{font-family:"Cinzel",serif;font-size:clamp(.85rem,2.2vw,1.16rem);color:var(--ink-2);margin-top:.5rem;letter-spacing:.22em}
+h1{font-weight:800;line-height:1.22;font-size:clamp(1.5rem,4.3vw,2.5rem);color:var(--ink);margin-bottom:.6rem}
+.lead{font-size:clamp(.98rem,2.4vw,1.28rem);line-height:1.9;color:#3c2c18;margin:.3rem auto 0;max-width:38ch}
+.lead .hi{color:var(--wax);font-weight:700;border-bottom:2px solid rgba(122,20,32,.35);padding-bottom:1px}
+.lead b{color:var(--ink)}
+.oneliner{margin-top:1rem;font-weight:700;font-size:clamp(1.02rem,2.7vw,1.4rem);color:var(--wax)}
+.spells{list-style:none;margin-top:.9rem;display:grid;gap:.55rem;text-align:left;max-width:34ch;margin-inline:auto}
+.spells li{display:flex;gap:.7rem;align-items:baseline;font-size:clamp(.92rem,2.2vw,1.14rem);line-height:1.5;color:#3c2c18}
+.spells .ru{font-family:"IM Fell English",serif;color:var(--wax);font-weight:700;flex:0 0 auto;font-style:italic}
+/* incantation (spell) block */
+.incant{margin:.85rem auto 0;max-width:36ch;text-align:left;font-family:"IM Fell English",serif;
+  background:linear-gradient(180deg,#241708,#150d04);color:#f0d49a;border:1.5px solid var(--brass-d);border-radius:9px;
+  padding:.7rem .95rem;font-size:clamp(.82rem,2vw,1.05rem);line-height:1.7;letter-spacing:.03em;
+  box-shadow:inset 0 0 22px rgba(0,0,0,.55),0 5px 14px rgba(40,26,8,.4)}
+.incant .pmt{color:var(--brass-l);user-select:none;margin-right:.5em}
+.incant .cm{color:#b89a64;font-style:italic}
+
+/* enchanted orb (sigil) */
+.orb{position:relative;width:clamp(140px,30vw,210px);height:clamp(140px,30vw,210px);margin:0 auto .8rem}
+.orb svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ring-rot{transform-origin:50% 50%;animation:spin 42s linear infinite}
+.ring-rot.rev{animation-duration:30s;animation-direction:reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sg{stroke:var(--brass-d);fill:none;stroke-width:1.3}.sg-glow{stroke:var(--brass-l);fill:none;stroke-width:2.4;opacity:.5;filter:blur(2px)}
+.glyph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(2.6rem,8vw,4.2rem);filter:drop-shadow(0 0 16px rgba(255,170,60,.6));animation:bob 4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(-4px)}50%{transform:translateY(4px)}}
+
+/* house crests row */
+.houses{display:flex;gap:clamp(10px,3vw,22px);justify-content:center;margin:.6rem auto 0}
+.house{display:flex;flex-direction:column;align-items:center;gap:.25rem}
+.house .shield{width:clamp(46px,11vw,64px);height:clamp(54px,13vw,76px);border-radius:8px 8px 50% 50%/8px 8px 30% 30%;
+  display:flex;align-items:center;justify-content:center;font-size:clamp(1.3rem,4vw,1.9rem);color:#fff;
+  box-shadow:0 5px 14px rgba(40,26,8,.5),inset 0 0 10px rgba(0,0,0,.35);border:2px solid var(--brass)}
+.house span{font-size:clamp(.66rem,1.8vw,.86rem);font-weight:700;color:var(--ink-2)}
+.h1{background:linear-gradient(160deg,#8a1a28,var(--house1))}
+.h2{background:linear-gradient(160deg,#11614b,var(--house2))}
+.h3{background:linear-gradient(160deg,#2a4f86,var(--house3))}
+.h4{background:linear-gradient(160deg,#e2bb3e,var(--house4));color:#3a2c0a}
+
+/* curve */
+.curve{width:100%;max-width:440px;margin:.3rem auto 0}.curve svg{width:100%;height:auto}
+.curve .axis{stroke:#8a6534;stroke-width:1.5}.curve .decay{stroke:var(--wax);stroke-width:3;fill:none;stroke-linecap:round}
+.curve .review{stroke:#0e4d3c;stroke-width:2.5;fill:none;stroke-dasharray:5 4;stroke-linecap:round}
+.curve .lbl{font-size:13px;fill:var(--ink-2);font-family:"Shippori Mincho",serif}
+
+/* quiz */
+.quiz-q{font-size:clamp(1.05rem,2.7vw,1.45rem);font-weight:700;color:var(--ink);margin:.4rem auto .9rem;max-width:32ch;line-height:1.5}
+.choices{display:grid;gap:.6rem;max-width:30ch;margin:0 auto;text-align:left}
+.choice{display:flex;gap:.6rem;align-items:center;cursor:pointer;font-size:clamp(.95rem,2.3vw,1.15rem);color:#3c2c18;
+  background:linear-gradient(180deg,#f3e6c6,#e6d2a6);border:1.5px solid var(--brass-d);border-radius:10px;padding:.6rem .85rem;
+  box-shadow:0 3px 8px rgba(40,26,8,.25);transition:.18s;font-family:"Shippori Mincho",serif}
+.choice:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 14px rgba(40,26,8,.32)}
+.choice .mk{font-family:"IM Fell English",serif;font-style:italic;color:var(--wax);font-weight:700;flex:0 0 auto}
+.choice:disabled{cursor:default;opacity:.92}
+.choice.ok{background:linear-gradient(180deg,#cdeccc,#a9e0b0);border-color:#0e4d3c;color:#0e3a28}
+.choice.ng{background:linear-gradient(180deg,#f3cdd0,#e7a9b0);border-color:var(--wax);color:#5a0f18}
+.verdict{margin-top:.9rem;font-weight:700;font-size:clamp(1rem,2.6vw,1.3rem);color:var(--wax);min-height:1.4em}
+.verdict .ex{display:block;font-weight:500;font-size:clamp(.82rem,2vw,.98rem);color:var(--ink-2);margin-top:.4rem;line-height:1.6}
+.spark{position:absolute;font-size:1.4rem;pointer-events:none;z-index:8;animation:sparkUp 1.1s ease forwards}
+@keyframes sparkUp{0%{opacity:0;transform:translateY(0) scale(.4) rotate(0)}18%{opacity:1}100%{opacity:0;transform:translateY(-110px) scale(1.35) rotate(40deg)}}
+
+/* certificate (a magical diploma / 認可状) */
+.cert{max-width:600px}
+.cert-frame{position:relative;margin:.4rem auto 0;padding:clamp(20px,4vw,38px) clamp(18px,4vw,40px);border-radius:10px;
+  background:radial-gradient(120% 120% at 50% 0%,#fdf6e6,#ecdab2);border:2px solid var(--brass-d);
+  box-shadow:inset 0 0 0 4px rgba(182,137,63,.22),inset 0 0 40px rgba(150,105,40,.18),0 10px 30px rgba(40,26,8,.4)}
+.cert-frame::before{content:"";position:absolute;inset:8px;border:1px dashed rgba(138,99,38,.5);border-radius:6px;pointer-events:none}
+.cert-title{font-family:"Cinzel Decorative",serif;font-weight:900;letter-spacing:.14em;font-size:clamp(1.5rem,5vw,2.5rem);
+  color:transparent;background:linear-gradient(180deg,#5a3c18,#2c2013);-webkit-background-clip:text;background-clip:text}
+.cert-rule{width:150px;height:2px;margin:.5rem auto .8rem;background:linear-gradient(90deg,transparent,var(--brass-d),transparent)}
+.cert-line{font-size:clamp(.95rem,2.4vw,1.18rem);line-height:1.85;color:#3c2c18}
+.cert-line b{color:var(--wax)}
+.cert-recip{color:var(--wax);font-weight:800;font-size:1.12em;border-bottom:2px solid rgba(122,20,32,.35);padding:0 .4em 1px}
+.cert-score{margin-top:1rem;font-size:clamp(1.05rem,3vw,1.5rem);font-weight:700;color:var(--ink)}
+.cert-score b{color:var(--wax);font-size:1.2em}
+.cert-un{font-size:.62em;color:#8a6534;font-weight:500}
+.cert-rank{margin-top:.5rem;font-size:clamp(1rem,2.7vw,1.32rem);font-weight:700;color:var(--brass-d)}
+.cert-rank b{color:var(--wax)}
+.cert-seal{position:absolute;right:clamp(10px,3vw,22px);bottom:clamp(8px,2.5vw,18px);width:clamp(48px,10vw,70px);height:clamp(48px,10vw,70px);
+  display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:clamp(1.3rem,4vw,1.9rem);
+  background:radial-gradient(circle,#b53a2a,var(--wax));border:2px solid var(--brass);color:#fff;
+  box-shadow:0 0 14px rgba(122,20,32,.5),inset 0 0 8px rgba(0,0,0,.4);transform:rotate(-10deg)}
+.cert-date{margin-top:1rem;font-family:"IM Fell English",serif;font-style:italic;font-size:clamp(.85rem,2.2vw,1.1rem);color:var(--ink-2)}
+.cert-actions{margin-top:1rem;display:flex;flex-direction:column;align-items:center;gap:.6rem}
+.cert-name-in{font-family:"Shippori Mincho",serif;font-size:clamp(.9rem,2.3vw,1.1rem);text-align:center;color:var(--ink);
+  background:#fdf6e6;border:1.5px solid var(--brass-d);border-radius:8px;padding:.5rem .9rem;width:min(320px,80%)}
+.cert-name-in:focus{outline:none;border-color:var(--wax);box-shadow:0 0 0 2px rgba(122,20,32,.18)}
+.cert-btns{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center}
+.cert-dl{font-family:"Cinzel",serif;font-weight:700;cursor:pointer;color:#1c0d05;border:none;border-radius:999px;padding:.5rem 1rem;
+  background:linear-gradient(180deg,var(--brass-l),var(--brass-d));box-shadow:0 5px 12px rgba(40,26,8,.35);transition:.2s}
+.cert-dl:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.cert-reset{font-family:"Cinzel",serif;font-weight:700;cursor:pointer;color:var(--brass-l);
+  background:linear-gradient(180deg,#3a1410,#1c0a06);border:1.5px solid rgba(182,137,63,.5);border-radius:999px;padding:.5rem 1.1rem;box-shadow:0 6px 16px rgba(0,0,0,.5);transition:.2s}
+.cert-reset:hover{color:#fff}
+
+/* familiar */
+.familiar{position:absolute;bottom:clamp(12px,3.5vw,26px);right:clamp(14px,3.6vw,30px);display:flex;align-items:flex-end;gap:.5rem;z-index:6;max-width:62%}
+.familiar .pet{font-size:clamp(1.8rem,5.4vw,2.6rem);animation:hop 3s ease-in-out infinite;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))}
+@keyframes hop{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+.familiar .say{background:linear-gradient(180deg,#fbf1d8,#f0ddb2);border:1.5px solid var(--brass);border-radius:14px;padding:.5rem .8rem;
+  font-size:clamp(.72rem,1.9vw,.92rem);color:var(--ink-2);line-height:1.45;box-shadow:0 6px 14px rgba(40,26,8,.4);position:relative}
+.familiar .say::after{content:"";position:absolute;right:-7px;bottom:12px;border:7px solid transparent;border-left-color:#f0ddb2}
+
+/* reveal */
+.page .anim{animation:rise .7s cubic-bezier(.2,.7,.3,1) backwards}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.page .anim:nth-child(1){animation-delay:.1s}.page .anim:nth-child(2){animation-delay:.22s}
+.page .anim:nth-child(3){animation-delay:.34s}.page .anim:nth-child(4){animation-delay:.46s}
+.page .anim:nth-child(5){animation-delay:.58s}.page .anim:nth-child(6){animation-delay:.7s}.page .anim:nth-child(7){animation-delay:.82s}
+
+/* controls */
+.nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:14px}
+.nav button{font-family:"Cinzel",serif;font-weight:700;background:linear-gradient(180deg,#3a1410,#1c0a06);color:var(--brass-l);
+  border:1.5px solid rgba(182,137,63,.55);width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.55),inset 0 0 10px rgba(255,170,60,.15);transition:.2s}
+.nav button:hover{transform:translateY(-2px);color:#fff;box-shadow:0 10px 22px rgba(0,0,0,.6),0 0 18px rgba(255,170,60,.45)}
+.nav button:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.runes{display:flex;gap:8px;flex-wrap:wrap;max-width:48vw;justify-content:center}
+.rune{width:11px;height:11px;border-radius:2px;transform:rotate(45deg);background:rgba(182,137,63,.25);border:1px solid rgba(182,137,63,.45);cursor:pointer;transition:all .3s}
+.rune.on{background:var(--candle);box-shadow:0 0 12px var(--candle);transform:rotate(45deg) scale(1.28)}
+.hint{position:fixed;bottom:74px;left:50%;transform:translateX(-50%);z-index:30;font-family:"Cinzel",serif;letter-spacing:.26em;font-size:.6rem;color:rgba(231,200,120,.5);text-transform:uppercase;animation:fade 5s ease forwards;animation-delay:4s}
+@keyframes fade{to{opacity:0;visibility:hidden}}
+.ver{position:fixed;left:14px;bottom:14px;z-index:25;font-family:"Cinzel",serif;letter-spacing:.1em;font-size:.6rem;color:rgba(231,200,120,.45)}
+.timer{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:28;display:none;align-items:center;gap:8px;
+  font-family:"IM Fell English",serif;font-weight:700;font-size:.98rem;color:var(--brass-l);
+  background:linear-gradient(180deg,#3a1410,#1c0a06);border:1.5px solid rgba(182,137,63,.5);border-radius:999px;padding:.4rem .9rem;box-shadow:0 6px 16px rgba(0,0,0,.5)}
+.timer.show{display:flex}
+.timer.warn{color:#ffd98a;border-color:#e0871c;animation:tpulse 1s ease-in-out infinite}
+.timer.over{color:#ffc9cf;border-color:#a52436}
+@keyframes tpulse{0%,100%{box-shadow:0 6px 16px rgba(0,0,0,.5)}50%{box-shadow:0 6px 22px rgba(224,135,28,.6)}}
+/* house theme picker */
+.house-picker{position:fixed;top:14px;right:14px;z-index:30;display:flex;gap:8px}
+.hp{width:30px;height:30px;border-radius:8px;cursor:pointer;border:2px solid rgba(182,137,63,.5);position:relative;
+  box-shadow:0 4px 10px rgba(0,0,0,.45);transition:.18s;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.hp:hover{transform:translateY(-2px)}
+.hp.on{border-color:#fff;box-shadow:0 0 12px rgba(255,200,90,.6)}
+/* toolbar */
+.toolbar{position:fixed;top:14px;left:14px;z-index:30;display:flex;gap:8px}
+.tbtn{font-family:"Cinzel",serif;font-weight:700;letter-spacing:.04em;font-size:.74rem;cursor:pointer;background:linear-gradient(180deg,#3a1410,#1c0a06);
+  color:var(--brass-l);border:1.5px solid rgba(182,137,63,.5);padding:.5rem .8rem;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.5);transition:.2s}
+.tbtn:hover{color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.55),0 0 16px rgba(255,170,60,.35)}
+/* editor panel */
+.dim{position:fixed;inset:0;background:rgba(8,5,3,.55);z-index:40;opacity:0;visibility:hidden;transition:.3s}
+.dim.show{opacity:1;visibility:visible}
+.panel{position:fixed;top:0;right:0;height:100%;width:min(440px,95vw);z-index:50;background:linear-gradient(180deg,#241410,#150c07);color:#efddb8;
+  border-left:3px solid var(--brass-d);box-shadow:-20px 0 50px rgba(0,0,0,.6);transform:translateX(100%);transition:transform .4s cubic-bezier(.2,.7,.3,1);display:flex;flex-direction:column;font-family:"Shippori Mincho",serif}
+.panel.show{transform:none}
+.panel header{padding:18px 20px;border-bottom:1px solid rgba(182,137,63,.25);display:flex;align-items:center;justify-content:space-between}
+.panel header h2{font-family:"Cinzel Decorative",serif;font-size:1.12rem;color:var(--brass-l)}
+.panel .x{background:none;border:none;color:var(--brass-l);font-size:1.4rem;cursor:pointer}
+.panel .body{padding:16px 20px;overflow-y:auto;flex:1}
+.sec{margin-bottom:22px}
+.sec h3{font-family:"Cinzel",serif;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--brass);margin-bottom:10px;border-bottom:1px dashed rgba(182,137,63,.3);padding-bottom:6px}
+.scene-row{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:8px;background:rgba(255,255,255,.04);margin-bottom:6px;font-size:.85rem}
+.scene-row .nm{flex:1;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scene-row.cur{outline:1px solid var(--brass);background:rgba(182,137,63,.12)}
+.scene-row button{background:rgba(255,255,255,.07);border:none;color:#efddb8;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:.78rem;transition:.15s}
+.scene-row button:hover{background:rgba(182,137,63,.3)}
+.fld{margin-bottom:11px}
+.fld label{display:block;font-size:.71rem;letter-spacing:.06em;color:var(--brass-l);margin-bottom:4px}
+.fld input,.fld textarea,.fld select{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(182,137,63,.3);border-radius:7px;color:#fbeed0;padding:8px 10px;font-family:"Shippori Mincho",serif;font-size:.89rem;resize:vertical}
+.fld textarea{min-height:60px;line-height:1.5}
+.fld input:focus,.fld textarea:focus,.fld select:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 2px rgba(182,137,63,.2)}
+.fld textarea.mono{font-family:"IM Fell English",serif;font-size:.85rem}
+.act-btn{width:100%;font-family:"Cinzel",serif;font-weight:700;letter-spacing:.05em;cursor:pointer;border:none;border-radius:9px;padding:11px;font-size:.9rem;color:#1c0d05;
+  background:linear-gradient(180deg,var(--brass-l),var(--brass-d));box-shadow:0 5px 14px rgba(0,0,0,.4);transition:.2s;margin-top:4px}
+.act-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.act-btn.ghost{background:transparent;color:var(--brass-l);border:1.5px solid var(--brass-d);box-shadow:none}
+.act-btn.summon{background:linear-gradient(135deg,#a52436,#7a1420);color:var(--brass-xl);border:1px solid var(--brass-d)}
+.act-btn:disabled{opacity:.5;cursor:wait}
+.note{font-size:.71rem;line-height:1.5;color:#c9b48c;margin-top:8px}
+.msg{font-size:.78rem;margin-top:8px;padding:8px 10px;border-radius:7px;display:none}
+.msg.err{display:block;background:rgba(165,36,54,.25);border:1px solid #a52436;color:#ffc9cf}
+.msg.ok{display:block;background:rgba(14,77,60,.25);border:1px solid #0e4d3c;color:#bff0d0}
+.row2{display:flex;gap:8px}.row2>*{flex:1}
+.lib-row{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:8px;background:rgba(255,255,255,.04);margin-bottom:5px;font-size:.84rem}
+.lib-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-row button{background:rgba(255,255,255,.07);border:none;color:#efddb8;width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:.78rem}
+.lib-row button:hover{background:rgba(182,137,63,.3)}
+.hidden{display:none}
+.stats-overlay{position:fixed;inset:0;z-index:60;background:rgba(8,5,3,.82);display:none;align-items:center;justify-content:center;padding:18px}
+.stats-overlay.show{display:flex}
+.stats-box{width:min(900px,96vw);max-height:92vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#241410,#150c07);border:2px solid var(--brass-d);border-radius:14px;box-shadow:0 30px 70px rgba(0,0,0,.7);color:#efddb8;font-family:"Shippori Mincho",serif}
+.stats-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(182,137,63,.25);gap:10px;flex-wrap:wrap}
+.stats-head h2{font-family:"Cinzel Decorative",serif;font-size:1.18rem;color:var(--brass-l)}
+.stats-head-btns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.stats-head .x{background:none;border:none;color:var(--brass-l);font-size:1.4rem;cursor:pointer}
+.stats-body{padding:18px 20px;overflow:auto}
+.stats-kpi{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.kpi{flex:1;min-width:110px;background:rgba(255,255,255,.05);border:1px solid rgba(182,137,63,.25);border-radius:10px;padding:12px 14px;text-align:center}
+.kpi b{display:block;font-size:1.7rem;color:var(--brass-l);font-family:"Cinzel",serif}
+.kpi span{font-size:.72rem;color:#c9b48c}
+.stats-sub{font-family:"Cinzel",serif;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);margin:16px 0 8px;border-bottom:1px dashed rgba(182,137,63,.3);padding-bottom:6px}
+.heat{width:100%;border-collapse:collapse;font-size:.84rem}
+.heat th,.heat td{padding:7px 9px;text-align:left;border-bottom:1px solid rgba(182,137,63,.12)}
+.heat th{color:var(--brass);font-size:.72rem;letter-spacing:.06em}
+.heat td.rate{text-align:center;font-weight:700;color:#1c0d05;border-radius:6px;min-width:60px}
+.heat td.num{text-align:center;color:#c9b48c;font-family:"IM Fell English",serif}
+.heat .lsn{color:var(--brass-l);font-style:italic;font-family:"IM Fell English",serif}
+.bar{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{display:block;height:100%}
+@media (max-width:560px){.familiar{position:static;margin-top:.7rem;max-width:100%;justify-content:center}.corner{width:42px;height:42px}.candle{display:none}}
+</style>
+</head>
+<body>
+<canvas id="motes"></canvas>
+<div class="aurora" id="aurora"><span></span><span></span><span></span><span></span></div>
+<canvas id="opensparkle"></canvas>
+
+<div class="hall">
+  <div class="desk" id="desk">
+    <div class="frame"></div>
+    <div class="sigil-top">
+      <svg viewBox="0 0 120 90">
+        <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0c6"/><stop offset="1" stop-color="#8a6326"/></linearGradient></defs>
+        <path d="M60 6 L74 30 L100 34 L80 52 L86 80 L60 66 L34 80 L40 52 L20 34 L46 30 Z" fill="url(#bg)" stroke="#8a6326" stroke-width="1.5"/>
+        <circle cx="60" cy="46" r="11" fill="#7a1420" stroke="#fff0c6" stroke-width="2"/>
+        <text x="60" y="51" font-size="12" text-anchor="middle" fill="#fff0c6">✦</text>
+      </svg>
+    </div>
+    <div class="candle l"><div class="flame"></div></div>
+    <div class="candle r"><div class="flame"></div></div>
+    <div class="stage"><div class="page" id="page"></div></div>
+  </div>
+</div>
+
+<div class="nav"><button id="prev">‹</button><div class="runes" id="runes"></div><button id="next">›</button></div>
+<div class="house-picker" id="housePicker"></div>
+<div class="toolbar"><button class="tbtn" id="openEditor">📜 教材編集</button></div>
+<div class="hint">← → / クリックでページをめくる ・ 右上で組（テーマ）を選べる</div>
+<div class="ver" id="ver"></div>
+<div class="timer" id="timer"></div>
+
+<div class="dim" id="dim"></div>
+<aside class="panel" id="panel">
+  <header><h2>📜 教材編集</h2><button class="x" id="closeEditor">✕</button></header>
+  <div class="body">
+    <div class="sec"><h3>頁の一覧</h3><div id="sceneList"></div></div>
+
+    <div class="sec">
+      <h3 id="formTitle">頁をつくる</h3>
+      <div class="fld"><label>型</label><select id="f-type">
+        <option value="normal">通常の頁（本文・箇条書き・呪文）</option>
+        <option value="quiz">確認の試練（3択）</option>
+        <option value="cover">表紙（大見出し）</option>
+      </select></div>
+      <div class="fld"><label>講ラベル</label><input id="f-lesson" placeholder="第◯講 / Lesson"></div>
+      <div class="fld"><label>タイトル</label><input id="f-title" placeholder="例：呪文を受ける窓 — シェル"></div>
+      <div class="fld" data-only="normal cover"><label>本文（改行で複数行）</label><textarea id="f-lead" placeholder="魔導書らしい語り口で"></textarea></div>
+      <div class="fld" data-only="normal"><label>箇条書き（任意・1行ずつ）</label><textarea id="f-bul" placeholder="cd … 枝を移る&#10;ls … 葉を見渡す"></textarea></div>
+      <div class="fld" data-only="normal"><label>呪文（任意・1行ずつ／#で注釈）</label><textarea id="f-cmd" class="mono" placeholder="ls -l&#10;chmod 755 spell.sh   # 結界を張る"></textarea></div>
+      <div class="fld" data-only="normal cover"><label>締めの一言（任意）</label><input id="f-one" placeholder="この頁のキメ言葉"></div>
+      <div class="fld" data-only="quiz"><label>設問</label><textarea id="f-q" placeholder="設問を1文で"></textarea></div>
+      <div class="fld" data-only="quiz"><label>選択肢（3つ・正解の行頭に ＊）</label><textarea id="f-choices" placeholder="＊ 正しい答え&#10;ちがう答え&#10;ちがう答え"></textarea></div>
+      <div class="fld" data-only="quiz"><label>解説（任意）</label><textarea id="f-explain" placeholder="正解の理由"></textarea></div>
+      <div class="fld"><label>使い魔🦉のひとこと（任意）</label><input id="f-pet" placeholder="やさしい一言"></div>
+      <div class="row2"><button class="act-btn" id="saveScene">＋ 追加する</button><button class="act-btn ghost" id="clearForm">クリア</button></div>
+    </div>
+
+    <div class="sec">
+      <h3>✦ AIに頁を召喚させる</h3>
+      <div class="fld"><label>召喚するもの</label><select id="f-aikind">
+        <option value="scene">通常の頁</option>
+        <option value="quiz">確認の試練（3択）</option>
+        <option value="lesson">講まるごと（本文＋試練）</option>
+      </select></div>
+      <div class="fld"><label>召喚エンジン</label><select id="f-provider">
+        <option value="claude">Claude（claude.ai プレビュー内・鍵不要）</option>
+        <option value="openai">OpenAI互換（gpt-4.1-mini・自分のキー）</option>
+      </select></div>
+      <div id="openaiCfg" class="hidden">
+        <div class="fld"><label>API キー</label><input id="f-key" type="password" placeholder="sk-..."></div>
+        <div class="row2"><div class="fld"><label>Base URL</label><input id="f-base" value="https://api.openai.com/v1"></div>
+          <div class="fld"><label>モデル</label><input id="f-model" value="gpt-4.1-mini"></div></div>
+      </div>
+      <div class="fld"><label>テーマ・お題</label><textarea id="f-ai" placeholder="例：cronで定期実行を／パーミッションの試練を"></textarea></div>
+      <button class="act-btn summon" id="summon">✦ 召喚する</button>
+      <div class="msg" id="aiMsg"></div>
+    </div>
+
+    <div class="sec">
+      <h3>📦 教材データ・配布</h3>
+      <div class="row2" style="margin-bottom:8px"><button class="act-btn ghost" id="exportBtn">書き出し</button><button class="act-btn ghost" id="importBtn">読み込み</button></div>
+      <div class="fld"><textarea id="f-json" class="mono" placeholder="JSONを出力／貼り付けて読み込み"></textarea></div>
+      <button class="act-btn ghost" id="resetBtn" style="margin-top:0">初期の教材に戻す</button>
+      <button class="act-btn" id="exportStudent" style="margin-top:8px">🎓 受講生版を書き出す（この教材）</button>
+      <div class="fld" style="margin-top:8px"><label>受講生版の制限時間（分・0で無制限）</label><input id="timeLimit" type="number" min="0" max="600" value="0"></div>
+      <button class="act-btn" id="exportCertPdf" style="margin-top:4px">📄 認可状をPDFで保存</button>
+      <div class="row2" style="margin-top:8px">
+        <input id="libName" placeholder="教材名（例：Linux入門）" style="flex:2">
+        <button class="act-btn ghost" id="libAdd" style="margin:0;flex:1">＋ライブラリ</button>
+      </div>
+      <div id="libList" style="margin-top:8px"></div>
+      <button class="act-btn" id="exportZip" style="margin-top:8px">📦 受講生版をまとめてZIP</button>
+      <button class="act-btn summon" id="exportFullPack" style="margin-top:8px">🎁 フル配布パックZIP（HTML+JSON+認可状PNG＋回収）</button>
+      <p class="note">受講生版は、いまの教材・選んだ組テーマを焼き込み、編集機能を隠した閲覧＋試練＋認可状だけのHTML。認可状PDFはオフラインで生成できます。</p>
+    </div>
+
+    <div class="sec">
+      <h3>📊 クラス集計（結果JSONを読み込み）</h3>
+      <button class="act-btn ghost" id="loadResults">📥 受講生の結果JSONを選ぶ（複数可）</button>
+      <input type="file" id="resultsFile" accept=".json,application/json" multiple style="display:none">
+      <div class="fld" style="margin-top:8px"><label>合格ライン（正答率%）</label><input id="passLine" type="number" min="0" max="100" value="80"></div>
+      <div class="msg" id="statsMsg"></div>
+      <p class="note">受講生が認可状画面の「結果を提出」で保存したJSONをまとめて選ぶと、平均正答率・つまずき試練・合否を表示。合格者の認可状を一括PDFで授与できます。</p>
+    </div>
+  </div>
+</aside>
+
+<div class="stats-overlay" id="statsOverlay">
+  <div class="stats-box">
+    <div class="stats-head">
+      <h2 id="statsTitle">クラス集計</h2>
+      <div class="stats-head-btns">
+        <button class="act-btn ghost" id="statsCsv" style="width:auto;margin:0;padding:.5rem .8rem">CSV</button>
+        <button class="act-btn ghost" id="statsPass" style="width:auto;margin:0;padding:.5rem .8rem">合格者一覧</button>
+        <button class="act-btn ghost" id="statsCertsPdf" style="width:auto;margin:0;padding:.5rem .8rem">合格者認可状PDF</button>
+        <button class="x" id="statsClose">✕</button>
+      </div>
+    </div>
+    <div class="stats-body" id="statsBody"></div>
+  </div>
+</div>
+
+<script>
+const STUDENT_MODE=false;
+const APP_VERSION="魔法学校の呪文書 v4.0";
+let timeLimitMin=((typeof window!=="undefined"&&window.BAKED_TIMELIMIT)?window.BAKED_TIMELIMIT:0);
+/* === 組（ハウス）テーマ：accent(--wax系)と灯り(--candle)を入替、真鍮枠は共通 === */
+const HOUSES={
+ brass:{label:"既定（真鍮）",icon:"✦",wax:"#7a1420",waxL:"#a52436",candle:"#ffb347"},
+ crimson:{label:"紅の組",icon:"🦁",wax:"#6c1420",waxL:"#9c2230",candle:"#ff9a4a"},
+ emerald:{label:"緑の組",icon:"🐍",wax:"#0e4d3c",waxL:"#1c7a55",candle:"#ffd98a"},
+ azure:{label:"青の組",icon:"🦅",wax:"#1d3b66",waxL:"#2a5b96",candle:"#ffe49a"},
+ gold:{label:"黄金の組",icon:"🦡",wax:"#9a7616",waxL:"#caa12a",candle:"#ffe9a0"}
+};
+let houseKey=((typeof window!=="undefined"&&window.BAKED_HOUSE)?window.BAKED_HOUSE:"brass");
+function applyHouse(key){const h=HOUSES[key]||HOUSES.brass;houseKey=HOUSES[key]?key:"brass";
+ const r=document.documentElement;r.style.setProperty("--wax",h.wax);r.style.setProperty("--wax-l",h.waxL);r.style.setProperty("--candle",h.candle);}
+
+
+/* ============================================================
+   DECK — 魔法学校仕立てのLinux入門（固有名詞なしの一般魔法世界観）
+   ============================================================ */
+const defaultDeck=[
+ {type:"cover",kicker:"The Enchanted Codex of Command",emoji:"🦉",
+  titleGrand:"魔法学校の呪文書",subtitle:"THE ENCHANTED CODEX",
+  lead:"黒き画面は、現代の<span class='hi'>呪文（コマンド）</span>を映す水鏡。<br>頁をめくり、術を我がものとせよ。",
+  pet:"ようこそ、見習い術師よ！",html:true},
+
+ {lesson:"第一講",kicker:"Lesson I",title:"そもそも、Linuxとは",
+  lead:"世界の城（サーバー）の多くを、静かに支える<span class='hi'>無料の魔導OS</span>。<br>携帯端末から巨大計算機まで、その血を引く。",
+  one:"見えぬ所で世界を動かす、縁の下の魔法。",pet:"城の多くはLinuxで守られているのだよ",html:true},
+
+ {type:"quiz",lesson:"第一講",kicker:"Trial I",title:"確認の試練",
+  question:"世界の“城（サーバー）”を最も多く支えるOSは？",
+  choices:["有料の専用OSのみ","Linux","携帯専用の魔法だけ"],answer:1,
+  explain:"多くのサーバーはLinux。無料で改良でき、堅牢なのが理由です。",
+  pet:"自信がなくても、当てにいこう！"},
+
+ {lesson:"第二講",kicker:"Lesson II",title:"呪文を受ける窓 — シェル",
+  lead:"シェルは、術師の言葉と<b>核（カーネル）</b>をつなぐ通訳。<br>プロンプト <b>$</b> は「呪文をどうぞ」の合図。",
+  cmd:"pwd        # 今いる広間を尋ねる\necho Hello # 鏡に映す",
+  one:"画面のボタンの正体は、すべて一行の呪文。",pet:"$ が出たら、呪文の受付中だよ",html:true},
+
+ {type:"quiz",lesson:"第二講",kicker:"Trial II",title:"確認の試練",
+  question:"プロンプトの「$」が意味するのは？",
+  choices:["処理が固まった印","呪文の入力待ち","電源が切れた印"],answer:1,
+  explain:"$ は入力待ちの合図。安心して呪文（コマンド）を唱えましょう。",
+  pet:"困ったら、まず $ を確かめてね"},
+
+ {lesson:"第三講",kicker:"Lesson III",title:"広間の地図 — ファイルの大樹",
+  lead:"すべては <b>/</b>（根）から枝分かれする一本の大樹。<br>広間（ディレクトリ）＝枝、巻物（ファイル）＝葉。",
+  bullets:["cd … 枝を移る","ls … 葉を見渡す","pwd … 現在の広間を知る","mkdir … 新たな枝を生む"],
+  one:"迷ったら pwd。現在地を知る者は、迷わない。",pet:"まずは ls と cd に慣れよう！",html:true},
+
+ {type:"quiz",lesson:"第三講",kicker:"Trial III",title:"確認の試練",
+  question:"今いる広間（現在地）を確かめる呪文は？",
+  choices:["ls","pwd","mkdir"],answer:1,
+  explain:"pwd は現在地を映す呪文。道に迷ったらまず唱えましょう。",
+  pet:"pwd＝print working directory だよ"},
+
+ {lesson:"第四講",kicker:"Lesson IV",title:"巻物の結界 — パーミッション",
+  lead:"葉の一枚ずつに張られた結界。<br><b>読(r)・書(w)・実行(x)</b> を、所有者・組・その他へ授ける。",
+  cmd:"ls -l              # 結界を確かめる\nchmod 755 spell.sh # 結界を張り直す",
+  one:"r=4 / w=2 / x=1。足し算が、結界の鍵。",pet:"755＝自分は全部、他は見て実行だけ",html:true},
+
+ {type:"quiz",lesson:"第四講",kicker:"Trial IV",title:"確認の試練",
+  question:"chmod 755 の先頭「7」が表す権限は？",
+  choices:["読のみ","読・書・実行のすべて","実行のみ"],answer:1,
+  explain:"7＝4(読)+2(書)+1(実行)。所有者にすべてを許す結界です。",
+  pet:"数字は r=4 / w=2 / x=1 の足し算！"},
+
+ {lesson:"第五講",kicker:"Lesson V",title:"使い魔たち — プロセス",
+  lead:"動く術（プログラム）＝使い魔。<br>それぞれに <b>PID</b>（識別番号）が宿る。",
+  cmd:"ps aux | grep nginx  # 使い魔を探す\nkill 1234            # PIDで鎮める",
+  one:"暴れる使い魔は、PIDを掴んで鎮める。",pet:"top で、今の使い魔を覗けるよ",html:true},
+
+ {type:"quiz",lesson:"第五講",kicker:"Trial V",title:"確認の試練",
+  question:"特定の使い魔（プロセス）を鎮めるとき kill に渡すのは？",
+  choices:["ファイル名","PID（識別番号）","パスワード"],answer:1,
+  explain:"kill にはPIDを渡します。ps や top で番号を調べましょう。",
+  pet:"まず ps で番号を探そう"},
+
+ {lesson:"第六講",kicker:"Lesson VI",title:"道具の召喚 — パッケージ",
+  lead:"必要な道具は、呪文ひとつで召喚できる。<br>系統により <b>apt</b>（Debian系）/ <b>dnf</b>（RHEL系）。",
+  cmd:"sudo apt install tree   # Debian系\nsudo dnf install tree   # RHEL系",
+  one:"「自分で入れる」を覚えた時、術師は独り立ちする。",pet:"sudo は“管理者の名において”の合図",html:true},
+
+ {type:"quiz",lesson:"第六講",kicker:"Trial VI",title:"確認の試練",
+  question:"Debian系で道具（ソフト）を召喚する呪文は？",
+  choices:["apt install","format disk","delete all"],answer:0,
+  explain:"Debian系は apt。RHEL系では dnf を使います。",
+  pet:"Ubuntuなら apt だよ"},
+
+ {lesson:"第七講",kicker:"Lesson VII",title:"上達のための、五つの心得",
+  bullets:["<b>小さく刻む</b> — 一度に一呪文ずつ。",
+           "<b>手を動かす</b> — 写すより、自ら唱えて確かめる。",
+           "<b>声に出す</b> — 人に説けて、初めて身につく。",
+           "<b>つまずきを記す</b> — 失敗は、次の呪文の素材。",
+           "<b>魔導書を引く</b> — 困れば man と --help を開け。"],
+  one:"man command で、いつでも師が現れる。",pet:"わからない時は man と --help だよ",html:true},
+
+ {type:"quiz",lesson:"第七講",kicker:"Trial VII",title:"最後の試練",
+  question:"呪文の使い方がわからない時に開く“公式の魔導書”は？",
+  choices:["man","run","stop"],answer:0,
+  explain:"man（マニュアル）が公式の魔導書。--help も手軽で便利です。",
+  pet:"man の他に --help もね"},
+
+ {type:"certificate"},
+];
+let deck=JSON.parse(JSON.stringify((typeof window!=="undefined"&&window.BAKED_DECK)?window.BAKED_DECK:defaultDeck));
+let idx=0, results={}, attempts={}, startedAt=Date.now(), learnerName="", editIndex=null;
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=t=>(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const nl2br=t=>esc(t).replace(/\n/g,"<br>");
+function leadHTML(s){if(s.lead==null)return"";return s.html?s.lead:nl2br(s.lead);}
+const RUNES=["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"];
+const CORNERS=`
+ <div class="corner c-tl"><svg viewBox="0 0 60 60"><path d="M4 56 Q4 4 56 4"/><path d="M14 56 Q14 14 56 14"/><circle cx="56" cy="4" r="3"/></svg></div>
+ <div class="corner c-tr"><svg viewBox="0 0 60 60"><path d="M4 56 Q4 4 56 4"/><path d="M14 56 Q14 14 56 14"/><circle cx="56" cy="4" r="3"/></svg></div>
+ <div class="corner c-bl"><svg viewBox="0 0 60 60"><path d="M4 56 Q4 4 56 4"/><path d="M14 56 Q14 14 56 14"/><circle cx="56" cy="4" r="3"/></svg></div>
+ <div class="corner c-br"><svg viewBox="0 0 60 60"><path d="M4 56 Q4 4 56 4"/><path d="M14 56 Q14 14 56 14"/><circle cx="56" cy="4" r="3"/></svg></div>`;
+const FLOURISH=`<div class="flourish anim"><svg viewBox="0 0 130 16"><path d="M3 8 H48"/><path d="M127 8 H82"/><path d="M58 8 l7 -5 l7 5 l-7 5 Z"/><circle cx="53" cy="8" r="2"/><circle cx="77" cy="8" r="2"/></svg></div>`;
+function orbHTML(emoji,small){const sz=small?"width:clamp(118px,26vw,168px);height:clamp(118px,26vw,168px)":"";
+ return `<div class="orb anim" style="${sz}"><svg viewBox="0 0 200 200">
+  <g class="ring-rot"><circle class="sg" cx="100" cy="100" r="92"/><circle class="sg-glow" cx="100" cy="100" r="92"/>
+   <polygon class="sg" points="100,16 175,135 25,135"/><polygon class="sg" points="100,184 25,65 175,65"/></g>
+  <g class="ring-rot rev"><circle class="sg" cx="100" cy="100" r="62"/>
+   <circle class="sg" cx="100" cy="6" r="4"/><circle class="sg" cx="100" cy="194" r="4"/><circle class="sg" cx="6" cy="100" r="4"/><circle class="sg" cx="194" cy="100" r="4"/></g></svg>
+  <div class="glyph">${emoji||"✦"}</div></div>`;}
+function housesHTML(){return `<div class="houses anim">
+  <div class="house"><div class="shield h1">🦁</div><span>紅の組</span></div>
+  <div class="house"><div class="shield h2">🐍</div><span>緑の組</span></div>
+  <div class="house"><div class="shield h3">🦅</div><span>青の組</span></div>
+  <div class="house"><div class="shield h4">🦡</div><span>黄金の組</span></div></div>`;}
+function cmdHTML(cmd){if(!cmd)return"";
+ return `<div class="incant anim">`+cmd.split("\n").map(line=>{const t=line.trim();if(!t)return"";
+   if(t.startsWith("#"))return `<div><span class="cm">${esc(t)}</span></div>`;
+   const i=line.indexOf("#");
+   if(i>0){const c=line.slice(0,i).trim(),cm=line.slice(i).trim();
+     return `<div><span class="pmt">✦</span>${esc(c)}  <span class="cm">${esc(cm)}</span></div>`;}
+   return `<div><span class="pmt">✦</span>${esc(t)}</div>`;}).join("")+`</div>`;}
+
+/* ---------- scoring + certificate ---------- */
+let qidSeq=0;
+function assignIds(){deck.forEach(s=>{if(s.type==="quiz"&&!s.qid)s.qid="q"+(++qidSeq);});}
+function ensureCert(){const c=deck.find(s=>s.type==="certificate")||{type:"certificate"};deck=deck.filter(s=>s.type!=="certificate");deck.push(c);}
+function quizzes(){return deck.filter(s=>s.type==="quiz");}
+function stats(){const qs=quizzes();let answered=0,correct=0;
+ qs.forEach(q=>{if(q.qid in results){answered++;if(results[q.qid])correct++;}});return {total:qs.length,answered,correct};}
+function breakdown(){return quizzes().map(q=>({lesson:q.lesson||"講",title:q.title||"試練",
+ state:(q.qid in results)?(results[q.qid]?"ok":"miss"):"none"}));}
+function rankOf(r){if(r>=1)return["大魔導士","🏆"];if(r>=.8)return["上級術師","✨"];if(r>=.5)return["見習い術師","📘"];return["新入生","🔰"];}
+
+function certHTML(s){const {total,answered,correct}=stats();const r=total?correct/total:0;const [title,badge]=rankOf(r);
+ const d=new Date();const ymd=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+ const mark={ok:"◯",miss:"✕",none:"—"};
+ const bd=breakdown();
+ const breakdownHTML=bd.length?`<div style="margin:.8rem auto 0;max-width:30ch;display:grid;gap:.18rem;text-align:left;font-size:clamp(.74rem,1.9vw,.9rem)">`+
+   bd.map(b=>`<div style="display:flex;gap:.5rem"><span style="flex:0 0 auto;color:var(--brass-d);font-style:italic;font-family:'IM Fell English',serif">${esc(b.lesson)}</span>
+     <span style="flex:1;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.title)}</span>
+     <span style="flex:0 0 auto;font-weight:800;color:${b.state==='ok'?'#0e4d3c':(b.state==='miss'?'var(--wax)':'#9a7b4a')}">${mark[b.state]}</span></div>`).join("")+`</div>`:"";
+ const body= total===0
+   ? `<p class="cert-line anim" style="margin-top:.6rem">確認の試練に挑むと、ここに成績が刻まれます。</p>`
+   : `<div class="cert-score anim">正解 <b>${correct}</b> / ${total} 問 ${answered<total?`<span class="cert-un">（未挑戦 ${total-answered}）</span>`:""}</div>
+      <div class="cert-rank anim">${badge} 称号：<b>${title}</b> ${badge}</div>${breakdownHTML}`;
+ return `${CORNERS}<div class="content cert">
+   <div class="kicker anim">Diploma of Sorcery</div>
+   <div class="cert-frame anim">
+     <div class="cert-title">認 可 状</div><div class="cert-rule"></div>
+     <p class="cert-line anim"><span class="cert-recip">${esc(learnerName||"見習い術師")}</span> 殿<br>
+       <b>魔法学校の呪文書</b> の全講を修め、黒き画面の術を会得せり。</p>
+     ${body}
+     <div class="cert-date anim">${ymd}　—　The Enchanted Codex</div>
+     <div class="cert-seal anim">✦</div>
+   </div>
+   <div class="cert-actions anim">
+     <input id="certName" class="cert-name-in" placeholder="術師の名を記す" value="${esc(learnerName)}">
+     <div class="cert-btns">
+       <button class="cert-dl" id="dlPng">🖼 PNG保存</button>
+       <button class="cert-dl" id="dlJson">📤 結果を提出</button>
+       <button class="cert-reset" id="certReset">✦ 記録をリセット</button>
+     </div>
+   </div>
+ </div>
+ <div class="familiar"><div class="say">${esc(s.pet||"よくぞ修了した！おめでとう✦")}</div><div class="pet">🦉</div></div>`;}
+
+/* ---------- page HTML ---------- */
+function pageHTML(s){
+ if(s.type==="certificate")return certHTML(s);
+ if(s.type==="quiz"){
+   const opts=(s.choices||[]).map((c,i)=>`<button class="choice" data-i="${i}"><span class="mk">${RUNES[i]||i+1}</span><span>${esc(c)}</span></button>`).join("");
+   return `${CORNERS}<div class="content">
+     <div class="kicker anim">${esc(s.kicker||"Trial")}</div>
+     <div class="lesson anim">${esc(s.lesson||"")}</div>
+     <h1 class="anim">${esc(s.title||"確認の試練")}</h1>
+     <div class="quiz-q anim">${esc(s.question||"")}</div>
+     <div class="choices anim">${opts}</div>
+     <div class="verdict anim" data-verdict></div>
+   </div>
+   <div class="familiar"><div class="say">${esc(s.pet||"")}</div><div class="pet">🦉</div></div>`;
+ }
+ let c="";
+ if(s.type==="cover"){
+   c+=`<div class="kicker anim">${esc(s.kicker||"")}</div>`+orbHTML(s.emoji);
+   c+=`<h1 class="anim"><span class="title-grand">${s.titleGrand||""}</span></h1>`;
+   if(s.subtitle)c+=`<p class="subtitle anim">${esc(s.subtitle)}</p>`;
+   if(s.lead!=null)c+=`<p class="lead anim" style="margin-top:1rem">${leadHTML(s)}</p>`;
+   c+=housesHTML();
+ }else{
+   if(s.kicker)c+=`<div class="kicker anim">${esc(s.kicker)}</div>`;
+   if(s.lesson)c+=`<div class="lesson anim">${esc(s.lesson)}</div>`;
+   c+=`<h1 class="anim">${esc(s.title||"")}</h1>`+FLOURISH;
+   if(s.lead!=null)c+=`<p class="lead anim">${leadHTML(s)}</p>`;
+   if(s.bullets&&s.bullets.length)c+=`<ul class="spells">`+s.bullets.map((b,i)=>`<li class="anim"><span class="ru">${RUNES[i]||((i+1)+".")}</span><span>${s.html?b:nl2br(b)}</span></li>`).join("")+`</ul>`;
+   if(s.cmd)c+=cmdHTML(s.cmd);
+   if(s.one)c+=`<p class="oneliner anim" style="margin-top:.9rem">${esc(s.one)}</p>`;
+ }
+ return `${CORNERS}<div class="content">${c}</div><div class="familiar"><div class="say">${esc(s.pet||"")}</div><div class="pet">🦉</div></div>`;
+}
+
+/* ---------- sound + sparkle ---------- */
+let actx;
+function chime(good){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+ const t=actx.currentTime;const notes=good?[523,659,784]:[220,175];
+ notes.forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type=good?"sine":"triangle";o.frequency.value=f;
+  o.connect(g);g.connect(actx.destination);const s=t+i*0.09;g.gain.setValueAtTime(0.0001,s);
+  g.gain.exponentialRampToValueAtTime(0.18,s+0.02);g.gain.exponentialRampToValueAtTime(0.0001,s+0.32);
+  o.start(s);o.stop(s+0.34);});}catch(e){}}
+function sparkBurst(scope){const E=["✦","✧","⭐","✨","・"];for(let i=0;i<16;i++){const s=document.createElement('div');
+ s.className='spark';s.textContent=E[i%E.length];s.style.left=(15+Math.random()*70)+"%";s.style.top=(40+Math.random()*30)+"%";
+ s.style.animationDelay=(Math.random()*0.25)+"s";scope.appendChild(s);setTimeout(()=>s.remove(),1300);}}
+
+/* ---------- nav / render ---------- */
+const page=$("#page"),runesWrap=$("#runes");
+function buildRunes(){runesWrap.innerHTML="";deck.forEach((_,i)=>{const r=document.createElement('div');
+ r.className='rune'+(i===idx?' on':'');r.onclick=()=>go(i);runesWrap.appendChild(r);});}
+function paint(){page.innerHTML=pageHTML(deck[idx]);
+ if(deck[idx].type==="quiz")wireQuiz(page,deck[idx]);
+ if(deck[idx].type==="certificate")wireCert(page);
+ if(STUDENT_MODE)saveProgress();
+ $("#prev").disabled=idx===0;$("#next").disabled=idx===deck.length-1;
+ [...runesWrap.children].forEach((r,i)=>r.classList.toggle('on',i===idx));}
+function go(n){if(n<0||n>=deck.length||n===idx)return;
+ page.classList.add('leaving');
+ setTimeout(()=>{idx=n;paint();page.classList.remove('leaving');},380);}
+$("#prev").onclick=()=>go(idx-1);$("#next").onclick=()=>go(idx+1);
+document.addEventListener('keydown',e=>{const tag=(e.target.tagName||"").toLowerCase();if(tag==="input")return;
+ if(['ArrowRight','PageDown',' '].includes(e.key))go(idx+1);
+ if(['ArrowLeft','PageUp'].includes(e.key))go(idx-1);
+ if(e.key==='Home')go(0);if(e.key==='End')go(deck.length-1);});
+$("#desk").addEventListener('click',e=>{if(e.target.closest('.nav')||e.target.closest('.choice')||e.target.closest('.cert-actions'))return;
+ go(e.clientX<innerWidth*0.32?idx-1:idx+1);});
+
+function wireQuiz(scope,s){const v=scope.querySelector('[data-verdict]');const btns=[...scope.querySelectorAll('.choice')];
+ btns.forEach(b=>b.onclick=ev=>{ev.stopPropagation();const i=+b.dataset.i;
+  const firstTry=!(s.qid in results);if(firstTry)results[s.qid]=(i===s.answer);
+  attempts[s.qid]=(attempts[s.qid]||0)+1;if(STUDENT_MODE)saveProgress();
+  if(i===s.answer){btns.forEach(x=>{x.disabled=true;if(+x.dataset.i===s.answer)x.classList.add('ok');});
+    v.innerHTML="🎉 正解！"+(s.explain?`<span class="ex">${esc(s.explain)}</span>`:"");sparkBurst(scope);chime(true);}
+  else{b.classList.add('ng');b.disabled=true;v.textContent="もう一度！ ヒントを思い出して";chime(false);}
+ });}
+function wireCert(scope){const reset=scope.querySelector('#certReset'),nameIn=scope.querySelector('#certName'),png=scope.querySelector('#dlPng'),json=scope.querySelector('#dlJson');
+ if(nameIn){nameIn.onclick=e=>e.stopPropagation();nameIn.oninput=()=>{learnerName=nameIn.value;
+   const rc=scope.querySelector('.cert-recip');if(rc)rc.textContent=learnerName||"見習い術師";};}
+ if(reset)reset.onclick=ev=>{ev.stopPropagation();results={};attempts={};startedAt=Date.now();if(STUDENT_MODE)clearProgress();chime(true);go(0);};
+ if(png)png.onclick=ev=>{ev.stopPropagation();exportCertificate();};
+ if(json)json.onclick=ev=>{ev.stopPropagation();exportResultsJSON();};}
+
+/* ---------- certificate PNG ---------- */
+function downloadBlob(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);}
+async function buildCertCanvas(){
+ try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+ const W=1684,H=1190,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+ const C={bg:"#fdf6e6",ink:"#2c2013",ink2:"#4a371f",brass:"#b6893f",brassD:"#8a6326",wax:"#7a1420",green:"#0e4d3c"};
+ const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#fffaf0");bg.addColorStop(1,"#ecdab2");g.fillStyle=bg;g.fillRect(0,0,W,H);
+ g.strokeStyle=C.brassD;g.lineWidth=10;g.strokeRect(46,46,W-92,H-92);g.lineWidth=2;g.strokeStyle=C.brass;g.strokeRect(66,66,W-132,H-132);
+ const cx=W/2;g.textAlign="center";
+ g.fillStyle=C.brassD;g.font='28px "Cinzel",serif';g.fillText("D I P L O M A   O F   S O R C E R Y",cx,180);
+ g.fillStyle=C.ink;g.font='900 96px "Cinzel Decorative","Shippori Mincho",serif';g.fillText("認 可 状",cx,300);
+ const gr=g.createLinearGradient(cx-180,0,cx+180,0);gr.addColorStop(0,"rgba(138,99,38,0)");gr.addColorStop(.5,C.brassD);gr.addColorStop(1,"rgba(138,99,38,0)");g.fillStyle=gr;g.fillRect(cx-180,338,360,3);
+ const name=(learnerName||"").trim()||"見習い術師";
+ g.fillStyle=C.ink;g.font='600 30px "Shippori Mincho",serif';g.fillText("次の術師に、これを授与する",cx,410);
+ g.fillStyle=C.wax;g.font='800 76px "Shippori Mincho",serif';g.fillText(name+"　殿",cx,500);
+ g.strokeStyle="rgba(122,20,32,.4)";g.lineWidth=2;g.beginPath();g.moveTo(cx-360,522);g.lineTo(cx+360,522);g.stroke();
+ g.fillStyle=C.ink2;g.font='500 30px "Shippori Mincho",serif';g.fillText("魔法学校の呪文書 の全講を修め、黒き画面の術を会得せり。",cx,575);
+ const {total,answered,correct}=stats();const [rk]=rankOf(total?correct/total:0);
+ if(total){g.fillStyle=C.ink;g.font='800 46px "Shippori Mincho",serif';g.fillText(`正解 ${correct} / ${total} 問`+(answered<total?`　（未挑戦 ${total-answered}）`:""),cx,650);
+   g.fillStyle=C.brassD;g.font='800 38px "Shippori Mincho",serif';g.fillText("称号："+rk,cx,705);}
+ const bd=breakdown();if(bd.length){const sY=760,rh=40,cw=560,half=Math.ceil(bd.length/2);g.font='500 24px "Shippori Mincho",serif';g.textAlign="left";
+  bd.forEach((b,i)=>{const col=i<half?0:1,row=i<half?i:i-half,x=cx-cw+col*cw,y=sY+row*rh;
+   g.fillStyle=C.ink2;g.fillText(`${b.lesson}　${b.title}`.slice(0,24),x,y);
+   g.fillStyle=b.state==="ok"?C.green:(b.state==="miss"?C.wax:"#9a7b4a");g.font='700 26px "Shippori Mincho",serif';
+   g.fillText(b.state==="ok"?"◯":(b.state==="miss"?"✕":"—"),x+cw-60,y);g.font='500 24px "Shippori Mincho",serif';});g.textAlign="center";}
+ const d=new Date();g.fillStyle=C.ink2;g.font='italic 30px "EB Garamond",serif';g.fillText(`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日　—　The Enchanted Codex`,cx,H-150);
+ g.beginPath();g.arc(W-250,H-200,70,0,7);g.fillStyle=C.wax;g.fill();g.lineWidth=4;g.strokeStyle=C.brassD;g.stroke();g.font='56px serif';g.fillStyle="#fff";g.fillText("✦",W-250,H-182);
+ return cv;
+}
+async function exportCertificate(){const cv=await buildCertCanvas();
+ cv.toBlob(b=>{if(b)downloadBlob(b,`Codex_Diploma_${stamp()}.png`);},"image/png");}
+function dataURLToBytes(durl){const b64=durl.split(",")[1];const bin=atob(b64);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;}
+function buildJpegPDF(jpeg,iw,ih){const PW=842,PH=595;const enc=s=>new TextEncoder().encode(s);
+ const parts=[];let len=0;const off=[];const push=u=>{parts.push(u);len+=u.length;};
+ push(enc("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n"));const obj=(n,b)=>{off[n]=len;push(enc(n+" 0 obj\n"+b+"\nendobj\n"));};
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+ obj(3,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`);
+ const ct=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;obj(4,`<< /Length ${ct.length} >>\nstream\n${ct}\nendstream`);
+ off[5]=len;push(enc(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${iw} /Height ${ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`));
+ push(jpeg);push(enc("\nendstream\nendobj\n"));const xp=len;let x="xref\n0 6\n0000000000 65535 f \n";
+ for(let i=1;i<=5;i++)x+=String(off[i]).padStart(10,"0")+" 00000 n \n";push(enc(x));push(enc(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xp}\n%%EOF`));
+ const out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length;}return out;}
+async function exportCertificatePDF(){const cv=await buildCertCanvas();
+ const jpeg=dataURLToBytes(cv.toDataURL("image/jpeg",0.92));const pdf=buildJpegPDF(jpeg,cv.width,cv.height);
+ downloadBlob(new Blob([pdf],{type:"application/pdf"}),`Codex_Diploma_${stamp()}.pdf`);}
+
+/* ---------- 名前→ASCII（かな/カナ→ローマ字） ---------- */
+const KANA={"きゃ":"kya","きゅ":"kyu","きょ":"kyo","しゃ":"sha","しゅ":"shu","しょ":"sho","ちゃ":"cha","ちゅ":"chu","ちょ":"cho","にゃ":"nya","にゅ":"nyu","にょ":"nyo","ひゃ":"hya","ひゅ":"hyu","ひょ":"hyo","みゃ":"mya","みゅ":"myu","みょ":"myo","りゃ":"rya","りゅ":"ryu","りょ":"ryo","ぎゃ":"gya","ぎゅ":"gyu","ぎょ":"gyo","じゃ":"ja","じゅ":"ju","じょ":"jo","びゃ":"bya","びゅ":"byu","びょ":"byo","ぴゃ":"pya","ぴゅ":"pyu","ぴょ":"pyo","あ":"a","い":"i","う":"u","え":"e","お":"o","か":"ka","き":"ki","く":"ku","け":"ke","こ":"ko","さ":"sa","し":"shi","す":"su","せ":"se","そ":"so","た":"ta","ち":"chi","つ":"tsu","て":"te","と":"to","な":"na","に":"ni","ぬ":"nu","ね":"ne","の":"no","は":"ha","ひ":"hi","ふ":"fu","へ":"he","ほ":"ho","ま":"ma","み":"mi","む":"mu","め":"me","も":"mo","や":"ya","ゆ":"yu","よ":"yo","ら":"ra","り":"ri","る":"ru","れ":"re","ろ":"ro","わ":"wa","を":"o","ん":"n","が":"ga","ぎ":"gi","ぐ":"gu","げ":"ge","ご":"go","ざ":"za","じ":"ji","ず":"zu","ぜ":"ze","ぞ":"zo","だ":"da","ぢ":"ji","づ":"zu","で":"de","ど":"do","ば":"ba","び":"bi","ぶ":"bu","べ":"be","ぼ":"bo","ぱ":"pa","ぴ":"pi","ぷ":"pu","ぺ":"pe","ぽ":"po","ー":"","　":" "};
+function kanaToRomaji(s){s=s.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));let o="",i=0;
+ while(i<s.length){if(s[i]==="っ"){const two=s.substr(i+1,2),one=s[i+1];const r=KANA[two]||KANA[one]||"";if(r)o+=r[0]||"";i++;continue;}
+  const two=s.substr(i,2);if(KANA[two]!==undefined){o+=KANA[two];i+=2;continue;}const one=s[i];if(KANA[one]!==undefined){o+=KANA[one];i++;continue;}o+=one;i++;}return o;}
+function toAsciiName(n){let s=(n||"").trim();try{s=s.normalize("NFKC");}catch(e){}s=kanaToRomaji(s);s=s.replace(/[^A-Za-z0-9]+/g,"_").replace(/^_+|_+$/g,"");return s||"student";}
+
+/* ---------- 結果JSONの提出（受講生） ---------- */
+function exportResultsJSON(){const {total,answered,correct}=stats();const [rank]=rankOf(total?correct/total:0);
+ const data={course:"魔法学校の呪文書 (The Enchanted Codex)",learner:learnerName||"",issued_at:new Date().toISOString(),
+  score:{total_quizzes:total,answered,first_try_correct:correct,accuracy_percent:total?Math.round(correct/total*100):0},rank,
+  details:breakdown().map(b=>({lesson:b.lesson,title:b.title,result:b.state==="ok"?"correct":(b.state==="miss"?"incorrect":"unanswered")}))};
+ downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),`Result_${toAsciiName(learnerName)}_Codex_${stamp()}.json`);
+ flash("ok","結果をJSONで提出（保存）しました。");}
+
+/* ---------- クラス集計 ---------- */
+let classData=null;
+$("#loadResults")&&($("#loadResults").onclick=()=>$("#resultsFile").click());
+$("#resultsFile")&&($("#resultsFile").onchange=async()=>{const files=[...($("#resultsFile").files||[])];const m=$("#statsMsg");m.className="msg";
+ if(!files.length)return;try{const recs=[];for(const f of files){const txt=await f.text();try{const o=JSON.parse(txt);if(Array.isArray(o))o.forEach(x=>recs.push(x));else recs.push(o);}catch(e){}}
+  if(!recs.length)throw new Error("有効な結果JSONがありません");classData=aggregate(recs);renderStats(classData);$("#resultsFile").value="";}
+ catch(err){m.className="msg err";m.textContent="読み込み失敗："+(err.message||err);}});
+function passLine(){const v=parseInt(($("#passLine")&&$("#passLine").value)||"80",10);return isNaN(v)?80:Math.max(0,Math.min(100,v));}
+function aggregate(recs){const students=(Array.isArray(recs)?recs:[]).map(r=>{r=r||{};const sc=r.score||{};let acc=Number(sc.accuracy_percent);if(!isFinite(acc))acc=0;acc=Math.max(0,Math.min(100,Math.round(acc)));
+  return {name:(r.learner||"(無名)"),acc,rank:r.rank||"",details:Array.isArray(r.details)?r.details:[]};});
+ const qmap=new Map();students.forEach(st=>st.details.forEach(d=>{const key=`${d.lesson||""}｜${d.title||""}`;
+   if(!qmap.has(key))qmap.set(key,{lesson:d.lesson||"",title:d.title||"",correct:0,incorrect:0,unanswered:0});
+   const e=qmap.get(key);if(d.result==="correct")e.correct++;else if(d.result==="incorrect")e.incorrect++;else e.unanswered++;}));
+ const questions=[...qmap.values()].map(e=>{const n=e.correct+e.incorrect+e.unanswered;return {...e,n,rate:n?Math.round(e.correct/n*100):0};});
+ const avg=students.length?Math.round(students.reduce((a,s)=>a+s.acc,0)/students.length):0;
+ return {students,questions,avg,count:students.length};}
+function heatColor(r){return `hsl(${Math.round(r*1.2)} 60% 70%)`;}
+function renderStats(d){const body=$("#statsBody");const line=passLine();d.students.forEach(s=>s.pass=s.acc>=line);
+ const passed=d.students.filter(s=>s.pass).length;const prate=d.count?Math.round(passed/d.count*100):0;
+ $("#statsTitle").textContent=`クラス集計（${d.count}名・合格ライン${line}%）`;
+ const rows=d.questions.map(q=>`<tr><td class="lsn">${esc(q.lesson)}</td><td>${esc(q.title)}</td>
+   <td class="rate" style="background:${heatColor(q.rate)}">${q.rate}%</td><td class="num">◯${q.correct} ✕${q.incorrect} —${q.unanswered}</td></tr>`).join("");
+ const studs=d.students.slice().sort((a,b)=>b.acc-a.acc).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.rank)}</td>
+   <td><div class="bar"><i style="width:${s.acc}%;background:${heatColor(s.acc)}"></i></div></td><td class="num">${s.acc}%</td>
+   <td class="num" style="font-weight:800;color:${s.pass?'#bff0d0':'#ffc9cf'}">${s.pass?'合格':'再'}</td></tr>`).join("");
+ const weak=d.questions.slice().sort((a,b)=>a.rate-b.rate).slice(0,3).map(q=>`${q.lesson} ${q.title}（${q.rate}%）`);
+ body.innerHTML=`<div class="stats-kpi">
+   <div class="kpi"><b>${d.count}</b><span>提出人数</span></div>
+   <div class="kpi"><b>${d.avg}%</b><span>平均正答率</span></div>
+   <div class="kpi"><b>${passed}</b><span>合格（≥${line}%）</span></div>
+   <div class="kpi"><b>${prate}%</b><span>合格率</span></div></div>
+  ${weak.length?`<div class="stats-sub">つまずいた試練（正答率ワースト）</div><div style="font-size:.86rem;line-height:1.7;color:#efddb8">・ ${weak.join("<br>・ ")}</div>`:""}
+  <div class="stats-sub">講別ヒートマップ（正答率）</div>
+  <table class="heat"><thead><tr><th>講</th><th>試練</th><th>正答率</th><th>内訳</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="stats-sub">受講生別（合格ライン ${line}%）</div>
+  <table class="heat"><thead><tr><th>氏名</th><th>称号</th><th>正答率</th><th></th><th>判定</th></tr></thead><tbody>${studs}</tbody></table>`;
+ $("#statsOverlay").classList.add('show');}
+$("#passLine")&&($("#passLine").onchange=()=>{if(classData)renderStats(classData);});
+$("#statsClose")&&($("#statsClose").onclick=()=>$("#statsOverlay").classList.remove('show'));
+$("#statsCsv")&&($("#statsCsv").onclick=()=>{if(!classData)return;const line=passLine();const e2=s=>`"${String(s).replace(/"/g,'""')}"`;
+ let csv="\uFEFF合格ライン(%),"+line+"\n\n講別\n講,試練,正答率(%),正解,不正解,未回答\n";
+ classData.questions.forEach(q=>csv+=[e2(q.lesson),e2(q.title),q.rate,q.correct,q.incorrect,q.unanswered].join(",")+"\n");
+ csv+="\n受講生別\n氏名,称号,正答率(%),判定\n";
+ classData.students.slice().sort((a,b)=>b.acc-a.acc).forEach(s=>csv+=[e2(s.name),e2(s.rank),s.acc,(s.acc>=line?"合格":"再")].join(",")+"\n");
+ downloadBlob(new Blob([csv],{type:"text/csv;charset=utf-8"}),`Codex_ClassReport_${stamp()}.csv`);});
+$("#statsPass")&&($("#statsPass").onclick=()=>{if(!classData)return;const line=passLine();const e2=s=>`"${String(s).replace(/"/g,'""')}"`;
+ const ps=classData.students.filter(s=>s.acc>=line).sort((a,b)=>b.acc-a.acc);
+ let csv="\uFEFF合格者一覧,魔法学校の呪文書,合格ライン "+line+"%\n\n番号,氏名,称号,正答率(%)\n";
+ ps.forEach((s,i)=>csv+=[i+1,e2(s.name),e2(s.rank),s.acc].join(",")+"\n");
+ csv+=`\n合格 ${ps.length} 名 / 提出 ${classData.count} 名\n`;
+ downloadBlob(new Blob([csv],{type:"text/csv;charset=utf-8"}),`Codex_PassList_${stamp()}.csv`);});
+
+/* 合格者の認可状を一括PDF（氏名・成績差し込み・1人1ページ） */
+function buildJpegPDFMulti(jpegs){const PW=842,PH=595;const enc=s=>new TextEncoder().encode(s);
+ const parts=[];let len=0;const off=[];const push=u=>{parts.push(u);len+=u.length;};
+ push(enc("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n"));const N=jpegs.length;
+ const pg=i=>3+i*3,ct=i=>4+i*3,im=i=>5+i*3,tot=2+N*3;
+ const obj=(n,b)=>{off[n]=len;push(enc(n+" 0 obj\n"+b+"\nendobj\n"));};
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,`<< /Type /Pages /Kids [${Array.from({length:N},(_,i)=>pg(i)+" 0 R").join(" ")}] /Count ${N} >>`);
+ jpegs.forEach((j,i)=>{obj(pg(i),`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 ${im(i)} 0 R >> >> /Contents ${ct(i)} 0 R >>`);
+   const c=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;obj(ct(i),`<< /Length ${c.length} >>\nstream\n${c}\nendstream`);
+   off[im(i)]=len;push(enc(`${im(i)} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${j.iw} /Height ${j.ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${j.bytes.length} >>\nstream\n`));
+   push(j.bytes);push(enc("\nendstream\nendobj\n"));});
+ const xp=len;let x=`xref\n0 ${tot+1}\n0000000000 65535 f \n`;for(let i=1;i<=tot;i++)x+=String(off[i]||0).padStart(10,"0")+" 00000 n \n";
+ push(enc(x));push(enc(`trailer\n<< /Size ${tot+1} /Root 1 0 R >>\nstartxref\n${xp}\n%%EOF`));
+ const out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length;}return out;}
+async function buildCertCanvasFor(student){
+ // 一時的に学習者名と成績を差し替えて描画
+ const savedName=learnerName,savedResults=results;
+ learnerName=student.name||"";
+ // 成績は学習者JSONのdetailsからbreakdown相当を再現できないため、正答率と称号のみ表示用に上書き
+ const cv=await buildCertCanvasWithScore(student);
+ learnerName=savedName;results=savedResults;return cv;}
+async function buildCertCanvasWithScore(st){try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+ const W=1684,H=1190,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+ const C={ink:"#2c2013",ink2:"#4a371f",brass:"#b6893f",brassD:"#8a6326",wax:"#7a1420"};
+ const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#fffaf0");bg.addColorStop(1,"#ecdab2");g.fillStyle=bg;g.fillRect(0,0,W,H);
+ g.strokeStyle=C.brassD;g.lineWidth=10;g.strokeRect(46,46,W-92,H-92);g.lineWidth=2;g.strokeStyle=C.brass;g.strokeRect(66,66,W-132,H-132);
+ const cx=W/2;g.textAlign="center";
+ g.fillStyle=C.brassD;g.font='28px "Cinzel",serif';g.fillText("D I P L O M A   O F   S O R C E R Y",cx,180);
+ g.fillStyle=C.ink;g.font='900 96px "Cinzel Decorative","Shippori Mincho",serif';g.fillText("認 可 状",cx,300);
+ g.fillStyle=C.ink;g.font='600 30px "Shippori Mincho",serif';g.fillText("次の術師に、これを授与する",cx,410);
+ g.fillStyle=C.wax;g.font='800 76px "Shippori Mincho",serif';g.fillText((st.name||"術師")+"　殿",cx,500);
+ g.strokeStyle="rgba(122,20,32,.4)";g.lineWidth=2;g.beginPath();g.moveTo(cx-360,522);g.lineTo(cx+360,522);g.stroke();
+ g.fillStyle=C.ink2;g.font='500 30px "Shippori Mincho",serif';g.fillText("魔法学校の呪文書 の全講を修め、黒き画面の術を会得せり。",cx,575);
+ if(st.acc!==""&&st.acc!=null){g.fillStyle=C.ink;g.font='800 46px "Shippori Mincho",serif';g.fillText(`正答率 ${st.acc}%`,cx,660);
+   g.fillStyle=C.brassD;g.font='800 38px "Shippori Mincho",serif';g.fillText("称号："+(st.rank||""),cx,712);}
+ const d=new Date();g.fillStyle=C.ink2;g.font='italic 30px "EB Garamond",serif';g.fillText(`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日　—　The Enchanted Codex`,cx,H-150);
+ g.beginPath();g.arc(W-250,H-200,70,0,7);g.fillStyle=C.wax;g.fill();g.lineWidth=4;g.strokeStyle=C.brassD;g.stroke();g.font='56px serif';g.fillStyle="#fff";g.fillText("✦",W-250,H-182);
+ return cv;}
+$("#statsCertsPdf")&&($("#statsCertsPdf").onclick=async()=>{if(!classData)return;const line=passLine();
+ const ps=classData.students.filter(s=>s.acc>=line).sort((a,b)=>b.acc-a.acc);
+ if(!ps.length){alert("合格者がいません（合格ラインを下げてください）。");return;}
+ const btn=$("#statsCertsPdf"),lab=btn.textContent;btn.disabled=true;btn.textContent="生成中…";
+ try{const jpegs=[];for(const s of ps){const cv=await buildCertCanvasWithScore(s);jpegs.push({bytes:dataURLToBytes(cv.toDataURL("image/jpeg",0.92)),iw:cv.width,ih:cv.height});}
+   const pdf=buildJpegPDFMulti(jpegs);downloadBlob(new Blob([pdf],{type:"application/pdf"}),`Codex_Certificates_${stamp()}.pdf`);}
+ catch(err){alert("認可状PDFの生成に失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+
+/* ---------- motes (floating dust) ---------- */
+const cv=$("#motes"),cx2=cv.getContext('2d');let W,H,P;
+function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;}size();addEventListener('resize',size);
+function spawn(){return{x:Math.random()*W,y:H+Math.random()*H,r:Math.random()*2+.5,s:Math.random()*.45+.12,a:Math.random()*.55+.2,tw:Math.random()*6.28};}
+P=Array.from({length:64},spawn);
+function loop(){cx2.clearRect(0,0,W,H);for(const p of P){p.y-=p.s;p.x+=Math.sin(p.tw)*.3;p.tw+=.02;
+ if(p.y<-10)Object.assign(p,spawn(),{y:H+10});const fl=p.a*(.6+.4*Math.sin(p.tw*3));
+ const g=cx2.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);g.addColorStop(0,`rgba(255,205,110,${fl})`);g.addColorStop(.5,`rgba(220,150,60,${fl*.4})`);g.addColorStop(1,'rgba(220,150,60,0)');
+ cx2.fillStyle=g;cx2.beginPath();cx2.arc(p.x,p.y,p.r*4,0,7);cx2.fill();}requestAnimationFrame(loop);}loop();
+
+/* ---------- 開幕演出：オーロラ＋キラキラ✨★ ---------- */
+function openingMagic(){
+ const a=$("#aurora");if(a)setTimeout(()=>a.classList.add('show'),200);
+ const cvs=$("#opensparkle");if(!cvs)return;const g=cvs.getContext('2d');
+ let w2,h2;function sz(){w2=cvs.width=innerWidth;h2=cvs.height=innerHeight;}sz();addEventListener('resize',sz);
+ const COL=["#fff3c4","#ffd98a","#9adcaa","#8fb4ff","#e0a9ff","#ffffff"];
+ const star=(x,y,r,rot,col,al)=>{g.save();g.translate(x,y);g.rotate(rot);g.globalAlpha=al;g.fillStyle=col;
+   g.shadowColor=col;g.shadowBlur=12;g.beginPath();
+   for(let i=0;i<5;i++){g.lineTo(0,-r);g.rotate(Math.PI/5);g.lineTo(0,-r*0.45);g.rotate(Math.PI/5);}
+   g.closePath();g.fill();g.restore();};
+ let parts=[],t0=performance.now(),dur=2600;
+ const cx0=innerWidth/2,cy0=innerHeight/2;
+ for(let i=0;i<90;i++){const ang=Math.random()*Math.PI*2,sp=2+Math.random()*6;
+   parts.push({x:cx0+(Math.random()-.5)*220,y:cy0+(Math.random()-.5)*140,
+     vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp-1.5,r:4+Math.random()*9,
+     rot:Math.random()*6.28,vr:(Math.random()-.5)*.3,col:COL[(Math.random()*COL.length)|0],
+     life:0,max:1400+Math.random()*1000,shape:Math.random()>.5?"star":"dot"});}
+ function frame(now){const el=now-t0;g.clearRect(0,0,w2,h2);
+   parts.forEach(p=>{p.life+=16;p.x+=p.vx;p.y+=p.vy;p.vy+=0.045;p.vx*=0.99;p.rot+=p.vr;
+     const al=Math.max(0,1-p.life/p.max)*(0.6+0.4*Math.sin(p.life*0.02));
+     if(al<=0)return;
+     if(p.shape==="star")star(p.x,p.y,p.r,p.rot,p.col,al);
+     else{g.save();g.globalAlpha=al;g.fillStyle=p.col;g.shadowColor=p.col;g.shadowBlur=10;
+       g.beginPath();g.arc(p.x,p.y,p.r*0.5,0,7);g.fill();g.restore();}});
+   if(el<dur)requestAnimationFrame(frame);else g.clearRect(0,0,w2,h2);
+ }requestAnimationFrame(frame);
+}
+
+/* ====================== EDITOR ====================== */
+const panel=$("#panel"),dim=$("#dim");
+function openEd(){panel.classList.add('show');dim.classList.add('show');renderList();}
+function closeEd(){panel.classList.remove('show');dim.classList.remove('show');}
+$("#openEditor")&&($("#openEditor").onclick=openEd);
+$("#closeEditor").onclick=closeEd;dim.onclick=closeEd;
+$("#f-type").onchange=()=>{const t=$("#f-type").value;document.querySelectorAll('[data-only]').forEach(el=>el.classList.toggle('hidden',!el.dataset.only.split(' ').includes(t)));};
+$("#f-provider").onchange=()=>$("#openaiCfg").classList.toggle('hidden',$("#f-provider").value!=="openai");
+
+function renderList(){const L=$("#sceneList");L.innerHTML="";
+ deck.forEach((s,i)=>{const name=s.titleGrand||s.title||s.question||(s.type==="certificate"?"認可状（自動）":"（無題）");
+  const row=document.createElement('div');row.className='scene-row'+(i===idx?' cur':'');
+  if(s.type==="certificate"){row.innerHTML=`<span class="nm">${i+1}. 🏅 ${esc(name)}</span><span style="font-size:.7rem;color:#c9b48c">末尾固定</span>`;
+   row.querySelector('.nm').onclick=()=>go(i);L.appendChild(row);return;}
+  row.innerHTML=`<span class="nm" title="${esc(name)}">${i+1}. ${s.type==="quiz"?"❓ ":""}${esc(name)}</span>
+   <button data-up>▲</button><button data-down>▼</button><button data-edit>✎</button><button data-del>🗑</button>`;
+  row.querySelector('.nm').onclick=()=>go(i);
+  row.querySelector('[data-up]').onclick=()=>move(i,-1);
+  row.querySelector('[data-down]').onclick=()=>move(i,1);
+  row.querySelector('[data-edit]').onclick=()=>loadForm(i);
+  row.querySelector('[data-del]').onclick=()=>del(i);
+  L.appendChild(row);});}
+function commit(focus){assignIds();ensureCert();if(focus!=null)idx=focus;idx=Math.max(0,Math.min(idx,deck.length-1));buildRunes();paint();if(panel.classList.contains('show'))renderList();}
+function move(i,d){const j=i+d;if(j<0||j>=deck.length)return;if(deck[i].type==="certificate"||deck[j].type==="certificate")return;
+ [deck[i],deck[j]]=[deck[j],deck[i]];if(idx===i)idx=j;else if(idx===j)idx=i;commit();}
+function del(i){if(deck[i].type==="certificate"||deck.length<=2)return;deck.splice(i,1);if(idx>=deck.length)idx=deck.length-1;commit();}
+function insertBeforeEnd(arr){let ins=deck.findIndex(s=>s.type==="certificate");if(ins<0)ins=deck.length;deck.splice(ins,0,...arr);commit(ins);}
+
+function clearForm(){editIndex=null;["lesson","title","lead","bul","cmd","one","q","choices","explain","pet"].forEach(k=>{const el=$("#f-"+k);if(el)el.value="";});
+ $("#f-type").value="normal";$("#f-type").onchange();$("#formTitle").textContent="頁をつくる";$("#saveScene").textContent="＋ 追加する";}
+$("#clearForm").onclick=clearForm;
+function loadForm(i){editIndex=i;const s=deck[i];
+ $("#f-type").value=s.type==="cover"?"cover":(s.type==="quiz"?"quiz":"normal");$("#f-type").onchange();
+ $("#f-lesson").value=s.lesson||"";$("#f-title").value=s.titleGrand||s.title||"";
+ $("#f-lead").value=(s.lead||"").replace(/<br\s*\/?>/g,"\n").replace(/<[^>]+>/g,"");
+ $("#f-bul").value=(s.bullets||[]).map(b=>b.replace(/<[^>]+>/g,"")).join("\n");
+ $("#f-cmd").value=s.cmd||"";$("#f-one").value=s.one||"";
+ $("#f-q").value=s.question||"";
+ $("#f-choices").value=(s.choices||[]).map((c,k)=>(k===s.answer?"＊ ":"")+c).join("\n");
+ $("#f-explain").value=s.explain||"";$("#f-pet").value=s.pet||"";
+ $("#formTitle").textContent="頁を編集（"+(i+1)+"）";$("#saveScene").textContent="✔ 更新する";
+ panel.querySelector('.body').scrollTo({top:0,behavior:'smooth'});}
+function readForm(){const t=$("#f-type").value;const g=k=>($("#f-"+k).value||"").trim();
+ const s={html:false,pet:g("pet")};
+ if(t==="cover"){s.type="cover";s.kicker="The Enchanted Codex";s.titleGrand=g("title");if(g("lead"))s.lead=g("lead");s.emoji="🦉";}
+ else if(t==="quiz"){s.type="quiz";s.kicker="Trial";s.lesson=g("lesson");s.title=g("title")||"確認の試練";s.question=g("q");
+   const lines=$("#f-choices").value.split("\n").map(x=>x.trim()).filter(Boolean);
+   let ans=0;const choices=lines.map((l,k)=>{if(/^＊|^\*/.test(l)){ans=k;return l.replace(/^＊\s*|^\*\s*/,"");}return l;});
+   s.choices=choices;s.answer=ans;if(g("explain"))s.explain=g("explain");}
+ else{s.lesson=g("lesson");s.title=g("title");if(g("lead"))s.lead=g("lead");
+   const bul=$("#f-bul").value.split("\n").map(x=>x.trim()).filter(Boolean);if(bul.length)s.bullets=bul;
+   if(g("cmd"))s.cmd=$("#f-cmd").value.trim();if(g("one"))s.one=g("one");}
+ return s;}
+$("#saveScene").onclick=()=>{const s=readForm();
+ if(!s.title&&!s.titleGrand&&!s.lead&&!s.bullets&&!s.question)return;
+ if(editIndex!=null){deck[editIndex]=s;commit();}else{insertBeforeEnd([s]);}clearForm();};
+
+/* ---------- JSON ---------- */
+$("#exportBtn").onclick=()=>{$("#f-json").value=JSON.stringify(deck.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;}),null,2);$("#f-json").focus();$("#f-json").select();};
+$("#importBtn").onclick=()=>{try{const d=JSON.parse($("#f-json").value);if(!Array.isArray(d)||!d.length)throw 0;deck=d;results={};commit(0);flash("ok","教材を読み込みました。");}catch(e){flash("err","JSONの形式が正しくありません。");}};
+$("#resetBtn").onclick=()=>{deck=JSON.parse(JSON.stringify(defaultDeck));results={};commit(0);flash("ok","初期の教材に戻しました。");};
+function flash(k,t){const m=$("#aiMsg");m.className="msg "+k;m.textContent=t;setTimeout(()=>{m.className="msg";},4500);}
+
+/* ====================== AI SUMMON ====================== */
+function buildPrompt(topic,kind){
+ if(kind==="lesson")return `あなたは「魔法学校の呪文書」という、固有名詞を使わない一般的な魔法世界観の教材作家です。
+お題について、Linux初学者向けに「1つの講」をまるごと作成。本編1頁＋確認の試練（3択）1問。同じ講ラベルに。
+お題：「${topic}」
+次のJSONだけ返す（前置き・コードフェンス禁止）。
+{"lesson":"第◯講","title":"本編タイトル","lead":"魔導書らしい語り口で2〜3文。改行は \\n。HTMLタグ禁止","bullets":["要点3〜5個。各15〜30字。空配列可"],"cmd":"Linuxコマンド1〜3行。#で注釈可。無ければ空文字","one":"締めの一言","pet":"使い魔🦉のやさしい一言","quiz":{"title":"確認の試練","question":"設問1文","choices":["A","B","C"],"answer":0,"explain":"正解理由を1〜2文","pet":"🦉のヒント"}}`;
+ if(kind==="quiz")return `あなたは「魔法学校の呪文書」の確認試練作家です。Linux初学者向け3択を1問。
+お題：「${topic}」。選択肢は必ず3個・正解1つ。次のJSONだけ返す（前置き禁止）。
+{"lesson":"第◯講","title":"確認の試練","question":"設問1文","choices":["A","B","C"],"answer":0,"explain":"正解理由を1〜2文","pet":"🦉のヒント"}`;
+ return `あなたは「魔法学校の呪文書」（固有名詞なしの一般魔法世界観）の教材作家です。Linux初学者向けに1頁。
+お題：「${topic}」。次のJSONだけ返す（前置き禁止）。
+{"lesson":"第◯講","title":"タイトル","lead":"魔導書らしい語り口で2〜3文。改行は \\n。HTMLタグ禁止","bullets":["要点3〜5個。空配列可"],"cmd":"コマンド1〜3行。#注釈可。無ければ空文字","one":"締めの一言","pet":"🦉のやさしい一言"}`;}
+function mkQuiz(q,lesson){let choices=Array.isArray(q.choices)?q.choices.filter(c=>String(c).trim()).map(c=>String(c).trim()):[];
+ if(choices.length<2)throw new Error("選択肢を生成できませんでした");let ans=Number(q.answer);if(!Number.isInteger(ans)||ans<0||ans>=choices.length)ans=0;
+ return {type:"quiz",kicker:"Trial",lesson:lesson||q.lesson||"",title:q.title||"確認の試練",question:q.question||"",choices,answer:ans,explain:q.explain||"",pet:q.pet||""};}
+function mkScene(o){return {lesson:o.lesson||"",title:o.title||"新しい頁",lead:o.lead||"",bullets:Array.isArray(o.bullets)?o.bullets.filter(Boolean):[],cmd:o.cmd||"",one:o.one||"",pet:o.pet||"",html:false};}
+function parseJSON(t){return JSON.parse(t.replace(/```json|```/g,"").trim());}
+$("#summon").onclick=async()=>{const topic=$("#f-ai").value.trim();const btn=$("#summon");
+ if(!topic){flash("err","お題を入力してね。");return;}
+ const provider=$("#f-provider").value,kind=$("#f-aikind").value;
+ btn.disabled=true;btn.textContent="✦ 召喚中…";$("#aiMsg").className="msg";
+ try{const prompt=buildPrompt(topic,kind);const maxT=kind==="lesson"?1600:1000;let obj;
+   if(provider==="openai"){const key=$("#f-key").value.trim();const base=$("#f-base").value.trim().replace(/\/$/,"");const model=$("#f-model").value.trim()||"gpt-4.1-mini";
+     if(!key){flash("err","APIキーを入力してね。");btn.disabled=false;btn.textContent="✦ 召喚する";return;}
+     const res=await fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
+       body:JSON.stringify({model,max_tokens:maxT,response_format:{type:"json_object"},messages:[{role:"system",content:"JSONのみ返す教材作家"},{role:"user",content:prompt}]})});
+     const data=await res.json();if(data.error)throw new Error(data.error.message||"API error");obj=parseJSON(data.choices[0].message.content);
+   }else{const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxT,messages:[{role:"user",content:prompt}]})});
+     const data=await res.json();obj=parseJSON((data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n"));}
+   let entries,name;
+   if(kind==="lesson"){const sc=mkScene(obj);const qz=mkQuiz(obj.quiz||{},obj.lesson);entries=[sc,qz];name="講「"+sc.title+"」";}
+   else if(kind==="quiz"){entries=[mkQuiz(obj,obj.lesson)];name="試練「"+(obj.title||obj.question||"")+"」";}
+   else{const sc=mkScene(obj);entries=[sc];name="頁「"+sc.title+"」";}
+   insertBeforeEnd(entries);$("#f-ai").value="";flash("ok",name+"を召喚しました！");
+ }catch(err){flash("err","召喚に失敗："+(err.message||err));}
+ finally{btn.disabled=false;btn.textContent="✦ 召喚する";}};
+
+/* ====================== 配布 ====================== */
+function studentBaseHTML(){const clone=document.documentElement.cloneNode(true);
+ ["#runes","#page","#sceneList","#housePicker","#libList","#statsBody"].forEach(sel=>{const el=clone.querySelector(sel);if(el)el.innerHTML="";});
+ clone.querySelectorAll(".spark").forEach(e=>e.remove());clone.querySelectorAll("script[src]").forEach(e=>e.remove());
+ const d=clone.querySelector("#dim");if(d)d.className="dim";const p=clone.querySelector("#panel");if(p)p.className="panel";
+ const so=clone.querySelector("#statsOverlay");if(so)so.className="stats-overlay";
+ let out="<!DOCTYPE html>\n"+clone.outerHTML;
+ out=out.replace("\nconst STUDENT_MODE=false;","\nconst STUDENT_MODE=true;");
+ out=out.replace(/<title>[^<]*<\/title>/,"<title>魔法学校の呪文書（受講生版） — The Enchanted Codex</title>");
+ return out;}
+function syncTimeLimit(){const el=$("#timeLimit");if(el){const v=parseInt(el.value||"0",10);timeLimitMin=isNaN(v)?0:Math.max(0,Math.min(600,v));}}
+function bakeFrom(base,deckArr){const clean=deckArr.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;});
+ const dj=JSON.stringify(clean).replace(/<\//g,"<\\/");const hj=JSON.stringify(houseKey).replace(/<\//g,"<\\/");
+ const inject=`<script>window.BAKED_DECK=${dj};window.BAKED_HOUSE=${hj};window.BAKED_TIMELIMIT=${Number(timeLimitMin)||0};<\/script>\n`;
+ return base.replace("<script>\nconst STUDENT_MODE",inject+"<script>\nconst STUDENT_MODE");}
+function bakeStudent(){syncTimeLimit();return bakeFrom(studentBaseHTML(),deck);}
+$("#exportStudent").onclick=()=>{try{downloadBlob(new Blob([bakeStudent()],{type:"text/html;charset=utf-8"}),`Codex_Student_${stamp()}.html`);flash("ok","受講生版を書き出しました。");}catch(e){flash("err","書き出し失敗："+(e.message||e));}};
+function stamp(){const d=new Date();const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}`;}
+$("#exportCertPdf")&&($("#exportCertPdf").onclick=async()=>{await exportCertificatePDF();});
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error("ライブラリ読込失敗（オフライン？）"));document.head.appendChild(s);});}
+
+/* 教材ライブラリ＋ZIP */
+let library=[];
+function slug(s){return toAsciiName(s)||"deck";}
+function renderLib(){const L=$("#libList");if(!L)return;L.innerHTML="";
+ library.forEach((it,i)=>{const r=document.createElement('div');r.className='lib-row';
+  r.innerHTML=`<span class="nm">${i+1}. ${esc(it.name)}（${it.deck.filter(s=>s.type!=="certificate").length}頁）</span><button data-x>🗑</button>`;
+  r.querySelector('[data-x]').onclick=()=>{library.splice(i,1);renderLib();};L.appendChild(r);});}
+$("#libAdd")&&($("#libAdd").onclick=()=>{const nm=($("#libName").value||"").trim()||`教材${library.length+1}`;
+ library.push({name:nm,deck:JSON.parse(JSON.stringify(deck))});$("#libName").value="";renderLib();flash("ok",`「${nm}」を追加（計${library.length}）`);});
+$("#exportZip")&&($("#exportZip").onclick=async()=>{const btn=$("#exportZip"),lab=btn.textContent;btn.disabled=true;btn.textContent="📦 生成中…";syncTimeLimit();
+ try{if(!window.JSZip)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  const items=library.length?library:[{name:"Linux入門",deck:JSON.parse(JSON.stringify(deck))}];
+  const base=studentBaseHTML();const zip=new window.JSZip();const used={};const man=[];
+  items.forEach(it=>{let nm=slug(it.name);if(used[nm])nm+="_"+(++used[nm]);else used[nm]=1;
+   zip.file(`Codex_${nm}_Student.html`,bakeFrom(base,it.deck));man.push(`${it.name}\tCodex_${nm}_Student.html\t${it.deck.filter(s=>s.type!=="certificate").length} pages`);});
+  zip.file("README.txt",`${APP_VERSION}\n魔法学校の呪文書 (The Enchanted Codex)\nGenerated: ${new Date().toISOString()}\n\nName\tFile\tPages\n`+man.join("\n"));
+  downloadBlob(await zip.generateAsync({type:"blob"}),`Codex_Distribution_${stamp()}.zip`);flash("ok",`ZIP書き出し（${items.length}件）`);}
+ catch(err){flash("err","ZIP失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+
+/* フル配布パック：HTML＋教材JSON＋認可状テンプレPNG＋回収＋運用メモ */
+async function certTemplatePngBlob(){const cv=await buildCertCanvasWithScore({name:"",acc:"__",rank:""});return await new Promise(r=>cv.toBlob(b=>r(b),"image/png"));}
+$("#exportFullPack")&&($("#exportFullPack").onclick=async()=>{const btn=$("#exportFullPack"),lab=btn.textContent;btn.disabled=true;btn.textContent="🎁 生成中…";syncTimeLimit();
+ try{if(!window.JSZip)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  const items=library.length?library:[{name:"Linux入門",deck:JSON.parse(JSON.stringify(deck))}];
+  const base=studentBaseHTML();const zip=new window.JSZip();const used={};const man=[];
+  let certBlob=null;try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+  try{const cv=await buildCertCanvasWithScore({name:"",acc:"",rank:""});certBlob=await new Promise(r=>cv.toBlob(b=>r(b),"image/png"));}catch(e){}
+  for(const it of items){let nm=slug(it.name);if(used[nm])nm+="_"+(++used[nm]);else used[nm]=1;const f=zip.folder(nm);
+   const clean=it.deck.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;});
+   f.file(`Codex_${nm}_Student.html`,bakeFrom(base,it.deck));
+   f.file(`Codex_${nm}_Deck.json`,JSON.stringify(clean,null,2));
+   if(certBlob)f.file(`Codex_Certificate_Template.png`,certBlob);
+   man.push(`${it.name}\t${nm}/\t${clean.length} pages`);}
+  const rec=zip.folder("_結果回収");rec.file("ここに結果JSONを集めてください.txt",`受講生が認可状画面の「結果を提出」で保存したJSON（例：Result_yamada_Codex_${stamp()}.json）をこのフォルダに集め、教材編集の「クラス集計」で読み込んでください。`);
+  zip.file("運用手順.txt",`【運用手順】${APP_VERSION}\n1. 各フォルダの *_Student.html を配布（ブラウザで開くだけ）\n2. 受講→各試練に回答→認可状で氏名入力・PNG保存\n3. 「結果を提出」のJSONを _結果回収/ に集約\n4. 教材編集→クラス集計でJSONを読み込み、合格判定・合格者認可状PDF\n※HTML/認可状/結果JSON/集計はオフライン動作。ZIPのみオンライン。`);
+  zip.file("README.txt",`${APP_VERSION} フル配布パック\nGenerated: ${new Date().toISOString()}\n\n各フォルダ: *_Student.html / *_Deck.json / Certificate_Template.png\nName\tFolder\tPages\n`+man.join("\n"));
+  downloadBlob(await zip.generateAsync({type:"blob"}),`Codex_FullPack_${stamp()}.zip`);flash("ok",`フルパック書き出し（${items.length}件）`);}
+ catch(err){flash("err","フルパック失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+
+/* ====================== 進捗保存（受講生） ====================== */
+function deckSig(){let n=0,s=0;deck.forEach(d=>{if(d.type==="quiz")n++;const t=(d.title||d.titleGrand||"")+"";for(let i=0;i<t.length;i++)s=(s*31+t.charCodeAt(i))>>>0;});return "codex_"+deck.length+"_"+n+"_"+s.toString(16);}
+function saveProgress(){try{localStorage.setItem(deckSig(),JSON.stringify({idx,results,attempts,startedAt,learnerName,t:Date.now()}));}catch(e){}}
+function loadProgress(){try{const r=localStorage.getItem(deckSig());return r?JSON.parse(r):null;}catch(e){return null;}}
+function clearProgress(){try{localStorage.removeItem(deckSig());}catch(e){}}
+
+/* ====================== 制限時間タイマー ====================== */
+let timeUpFired=false;
+function fmtClock(sec){sec=Math.max(0,sec);const m=Math.floor(sec/60),s=sec%60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;}
+function tickTimer(){if(!STUDENT_MODE||!timeLimitMin)return;const el=$("#timer");const remain=Math.round((startedAt+timeLimitMin*60000-Date.now())/1000);el.classList.add('show');
+ if(remain>0){el.textContent="⏳ 残り "+fmtClock(remain);el.classList.toggle('warn',remain<=60);el.classList.remove('over');}
+ else{el.textContent="⏰ 時間終了";el.classList.remove('warn');el.classList.add('over');if(!timeUpFired){timeUpFired=true;
+  const last=deck.length-1;if(deck[last]&&deck[last].type==="certificate"&&idx!==last){setTimeout(()=>{if(confirm("制限時間になりました。認可状へ進みますか？"))go(last);},100);}}}}
+
+/* ====================== house picker ====================== */
+(function(){const wrap=$("#housePicker");if(!wrap)return;
+ Object.entries(HOUSES).forEach(([k,h])=>{const b=document.createElement('div');b.className='hp'+(k===houseKey?' on':'');
+  b.title=h.label;b.textContent=h.icon;b.style.background=`linear-gradient(160deg,${h.waxL},${h.wax})`;b.style.color="#fff";
+  b.onclick=()=>{applyHouse(k);[...wrap.children].forEach(c=>c.classList.remove('on'));b.classList.add('on');};
+  wrap.appendChild(b);});})();
+
+/* ---------- init ---------- */
+applyHouse(houseKey);assignIds();ensureCert();
+if(STUDENT_MODE){const sv=loadProgress();
+ if(sv&&(sv.idx>0||(sv.results&&Object.keys(sv.results).length))){setTimeout(()=>{
+   if(confirm("前回の続きから再開しますか？\n（「キャンセル」で最初から）")){results=sv.results||{};attempts=sv.attempts||{};if(sv.startedAt)startedAt=sv.startedAt;learnerName=sv.learnerName||"";idx=Math.max(0,Math.min(sv.idx||0,deck.length-1));paint();}
+   else{clearProgress();startedAt=Date.now();}},500);}
+ if(timeLimitMin){tickTimer();setInterval(tickTimer,1000);}}
+buildRunes();paint();
+$("#ver").textContent=APP_VERSION+(STUDENT_MODE?" · 受講生版":"");
+if(STUDENT_MODE){const tb=$(".toolbar");if(tb)tb.style.display="none";}
+$("#f-type")&&$("#f-type").onchange();
+openingMagic();
+</script>
+</body>
+</html>
