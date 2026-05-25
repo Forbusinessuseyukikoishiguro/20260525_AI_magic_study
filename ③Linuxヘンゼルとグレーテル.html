@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux ヘンゼルとグレーテル — お菓子の家のLinuxレッスンB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Klee+One:wght@400;600&family=Kosugi+Maru&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --forest:#1b2a1f;--forest-2:#102016;--forest-3:#0a140d;
+  --moss:#3a5a3f;--moss-l:#5c8a5f;
+  --ginger:#a8682f;--ginger-d:#7c4a1e;--ginger-l:#c98a4e;
+  --icing:#fff6ee;--icing-2:#ffe9d6;
+  --candy-pink:#f2849e;--candy-pink-d:#d85f7c;
+  --candy-mint:#7fd0b6;--candy-mint-d:#4fa98c;
+  --candy-lemon:#f6d365;--candy-lemon-d:#e0b13e;
+  --candy-berry:#9b5bb0;--candy-berry-d:#7a4090;
+  --cocoa:#5a3a26;--cocoa-2:#3e2818;
+  --cream:#fff9f2;--cream-2:#ffeedd;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:"Klee One","Zen Maru Gothic",sans-serif;color:var(--cocoa);
+  background:radial-gradient(130% 120% at 50% -10%,#26402c 0%,#13241a 55%,#080f0a 100%);
+  position:relative;-webkit-tap-highlight-color:transparent}
+/* もや（森の空気） */
+body::after{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.5;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");mix-blend-mode:overlay}
+/* 月あかり */
+.moon{position:fixed;top:-60px;left:50%;transform:translateX(-50%);z-index:1;pointer-events:none;width:min(60vw,520px);height:280px;
+  background:radial-gradient(closest-side,rgba(255,245,210,.3),rgba(220,230,200,.1) 52%,transparent 72%);filter:blur(10px)}
+/* 木のシルエット */
+.trees{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.55}
+.trees svg{position:absolute;bottom:0;width:100%;height:42%}
+.trees path{fill:#0a140d}
+
+/* 蛍 */
+#fly{position:fixed;inset:0;z-index:2;pointer-events:none}
+
+/* ===== お菓子の家（カード） ===== */
+.clearing{position:fixed;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;padding:18px}
+.cottage{position:relative;width:min(96vw,1000px);height:min(90vh,672px)}
+/* 屋根（ジンジャーブレッド＋アイシング） */
+.roof{position:absolute;top:-2px;left:-10px;right:-10px;height:64px;z-index:6;
+  background:repeating-linear-gradient(90deg,var(--ginger) 0 30px,var(--ginger-d) 30px 34px);
+  border-radius:14px 14px 0 0;box-shadow:0 6px 14px rgba(0,0,0,.4),inset 0 -6px 0 rgba(0,0,0,.15)}
+.roof::before{content:"";position:absolute;left:0;right:0;bottom:-10px;height:18px;
+  background:radial-gradient(circle at 12px -2px,var(--icing) 12px,transparent 13px) repeat-x;background-size:24px 18px;
+  filter:drop-shadow(0 2px 1px rgba(0,0,0,.15))}
+/* 屋根の上の飴 */
+.roof .gum{position:absolute;top:14px;width:18px;height:18px;border-radius:50%;box-shadow:0 2px 3px rgba(0,0,0,.3),inset 0 -3px 4px rgba(0,0,0,.18)}
+/* 本体（ビスケットの壁） */
+.walls{position:absolute;inset:54px 0 0;border-radius:6px 6px 16px 16px;z-index:4;
+  background:
+    linear-gradient(180deg,#e8c9a0,#dcb588 60%,#cfa676);
+  box-shadow:0 30px 70px -26px rgba(0,0,0,.8),inset 0 0 0 3px rgba(124,74,30,.35),inset 0 0 40px rgba(124,74,30,.18)}
+.walls::before{content:"";position:absolute;inset:10px;border-radius:5px;pointer-events:none;
+  border:3px dashed rgba(255,246,238,.6)}
+/* アイシングのふち飾り */
+.walls::after{content:"";position:absolute;left:6px;right:6px;top:4px;height:14px;pointer-events:none;
+  background:radial-gradient(circle at 11px 0,var(--icing) 11px,transparent 12px) repeat-x;background-size:22px 14px;opacity:.9}
+
+/* めくられる「物語のページ」＝アイシングの板 */
+.page-area{position:absolute;inset:78px clamp(22px,3.4vw,40px) clamp(58px,7vw,72px);z-index:5;display:flex}
+.page{position:relative;flex:1;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;padding:clamp(24px,4vw,46px);
+  background:radial-gradient(130% 120% at 50% 0%,var(--cream),var(--cream-2));
+  box-shadow:inset 0 0 0 3px rgba(242,132,158,.3),inset 0 0 30px rgba(168,104,47,.12),0 8px 20px rgba(0,0,0,.2);
+  transition:opacity .42s ease,transform .5s cubic-bezier(.2,.7,.3,1)}
+.page.leaving{opacity:0;transform:translateY(-10px) scale(.99)}
+
+/* 見出し */
+.head{text-align:center;margin-bottom:1rem}
+.crumbs{font-family:"Kosugi Maru",sans-serif;letter-spacing:.2em;font-size:clamp(.62rem,1.6vw,.8rem);color:var(--candy-pink-d)}
+.crumbs .b{opacity:.6}
+.title{font-family:"Mochiy Pop One","Zen Maru Gothic",sans-serif;font-size:clamp(1.3rem,3.6vw,2rem);color:var(--cocoa);line-height:1.3;margin-top:.4rem}
+.title-grand{font-family:"Mochiy Pop One",sans-serif;font-size:clamp(2rem,6.6vw,3.4rem);line-height:1.12;
+  color:transparent;background:linear-gradient(180deg,var(--candy-pink),var(--candy-berry) 90%);-webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 2px 0 rgba(255,255,255,.5))}
+.subtitle{font-family:"Kosugi Maru",sans-serif;font-size:clamp(.92rem,2.2vw,1.18rem);color:var(--ginger-d);margin-top:.5rem}
+.candy-rule{width:clamp(120px,32vw,200px);height:14px;margin:.55rem auto .2rem;border-radius:999px;
+  background:repeating-linear-gradient(45deg,var(--candy-pink) 0 8px,#fff 8px 16px);box-shadow:0 2px 4px rgba(0,0,0,.18)}
+
+.body-scroll{flex:1;overflow:auto;padding-right:6px}
+.body-scroll::-webkit-scrollbar{width:7px}.body-scroll::-webkit-scrollbar-thumb{background:var(--candy-pink);border-radius:4px}
+
+.prose{font-family:"Klee One",serif;font-size:clamp(1.02rem,2.4vw,1.22rem);line-height:1.95;color:#4a3526;text-align:justify}
+.prose.story::first-letter{font-family:"Mochiy Pop One",sans-serif;font-size:2.4em;line-height:.9;float:left;color:var(--candy-pink-d);padding:.04em .1em 0 0}
+.prose .hi{color:var(--candy-pink-d);font-weight:700}
+.prose b{color:var(--cocoa);font-weight:700}
+.moral{margin-top:1rem;font-family:"Mochiy Pop One",sans-serif;font-size:clamp(1rem,2.5vw,1.28rem);color:var(--candy-berry-d);text-align:center}
+/* 教え＝キャンディの粒 */
+.candies{list-style:none;margin-top:1rem;display:grid;gap:.6rem}
+.candies li{display:flex;gap:.7rem;align-items:baseline;font-family:"Klee One",serif;font-size:clamp(1rem,2.3vw,1.18rem);line-height:1.55;color:#4a3526}
+.candies .drop{flex:0 0 auto;width:1.5em;height:1.5em;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-family:"Mochiy Pop One",sans-serif;font-size:.78em;color:#fff;box-shadow:0 2px 3px rgba(0,0,0,.25),inset 0 -2px 3px rgba(0,0,0,.18)}
+/* コマンド＝ジンジャーブレッドの札 */
+.gingers{margin-top:1.1rem;display:grid;gap:.5rem}
+.gingers .row{display:flex;gap:.6rem;align-items:center;font-family:"Kosugi Maru",monospace;
+  background:linear-gradient(180deg,var(--ginger-l),var(--ginger));border:2px solid var(--ginger-d);border-radius:10px;
+  padding:.45rem .75rem;font-size:clamp(.84rem,2vw,1rem);color:#3a2412;box-shadow:0 3px 6px rgba(80,50,20,.3),inset 0 0 0 2px rgba(255,246,238,.35)}
+.gingers .row .cmd{font-weight:700;color:#2e1c0e}
+.gingers .row .gloss{color:#6a4628;font-family:"Klee One",serif}
+
+/* 森の問いかけ（クイズ） */
+.ask-q{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:clamp(1.06rem,2.7vw,1.4rem);color:var(--cocoa);margin:.3rem auto 1rem;max-width:32ch;line-height:1.5;text-align:center}
+.choices{display:grid;gap:.6rem;max-width:34ch;margin:0 auto}
+.choice{display:flex;gap:.7rem;align-items:center;cursor:pointer;text-align:left;font-family:"Klee One",sans-serif;font-size:clamp(.98rem,2.3vw,1.16rem);color:#4a3526;
+  background:linear-gradient(180deg,#fff,#ffeedd);border:2px solid var(--candy-pink);border-radius:14px;padding:.6rem .9rem;
+  box-shadow:0 3px 7px rgba(168,104,47,.18);transition:.16s}
+.choice:hover:not(:disabled){transform:translateY(-1px) scale(1.01);box-shadow:0 6px 14px rgba(168,104,47,.26)}
+.choice .pip{flex:0 0 auto;width:1.6em;height:1.6em;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-family:"Mochiy Pop One",sans-serif;font-size:.8em;color:#fff;background:linear-gradient(180deg,var(--candy-mint),var(--candy-mint-d));box-shadow:inset 0 -2px 3px rgba(0,0,0,.18)}
+.choice:disabled{cursor:default}
+.choice.ok{background:linear-gradient(180deg,#d4f0e2,#a9e3cb);border-color:var(--candy-mint-d);color:#1d6b4f}
+.choice.ok .pip{background:linear-gradient(180deg,#56c596,var(--candy-mint-d))}
+.choice.ng{background:linear-gradient(180deg,#ffd9e2,#f4aebd);border-color:var(--candy-pink-d);color:#9a3552}
+.verdict{margin-top:1rem;font-family:"Mochiy Pop One",sans-serif;font-size:clamp(1.02rem,2.5vw,1.28rem);color:var(--candy-pink-d);min-height:1.4em;text-align:center}
+.verdict .ex{display:block;font-family:"Klee One",sans-serif;font-size:clamp(.84rem,2vw,1rem);color:#6a4628;margin-top:.4rem;line-height:1.6;font-weight:400}
+.candy-pop{position:absolute;font-size:1.3rem;pointer-events:none;z-index:8;animation:pop 1.3s ease forwards}
+@keyframes pop{0%{opacity:0;transform:translateY(0) scale(.4) rotate(0)}18%{opacity:1}100%{opacity:0;transform:translateY(-100px) scale(1.2) rotate(40deg)}}
+
+/* 修了証＝お菓子の家の証文 */
+.diploma{text-align:center;display:flex;flex-direction:column;height:100%}
+.dip-frame{position:relative;margin:.2rem auto 0;padding:clamp(18px,4vw,38px) clamp(16px,4vw,36px);border-radius:14px;flex:1;display:flex;flex-direction:column;justify-content:center;
+  background:radial-gradient(120% 120% at 50% 0%,#fff,#ffeedd);border:3px solid var(--candy-pink);
+  box-shadow:inset 0 0 0 4px rgba(127,208,182,.35),inset 0 0 30px rgba(168,104,47,.12)}
+.dip-frame::before{content:"";position:absolute;inset:7px;border:2px dashed rgba(155,91,176,.4);border-radius:9px;pointer-events:none}
+.dip-kicker{font-family:"Kosugi Maru",sans-serif;letter-spacing:.2em;font-size:clamp(.64rem,1.6vw,.82rem);color:var(--candy-berry-d)}
+.dip-title{font-family:"Mochiy Pop One",sans-serif;font-size:clamp(1.6rem,5.4vw,2.7rem);color:transparent;background:linear-gradient(180deg,var(--candy-pink),var(--candy-berry));-webkit-background-clip:text;background-clip:text;margin:.2rem 0}
+.dip-rule{width:150px;height:12px;margin:.5rem auto .8rem;border-radius:999px;background:repeating-linear-gradient(45deg,var(--candy-mint) 0 7px,#fff 7px 14px)}
+.dip-line{font-family:"Klee One",sans-serif;font-size:clamp(.96rem,2.4vw,1.18rem);line-height:1.9;color:#4a3526}
+.dip-line b{color:var(--candy-pink-d)}
+.dip-recip{color:var(--candy-berry-d);font-weight:700;font-size:1.16em;border-bottom:3px dotted rgba(155,91,176,.5);padding:0 .4em 1px}
+.dip-score{margin-top:1rem;font-family:"Mochiy Pop One",sans-serif;font-size:clamp(1.05rem,3vw,1.5rem);color:var(--cocoa)}
+.dip-score b{color:var(--candy-pink-d);font-size:1.1em}
+.dip-rank{margin-top:.4rem;font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:clamp(1rem,2.6vw,1.3rem);color:var(--ginger-d)}
+.dip-rank b{color:var(--candy-pink-d)}
+.dip-break{margin:.7rem auto 0;max-width:30ch;display:grid;gap:.16rem;text-align:left;font-family:"Klee One",sans-serif;font-size:clamp(.75rem,1.9vw,.9rem)}
+.dip-break .r{display:flex;gap:.5rem}.dip-break .r .l{flex:0 0 auto;color:var(--candy-berry-d)}
+.dip-break .r .t{flex:1;color:#6a4628;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dip-seal{position:absolute;right:clamp(10px,3vw,20px);bottom:clamp(8px,2.5vw,16px);width:clamp(50px,11vw,72px);height:clamp(50px,11vw,72px);
+  display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:clamp(1.5rem,4vw,2.1rem);
+  background:radial-gradient(circle at 40% 30%,var(--candy-lemon),var(--candy-lemon-d));border:3px solid #fff;
+  box-shadow:0 3px 8px rgba(160,120,30,.5);transform:rotate(-8deg)}
+.dip-date{margin-top:1rem;font-family:"Kosugi Maru",sans-serif;font-size:clamp(.85rem,2.2vw,1.06rem);color:#6a4628}
+.dip-actions{margin-top:1rem;display:flex;flex-direction:column;align-items:center;gap:.6rem}
+.dip-name-in{font-family:"Klee One",sans-serif;font-size:clamp(.9rem,2.3vw,1.08rem);text-align:center;color:var(--cocoa);
+  background:#fff;border:2px solid var(--candy-pink);border-radius:12px;padding:.5rem .9rem;width:min(320px,80%)}
+.dip-name-in:focus{outline:none;border-color:var(--candy-berry);box-shadow:0 0 0 3px rgba(155,91,176,.16)}
+.dip-btns{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center}
+.sweet-btn{font-family:"Mochiy Pop One",sans-serif;cursor:pointer;color:#fff;border:none;border-radius:999px;padding:.5rem 1.1rem;font-size:.9rem;
+  background:linear-gradient(180deg,var(--candy-pink),var(--candy-pink-d));box-shadow:0 4px 10px rgba(216,95,124,.4);transition:.2s}
+.sweet-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.sweet-btn.ghost{background:none;color:var(--ginger-d);border:2px solid rgba(168,104,47,.5);box-shadow:none}
+.sweet-btn.ghost:hover{color:var(--cocoa);border-color:var(--cocoa)}
+
+/* reveal */
+.page .rise{animation:rise .65s cubic-bezier(.2,.7,.3,1) backwards}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.page .rise:nth-child(1){animation-delay:.06s}.page .rise:nth-child(2){animation-delay:.18s}
+.page .rise:nth-child(3){animation-delay:.3s}.page .rise:nth-child(4){animation-delay:.42s}
+.page .rise:nth-child(5){animation-delay:.54s}
+
+/* 語り部（小鳥） */
+.teller{display:flex;align-items:flex-end;gap:.5rem;justify-content:center;margin-top:.8rem}
+.teller .who{font-size:clamp(1.6rem,4.6vw,2.3rem);animation:hop 3s ease-in-out infinite;filter:drop-shadow(0 3px 4px rgba(0,0,0,.2))}
+@keyframes hop{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
+.teller .say{background:linear-gradient(180deg,#fff,#ffeedd);border:2px solid var(--candy-lemon);border-radius:16px;padding:.45rem .8rem;
+  font-family:"Kosugi Maru",sans-serif;font-size:clamp(.8rem,2vw,1rem);color:#6a4628;line-height:1.45;box-shadow:0 5px 12px rgba(160,120,30,.25);position:relative;max-width:34ch}
+.teller .say::after{content:"";position:absolute;left:-8px;bottom:12px;border:8px solid transparent;border-right-color:var(--candy-lemon)}
+
+/* nav */
+.nav{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:14px}
+.nav button{font-family:"Mochiy Pop One",sans-serif;background:linear-gradient(180deg,var(--candy-pink),var(--candy-pink-d));color:#fff;
+  border:2px solid #fff;width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.45);transition:.2s}
+.nav button:hover{transform:translateY(-2px) scale(1.05)}
+.nav button:disabled{opacity:.35;cursor:not-allowed;transform:none}
+/* パンくずの道 */
+.trail{display:flex;gap:9px;flex-wrap:wrap;max-width:48vw;justify-content:center}
+.crumb{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e8c9a0,var(--ginger));border:1px solid var(--ginger-d);cursor:pointer;transition:.25s;opacity:.7}
+.crumb.on{background:radial-gradient(circle at 35% 30%,#fff,var(--candy-pink));border-color:var(--candy-pink-d);transform:scale(1.4);opacity:1;box-shadow:0 0 10px var(--candy-pink)}
+.hint{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:30;font-family:"Kosugi Maru",sans-serif;letter-spacing:.14em;font-size:.66rem;color:rgba(255,220,180,.6);animation:fade 5s ease forwards;animation-delay:4.5s}
+@keyframes fade{to{opacity:0;visibility:hidden}}
+.ver{position:fixed;left:14px;bottom:14px;z-index:25;font-family:"Kosugi Maru",sans-serif;letter-spacing:.08em;font-size:.62rem;color:rgba(255,220,180,.45)}
+/* timer */
+.timer{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:28;display:none;align-items:center;gap:8px;
+  font-family:"Mochiy Pop One",sans-serif;font-size:.96rem;color:#fff;
+  background:linear-gradient(180deg,var(--candy-pink),var(--candy-pink-d));border:2px solid #fff;border-radius:999px;padding:.38rem .95rem;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.timer.show{display:flex}
+.timer.warn{color:#fff;background:linear-gradient(180deg,var(--candy-lemon),var(--candy-lemon-d));animation:tpulse 1s ease-in-out infinite}
+.timer.over{background:linear-gradient(180deg,var(--candy-berry),var(--candy-berry-d))}
+@keyframes tpulse{0%,100%{box-shadow:0 6px 16px rgba(0,0,0,.4)}50%{box-shadow:0 6px 22px rgba(246,211,101,.7)}}
+/* toolbar */
+.toolbar{position:fixed;top:14px;left:14px;z-index:30}
+.tbtn{font-family:"Mochiy Pop One",sans-serif;font-size:.74rem;cursor:pointer;
+  background:linear-gradient(180deg,var(--candy-pink),var(--candy-pink-d));color:#fff;border:2px solid #fff;
+  padding:.5rem 1rem;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.4);transition:.2s}
+.tbtn:hover{transform:translateY(-1px) scale(1.03)}
+/* editor panel */
+.dim{position:fixed;inset:0;background:rgba(15,20,12,.6);z-index:40;opacity:0;visibility:hidden;transition:.3s}
+.dim.show{opacity:1;visibility:visible}
+.panel{position:fixed;top:0;right:0;height:100%;width:min(444px,95vw);z-index:50;
+  background:linear-gradient(180deg,#fff9f2,#ffeedd);color:var(--cocoa);border-left:6px solid var(--candy-pink);
+  box-shadow:-20px 0 50px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .4s cubic-bezier(.2,.7,.3,1);display:flex;flex-direction:column;font-family:"Klee One",sans-serif}
+.panel.show{transform:none}
+.panel header{padding:18px 20px;border-bottom:2px dashed rgba(242,132,158,.4);display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(180deg,var(--candy-pink),var(--candy-pink-d))}
+.panel header h2{font-family:"Mochiy Pop One",sans-serif;font-size:1.1rem;color:#fff}
+.panel .x{background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer}
+.panel .body{padding:16px 20px;overflow-y:auto;flex:1}
+.sec{margin-bottom:22px}
+.sec h3{font-family:"Mochiy Pop One",sans-serif;font-size:.84rem;color:var(--candy-berry-d);margin-bottom:10px;border-bottom:2px dotted rgba(155,91,176,.3);padding-bottom:6px}
+.scene-row{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:10px;background:rgba(242,132,158,.1);margin-bottom:6px;font-size:.85rem}
+.scene-row .nm{flex:1;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scene-row.cur{outline:2px solid var(--candy-pink);background:rgba(242,132,158,.2)}
+.scene-row button{background:rgba(168,104,47,.12);border:none;color:var(--cocoa);width:26px;height:26px;border-radius:8px;cursor:pointer;font-size:.78rem}
+.scene-row button:hover{background:var(--candy-pink);color:#fff}
+.fld{margin-bottom:11px}
+.fld label{display:block;font-size:.71rem;color:var(--ginger-d);margin-bottom:4px}
+.fld input,.fld textarea,.fld select{width:100%;background:#fff;border:2px solid rgba(242,132,158,.4);border-radius:10px;color:var(--cocoa);padding:8px 10px;font-family:"Klee One",sans-serif;font-size:.89rem;resize:vertical}
+.fld textarea{min-height:60px;line-height:1.5}
+.fld textarea.mono{font-family:"Kosugi Maru",monospace;font-size:.84rem}
+.fld input:focus,.fld textarea:focus,.fld select:focus{outline:none;border-color:var(--candy-berry);box-shadow:0 0 0 3px rgba(155,91,176,.14)}
+.act-btn{width:100%;font-family:"Mochiy Pop One",sans-serif;cursor:pointer;border:none;border-radius:12px;padding:11px;font-size:.9rem;color:#fff;
+  background:linear-gradient(180deg,var(--ginger-l),var(--ginger));box-shadow:0 4px 10px rgba(124,74,30,.3);transition:.2s;margin-top:4px}
+.act-btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.act-btn.ghost{background:#fff;color:var(--ginger-d);border:2px solid rgba(168,104,47,.4);box-shadow:none}
+.act-btn.ghost:hover{color:var(--cocoa);border-color:var(--cocoa)}
+.act-btn.candy{background:linear-gradient(180deg,var(--candy-pink),var(--candy-pink-d))}
+.act-btn:disabled{opacity:.5;cursor:wait}
+.note{font-size:.71rem;line-height:1.5;color:var(--ginger-d);margin-top:8px}
+.msg{font-size:.78rem;margin-top:8px;padding:8px 10px;border-radius:10px;display:none}
+.msg.err{display:block;background:rgba(216,95,124,.14);border:2px solid var(--candy-pink-d);color:#9a3552}
+.msg.ok{display:block;background:rgba(127,208,182,.18);border:2px solid var(--candy-mint-d);color:#1d6b4f}
+.row2{display:flex;gap:8px}.row2>*{flex:1}
+.hidden{display:none}
+.lib-row{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:10px;background:rgba(242,132,158,.1);margin-bottom:5px;font-size:.84rem}
+.lib-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-row button{background:rgba(168,104,47,.12);border:none;color:var(--cocoa);width:24px;height:24px;border-radius:8px;cursor:pointer;font-size:.78rem}
+/* stats overlay */
+.stats-overlay{position:fixed;inset:0;z-index:60;background:rgba(15,20,12,.82);display:none;align-items:center;justify-content:center;padding:18px}
+.stats-overlay.show{display:flex}
+.stats-box{width:min(900px,96vw);max-height:92vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#fff9f2,#ffeedd);border:3px solid var(--candy-pink);border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,.6);color:var(--cocoa);font-family:"Klee One",sans-serif}
+.stats-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:2px dashed rgba(242,132,158,.4);gap:10px;flex-wrap:wrap;background:linear-gradient(180deg,var(--candy-pink),var(--candy-pink-d));border-radius:15px 15px 0 0}
+.stats-head h2{font-family:"Mochiy Pop One",sans-serif;font-size:1.12rem;color:#fff}
+.stats-head-btns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.stats-head .x{background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer}
+.stats-head .act-btn.ghost{color:#fff;border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.12)}
+.stats-body{padding:18px 20px;overflow:auto}
+.stats-kpi{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.kpi{flex:1;min-width:110px;background:rgba(242,132,158,.1);border:2px solid rgba(242,132,158,.3);border-radius:14px;padding:12px 14px;text-align:center}
+.kpi b{display:block;font-size:1.7rem;color:var(--candy-pink-d);font-family:"Mochiy Pop One",sans-serif}
+.kpi span{font-size:.72rem;color:var(--ginger-d)}
+.stats-sub{font-family:"Mochiy Pop One",sans-serif;font-size:.84rem;color:var(--candy-berry-d);margin:16px 0 8px;border-bottom:2px dotted rgba(155,91,176,.3);padding-bottom:6px}
+.heat{width:100%;border-collapse:collapse;font-size:.84rem}
+.heat th,.heat td{padding:7px 9px;text-align:left;border-bottom:1px solid rgba(168,104,47,.14)}
+.heat th{color:var(--candy-berry-d);font-size:.74rem;font-family:"Mochiy Pop One",sans-serif}
+.heat td.rate{text-align:center;font-weight:700;color:#4a3526;border-radius:8px;min-width:58px}
+.heat td.num{text-align:center;color:var(--ginger-d)}
+.heat .lsn{color:var(--candy-pink-d)}
+.bar{height:9px;border-radius:999px;background:rgba(168,104,47,.14);overflow:hidden}
+.bar i{display:block;height:100%}
+@media (max-width:640px){.teller .say{max-width:100%}}
+</style>
+</head>
+<body>
+<div class="moon"></div>
+<div class="trees"><svg viewBox="0 0 1200 300" preserveAspectRatio="none"><path d="M0 300 L0 180 L40 200 L60 120 L90 190 L120 90 L150 185 L200 200 L230 130 L260 195 L300 110 L340 190 L380 200 L410 140 L450 195 L500 100 L540 188 L590 200 L620 150 L660 192 L700 110 L740 190 L800 200 L840 130 L880 192 L920 100 L960 188 L1010 200 L1050 140 L1090 192 L1130 110 L1160 190 L1200 180 L1200 300 Z"/></svg></div>
+<canvas id="fly"></canvas>
+
+<div class="clearing">
+  <div class="cottage" id="cottage">
+    <div class="roof" id="roof"></div>
+    <div class="walls"></div>
+    <div class="page-area"><div class="page" id="page"></div></div>
+  </div>
+</div>
+
+<div class="nav"><button id="prev">‹</button><div class="trail" id="trail"></div><button id="next">›</button></div>
+<div class="toolbar"><button class="tbtn" id="openEditor">お話づくり</button></div>
+<div class="hint">← → / クリックでお話を進める ・ おわりに卒業証</div>
+<div class="ver" id="ver"></div>
+<div class="timer" id="timer"></div>
+
+<div class="dim" id="dim"></div>
+<aside class="panel" id="panel">
+  <header><h2>お話づくり</h2><button class="x" id="closeEditor">✕</button></header>
+  <div class="body">
+    <div class="sec"><h3>小道の一覧</h3><div id="sceneList"></div></div>
+
+    <div class="sec">
+      <h3 id="formTitle">小道をつくる</h3>
+      <div class="fld"><label>型</label><select id="f-type">
+        <option value="normal">小道（本文・キャンディ・ジンジャー札）</option>
+        <option value="quiz">森の問いかけ（3択）</option>
+        <option value="cover">表紙（大見出し）</option>
+      </select></div>
+      <div class="fld"><label>小道ラベル</label><input id="f-crumbs" placeholder="例：第七の小道"></div>
+      <div class="fld"><label>みだし</label><input id="f-title" placeholder="例：言葉をうけとる窓 ── シェル"></div>
+      <div class="fld" data-only="normal cover"><label>本文（改行可）</label><textarea id="f-lead" placeholder="あるところに…のやさしい語り口で"></textarea></div>
+      <div class="fld" data-only="normal"><label>キャンディ（箇条書き・1行ずつ）</label><textarea id="f-candies" placeholder="cd … 枝をわたる&#10;ls … 葉っぱを見わたす"></textarea></div>
+      <div class="fld" data-only="normal"><label>ジンジャー札（コマンド・「命令 | 注釈」を1行ずつ）</label><textarea id="f-gingers" class="mono" placeholder="ls -l | 鍵のようすを みる"></textarea></div>
+      <div class="fld" data-only="normal cover"><label>おしえ・むすび（任意）</label><input id="f-moral" placeholder="この小道のキメ言葉"></div>
+      <div class="fld" data-only="quiz"><label>もんだい</label><textarea id="f-q" placeholder="森の問いかけを1文で"></textarea></div>
+      <div class="fld" data-only="quiz"><label>こたえ（3つ・正解の行あたまに ＊）</label><textarea id="f-choices" placeholder="＊ 正しいこたえ&#10;ちがうこたえ&#10;ちがうこたえ"></textarea></div>
+      <div class="fld" data-only="quiz"><label>かいせつ（任意）</label><textarea id="f-explain" placeholder="正解のわけ"></textarea></div>
+      <div class="fld"><label>語り部🐤の一言（任意）</label><input id="f-who" placeholder="やさしい一言"></div>
+      <div class="row2"><button class="act-btn" id="saveScene">＋ ついか</button><button class="act-btn ghost" id="clearForm">クリア</button></div>
+    </div>
+
+    <div class="sec">
+      <h3>AIにお話をつくらせる</h3>
+      <div class="fld"><label>つくるもの</label><select id="f-aikind">
+        <option value="scene">小道（本文）</option>
+        <option value="quiz">森の問いかけ（3択）</option>
+        <option value="lesson">小道まるごと（本文＋問いかけ）</option>
+      </select></div>
+      <div class="fld"><label>語り部エンジン</label><select id="f-provider">
+        <option value="claude">Claude（claude.ai プレビュー内・鍵不要）</option>
+        <option value="openai">OpenAI互換（gpt-4.1-mini・自分のキー）</option>
+      </select></div>
+      <div id="openaiCfg" class="hidden">
+        <div class="fld"><label>API キー</label><input id="f-key" type="password" placeholder="sk-..."></div>
+        <div class="row2"><div class="fld"><label>Base URL</label><input id="f-base" value="https://api.openai.com/v1"></div>
+          <div class="fld"><label>モデル</label><input id="f-model" value="gpt-4.1-mini"></div></div>
+      </div>
+      <div class="fld"><label>テーマ・お題</label><textarea id="f-ai" placeholder="例：cronで定期実行を／パーミッションの問いかけを"></textarea></div>
+      <button class="act-btn candy" id="summon">つくる</button>
+      <div class="msg" id="aiMsg"></div>
+    </div>
+
+    <div class="sec">
+      <h3>お話データ・くばる</h3>
+      <div class="row2" style="margin-bottom:8px"><button class="act-btn ghost" id="exportBtn">書き出し</button><button class="act-btn ghost" id="importBtn">読み込み</button></div>
+      <div class="fld"><textarea id="f-json" class="mono" placeholder="JSONを出力／貼り付けて読み込み"></textarea></div>
+      <button class="act-btn ghost" id="resetBtn" style="margin-top:0">はじめのお話に戻す</button>
+      <button class="act-btn" id="exportStudent" style="margin-top:8px">読み手版を書き出す（このお話）</button>
+      <div class="fld" style="margin-top:8px"><label>読み手版の制限時間（分・0で無制限）</label><input id="timeLimit" type="number" min="0" max="600" value="0"></div>
+      <button class="act-btn" id="exportCertPdf" style="margin-top:4px">そつぎょう証をPDFで保存</button>
+      <div class="row2" style="margin-top:8px">
+        <input id="libName" placeholder="お話の名（例：Linux入門）" style="flex:2">
+        <button class="act-btn ghost" id="libAdd" style="margin:0;flex:1">＋ お話集に</button>
+      </div>
+      <div id="libList" style="margin-top:8px"></div>
+      <button class="act-btn" id="exportZip" style="margin-top:8px">読み手版をまとめてZIP</button>
+      <button class="act-btn candy" id="exportFullPack" style="margin-top:8px">フル配布パックZIP（HTML+JSON+そつぎょう証+回収）</button>
+      <p class="note">読み手版は、いまのお話・制限時間を埋め込み、編集機能を隠した よみもの＋問いかけ＋そつぎょう証だけのHTML。そつぎょう証PDFはオフラインで作れます。</p>
+    </div>
+
+    <div class="sec">
+      <h3>手がら成績の集計（結果JSONを読み込み）</h3>
+      <button class="act-btn ghost" id="loadResults">読み手の結果JSONを選ぶ（複数可）</button>
+      <input type="file" id="resultsFile" accept=".json,application/json" multiple style="display:none">
+      <div class="fld" style="margin-top:8px"><label>合格ライン（正答率%）</label><input id="passLine" type="number" min="0" max="100" value="80"></div>
+      <div class="msg" id="statsMsg"></div>
+      <p class="note">読み手がそつぎょう証画面の「結果を提出」で保存したJSONをまとめて選ぶと、平均正答率・つまずいた問いかけ・合否を表示。合格者のそつぎょう証を一括PDFで授けられます。</p>
+    </div>
+  </div>
+</aside>
+
+<div class="stats-overlay" id="statsOverlay">
+  <div class="stats-box">
+    <div class="stats-head">
+      <h2 id="statsTitle">手がら成績の集計</h2>
+      <div class="stats-head-btns">
+        <button class="act-btn ghost" id="statsCsv" style="width:auto;margin:0;padding:.5rem .8rem">CSV</button>
+        <button class="act-btn ghost" id="statsPass" style="width:auto;margin:0;padding:.5rem .8rem">合格者一覧</button>
+        <button class="act-btn ghost" id="statsCertsPdf" style="width:auto;margin:0;padding:.5rem .8rem">合格者そつぎょう証PDF</button>
+        <button class="x" id="statsClose">✕</button>
+      </div>
+    </div>
+    <div class="stats-body" id="statsBody"></div>
+  </div>
+</div>
+
+<script>
+const STUDENT_MODE=false;
+const APP_VERSION="Linux ヘンゼルとグレーテル v3.0";
+let timeLimitMin=((typeof window!=="undefined"&&window.BAKED_TIMELIMIT)?window.BAKED_TIMELIMIT:0);
+
+/* ============================================================
+   DECK — ヘンゼルとグレーテル（お菓子の家）仕立てのLinux入門
+   ============================================================ */
+const defaultDeck=[
+ {type:"cover",crumbs:"森のはじまり",titleGrand:"Linux ヘンゼルとグレーテル",subtitle:"お菓子の家でまなぶ、コマンドのおはなし",
+  lead:"あるところに、<span class='hi'>命令（コマンド）</span>という名のパンくずを道しるべに、黒い画面の森をぬける、ふたりの子どもがおりました。さあ、いっしょにまいりましょう。",
+  who:"パンくずを目印に、ついておいで！",html:true},
+
+ {crumbs:"第一の小道",title:"はじまり ── Linuxとは",
+  lead:"森のおくの大きな館（サーバー）の多くを、そっと支えていたのは<b>ただ（無料）の基本ソフト（OS）</b>でした。小さなランプから大きなお城まで、その光はひろくとどいていたのです。",
+  moral:"見えないところで、みんなを支える働きもの。",who:"たくさんの館はLinuxが支えているんだよ",html:true},
+
+ {type:"quiz",crumbs:"森の問いかけ・一",title:"森の問いかけ ・ その一",
+  question:"森の館（サーバー）を、いちばん広く支える基本ソフトは？",
+  choices:["有料の専用OSだけ","Linux","携帯だけのもの"],answer:1,
+  explain:"多くの館はLinux。ただで直せて、じょうぶなのが理由だよ。",who:"気らくに、当ててみてね"},
+
+ {crumbs:"第二の小道",title:"言葉をうけとる窓 ── シェル",
+  lead:"シェルは、人の言葉と機械の心（カーネル）をつなぐ、やさしい通訳。行のあたまの <b>$</b> は「どうぞ、お話しください」の合図でした。",
+  gingers:["pwd | いま どこにいるかを たずねる","echo こんにちは | 画面に ことばを うつす"],
+  moral:"画面のボタンの正体は、みんな一行のことば。",who:"$ が出たら、唱えるばんだよ",html:true},
+
+ {type:"quiz",crumbs:"森の問いかけ・二",title:"森の問いかけ ・ その二",
+  question:"行のあたまの「$」が teaching しているのは？",
+  choices:["こわれた印","命令の入力まち","日がくれた印"],answer:1,
+  explain:"$ は入力まちの合図。あんしんして命令を唱えてね。",who:"こまったら まず $ を見てね"},
+
+ {crumbs:"第三の小道",title:"森の地図 ── ファイルの樹",
+  lead:"すべては <b>/</b>（根っこ）から枝わかれする、一本の大きな樹。小道（ディレクトリ）は枝、お話（ファイル）は葉っぱにたとえられます。",
+  candies:["cd … 枝をわたる","ls … 葉っぱを見わたす","pwd … いまの居場所を知る","mkdir … 新しい小道をつくる"],
+  moral:"道にまよったら pwd。居場所を知る子は、森でまよわない。",who:"まずは ls と cd になれてね",html:true},
+
+ {type:"quiz",crumbs:"森の問いかけ・三",title:"森の問いかけ ・ その三",
+  question:"いまいる場所（居場所）をたしかめる命令は？",
+  choices:["ls","pwd","mkdir"],answer:1,
+  explain:"pwd は居場所をうつす命令。まよったら、まず唱えてね。",who:"pwd で 居場所がわかるよ"},
+
+ {crumbs:"第四の小道",title:"お菓子の戸じまり ── パーミッション",
+  lead:"葉っぱ一枚ごとにかけられた、やさしい鍵。<b>読む(r)・書く(w)・うごかす(x)</b> のゆるしを、おうち・なかま・みんなへ わけあたえます。",
+  gingers:["ls -l | 鍵のようすを みる","chmod 755 okashi.sh | 鍵を かけなおす"],
+  moral:"r=4・w=2・x=1。その足し算が、合鍵になるよ。",who:"755＝おうちは全部、みんなは見て動かすだけ",html:true},
+
+ {type:"quiz",crumbs:"森の問いかけ・四",title:"森の問いかけ ・ その四",
+  question:"chmod 755 のあたまの「7」があらわすゆるしは？",
+  choices:["読むだけ","読む・書く・うごかす ぜんぶ","うごかすだけ"],answer:1,
+  explain:"7＝4(読)+2(書)+1(動)。おうちにぜんぶをゆるす鍵だよ。",who:"数字は r=4 / w=2 / x=1 の足し算"},
+
+ {crumbs:"第五の小道",title:"はたらく こびとたち ── プロセス",
+  lead:"森ではたらく お話（プログラム）には、それぞれ <b>番号（PID）</b> がつけられます。これをつかまえて、さしずするのです。",
+  gingers:["ps aux | はたらく子を さがす","kill 1234 | 番号で おやすみさせる"],
+  moral:"あばれる子は、その番号をつかまえて おやすみさせる。",who:"top で いまの はたらき者を のぞけるよ",html:true},
+
+ {type:"quiz",crumbs:"森の問いかけ・五",title:"森の問いかけ ・ その五",
+  question:"ある はたらき者（プロセス）を おやすみさせるとき kill にわたすのは？",
+  choices:["お話の名まえ","PID（番号）","あいことば"],answer:1,
+  explain:"kill には番号（PID）をわたすよ。ps や top でしらべてね。",who:"まず ps で番号をさがしてね"},
+
+ {crumbs:"第六の小道",title:"道具のおとりよせ ── パッケージ",
+  lead:"ほしい道具は、一行のことばで おとりよせできます。おうちの種類で <b>apt</b>（Debian系）・<b>dnf</b>（RHEL系）を つかいわけます。",
+  gingers:["sudo apt install tree | Debian系","sudo dnf install tree | RHEL系"],
+  moral:"「じぶんで とりよせる」を覚えたとき、主役になれる。",who:"sudo は“おうちの名において”の合図だよ",html:true},
+
+ {type:"quiz",crumbs:"森の問いかけ・六",title:"森の問いかけ ・ その六",
+  question:"Debian系で道具を おとりよせする命令は？",
+  choices:["apt install","format disk","delete all"],answer:0,
+  explain:"Debian系は apt。RHEL系では dnf を つかうよ。",who:"Ubuntuなら apt だね"},
+
+ {crumbs:"おうちに かえる道",title:"むすび ── 五つのお守り",
+  candies:["<b>小さくきざめ</b> ── 一どに ひとつの命令を。","<b>手をうごかせ</b> ── 写すより、じぶんで唱えてたしかめる。","<b>声に出せ</b> ── 人におしえて、はじめて身につく。","<b>つまずきを書け</b> ── しっぱいは、つぎの手がらのたね。","<b>地図を見よ</b> ── こまったら man と --help をひらく。"],
+  moral:"man <命令> と唱えれば、いつでも やさしい先生があらわれる。",who:"わからない時は man と --help をね",html:true},
+
+ {type:"quiz",crumbs:"森の問いかけ・むすび",title:"おわりの 森の問いかけ",
+  question:"命令のつかい方をしらべる“おおやけの地図”は？",
+  choices:["man","run","stop"],answer:0,
+  explain:"man（マニュアル）がおおやけの地図。--help も手がるで べんりだよ。",who:"man のほかに --help もね"},
+
+ {type:"certificate"},
+];
+let deck=JSON.parse(JSON.stringify((typeof window!=="undefined"&&window.BAKED_DECK)?window.BAKED_DECK:defaultDeck));
+let idx=0, results={}, attempts={}, startedAt=Date.now(), learnerName="", editIndex=null;
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=t=>(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const nl2br=t=>esc(t).replace(/\n/g,"<br>");
+function leadHTML(s){if(s.lead==null)return"";return s.html?s.lead:nl2br(s.lead);}
+const PIPN=["１","２","３","４","５","６"];
+const CANDYC=["var(--candy-pink-d)","var(--candy-mint-d)","var(--candy-lemon-d)","var(--candy-berry-d)","var(--ginger)"];
+const GUMC=["#f2849e","#7fd0b6","#f6d365","#9b5bb0","#f29e84","#84b8f2"];
+const CANDY_RULE=`<div class="candy-rule rise"></div>`;
+
+/* ---------- scoring ---------- */
+let qidSeq=0;
+function assignIds(){deck.forEach(s=>{if(s.type==="quiz"&&!s.qid)s.qid="q"+(++qidSeq);});}
+function ensureCert(){const c=deck.find(s=>s.type==="certificate")||{type:"certificate"};deck=deck.filter(s=>s.type!=="certificate");deck.push(c);}
+function quizzes(){return deck.filter(s=>s.type==="quiz");}
+function stats(){const qs=quizzes();let answered=0,correct=0;qs.forEach(q=>{if(q.qid in results){answered++;if(results[q.qid])correct++;}});return{total:qs.length,answered,correct};}
+function breakdown(){return quizzes().map(q=>({crumbs:q.crumbs||"問いかけ",title:q.title||"問いかけ",state:(q.qid in results)?(results[q.qid]?"ok":"miss"):"none"}));}
+function rankOf(r){if(r>=1)return["お菓子の家のあるじ","🏠"];if(r>=.8)return["森のおさ","🌟"];if(r>=.5)return["森のたんけん家","🍬"];return["森のはじめの一歩","🐤"];}
+
+/* ---------- page ---------- */
+function pageHTML(s){
+ if(s.type==="certificate")return certHTML(s);
+ if(s.type==="quiz"){
+   const opts=(s.choices||[]).map((c,i)=>`<button class="choice" data-i="${i}"><span class="pip">${PIPN[i]||i+1}</span><span>${esc(c)}</span></button>`).join("");
+   return `<div class="head rise"><div class="crumbs">${esc(s.crumbs||"森の問いかけ")}</div><div class="title">${esc(s.title||"森の問いかけ")}</div></div>
+     <div class="body-scroll"><p class="ask-q rise">${esc(s.question||"")}</p>
+       <div class="choices rise">${opts}</div>
+       <div class="verdict rise" data-verdict></div>
+       ${s.who?`<div class="teller rise"><div class="who">🐤</div><div class="say">${esc(s.who)}</div></div>`:""}
+     </div>`;
+ }
+ if(s.type==="cover"){
+   return `<div class="head rise"><div class="crumbs">${esc(s.crumbs||"森のはじまり")}</div></div>
+     <div class="body-scroll" style="display:flex;flex-direction:column;justify-content:center;text-align:center">
+       <div class="title-grand rise">${s.titleGrand||""}</div>
+       ${s.subtitle?`<div class="subtitle rise">${esc(s.subtitle)}</div>`:""}
+       ${CANDY_RULE}
+       ${s.lead!=null?`<p class="prose rise" style="text-align:center;margin-top:.6rem">${leadHTML(s)}</p>`:""}
+       ${s.who?`<div class="teller rise"><div class="who">🐤</div><div class="say">${esc(s.who)}</div></div>`:""}
+     </div>`;
+ }
+ let c=`<div class="head rise"><div class="crumbs">${esc(s.crumbs||"")}</div><div class="title">${esc(s.title||"")}</div></div>${CANDY_RULE}<div class="body-scroll">`;
+ if(s.lead!=null)c+=`<p class="prose story rise">${leadHTML(s)}</p>`;
+ if(s.candies&&s.candies.length)c+=`<ul class="candies rise">`+s.candies.map((b,i)=>`<li><span class="drop" style="background:linear-gradient(180deg,${GUMC[i%GUMC.length]},${GUMC[i%GUMC.length]})">${i+1}</span><span>${s.html?b:nl2br(b)}</span></li>`).join("")+`</ul>`;
+ if(s.gingers&&s.gingers.length){c+=`<div class="gingers rise">`+s.gingers.map(line=>{const [cmd,gloss]=line.split("|").map(x=>x.trim());
+   return `<div class="row"><span class="cmd">${esc(cmd)}</span>${gloss?`<span class="gloss">— ${esc(gloss)}</span>`:""}</div>`;}).join("")+`</div>`;}
+ if(s.moral)c+=`<p class="moral rise">${esc(s.moral)}</p>`;
+ if(s.who)c+=`<div class="teller rise"><div class="who">🐤</div><div class="say">${esc(s.who)}</div></div>`;
+ c+=`</div>`;
+ return c;
+}
+
+/* ---------- certificate ---------- */
+function certHTML(s){const {total,answered,correct}=stats();const r=total?correct/total:0;const [title,badge]=rankOf(r);
+ const d=new Date();const ymd=`${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日`;
+ const mark={ok:"◯",miss:"✕",none:"—"};const bd=breakdown();
+ const bdHTML=bd.length?`<div class="dip-break rise">`+bd.map(b=>`<div class="r"><span class="l">${esc(b.crumbs)}</span><span class="t">${esc(b.title)}</span><span style="color:${b.state==='ok'?'var(--candy-mint-d)':(b.state==='miss'?'var(--candy-pink-d)':'#b89a7a')};font-weight:700">${mark[b.state]}</span></div>`).join("")+`</div>`:"";
+ const body= total===0
+  ? `<p class="dip-line rise" style="margin-top:.6rem">森の問いかけにこたえると、ここに手がらが書かれるよ。</p>`
+  : `<div class="dip-score rise">手がら <b>${correct}</b> / ${total} もん ${answered<total?`<span style="font-size:.7em;color:#6a4628">（のこり ${total-answered}）</span>`:""}</div>
+     <div class="dip-rank rise">${badge} しょうごう ── <b>${title}</b> ${badge}</div>${bdHTML}`;
+ return `<div class="diploma">
+   <div class="dip-kicker rise">おかしの家 そつぎょう証</div>
+   <div class="dip-frame rise">
+     <div class="dip-title">そつぎょう証</div><div class="dip-rule"></div>
+     <p class="dip-line rise"><span class="dip-recip">${esc(learnerName||"あなた")}</span> へ<br>
+       <b>Linux ヘンゼルとグレーテル</b> の森をぬけ、お菓子の家で コマンドをまなびきったことを、ここに みとめます。めでたし、めでたし。</p>
+     ${body}
+     <div class="dip-date rise">${ymd}　お菓子の家より</div>
+     <div class="dip-seal rise">🍭</div>
+   </div>
+   <div class="dip-actions rise">
+     <input id="certName" class="dip-name-in" placeholder="なまえを書いてね" value="${esc(learnerName)}">
+     <div class="dip-btns">
+       <button class="sweet-btn" id="dlPng">PNGでもらう</button>
+       <button class="sweet-btn" id="dlPdf">PDFでもらう</button>
+       <button class="sweet-btn" id="dlJson">結果を提出</button>
+       <button class="sweet-btn ghost" id="certReset">きろくを消す</button>
+     </div>
+   </div>
+ </div>`;
+}
+
+/* ---------- sound + candy ---------- */
+let actx;
+function chime(good){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+ const t=actx.currentTime;const notes=good?[659,784,988,1175]:[330,262];
+ notes.forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type=good?"triangle":"sine";o.frequency.value=f;
+  o.connect(g);g.connect(actx.destination);const st=t+i*0.08;g.gain.setValueAtTime(0.0001,st);
+  g.gain.exponentialRampToValueAtTime(0.14,st+0.02);g.gain.exponentialRampToValueAtTime(0.0001,st+0.3);
+  o.start(st);o.stop(st+0.32);});}catch(e){}}
+function candyBurst(scope){const E=["🍬","🍭","🧁","🍩","🍪","⭐"];for(let i=0;i<13;i++){const s=document.createElement('div');
+ s.className='candy-pop';s.textContent=E[i%E.length];s.style.left=(15+Math.random()*70)+"%";s.style.top=(30+Math.random()*25)+"%";
+ s.style.animationDelay=(Math.random()*0.3)+"s";scope.appendChild(s);setTimeout(()=>s.remove(),1400);}}
+
+/* ---------- nav / render ---------- */
+const page=$("#page"),trailWrap=$("#trail"),cottage=$("#cottage");
+function buildTrail(){trailWrap.innerHTML="";deck.forEach((_,i)=>{const t=document.createElement('div');t.className='crumb'+(i===idx?' on':'');t.onclick=()=>go(i);trailWrap.appendChild(t);});}
+function paint(){page.innerHTML=pageHTML(deck[idx]);
+ if(deck[idx].type==="quiz")wireQuiz(page,deck[idx]);
+ if(deck[idx].type==="certificate")wireCert(page);
+ if(STUDENT_MODE)saveProgress();
+ $("#prev").disabled=idx===0;$("#next").disabled=idx===deck.length-1;
+ [...trailWrap.children].forEach((t,i)=>t.classList.toggle('on',i===idx));}
+function go(n){if(n<0||n>=deck.length||n===idx)return;page.classList.add('leaving');
+ setTimeout(()=>{idx=n;paint();page.classList.remove('leaving');},380);}
+$("#prev").onclick=()=>go(idx-1);$("#next").onclick=()=>go(idx+1);
+document.addEventListener('keydown',e=>{const tag=(e.target.tagName||"").toLowerCase();if(tag==="input")return;
+ if(['ArrowRight','PageDown',' '].includes(e.key))go(idx+1);
+ if(['ArrowLeft','PageUp'].includes(e.key))go(idx-1);
+ if(e.key==='Home')go(0);if(e.key==='End')go(deck.length-1);});
+cottage.addEventListener('click',e=>{if(e.target.closest('.nav')||e.target.closest('.choice')||e.target.closest('.dip-actions'))return;
+ const r=cottage.getBoundingClientRect();go(e.clientX<r.left+r.width*0.42?idx-1:idx+1);});
+
+function wireQuiz(scope,s){const v=scope.querySelector('[data-verdict]');const btns=[...scope.querySelectorAll('.choice')];
+ btns.forEach(b=>b.onclick=ev=>{ev.stopPropagation();const i=+b.dataset.i;
+  const firstTry=!(s.qid in results);if(firstTry)results[s.qid]=(i===s.answer);
+  attempts[s.qid]=(attempts[s.qid]||0)+1;if(STUDENT_MODE)saveProgress();
+  if(i===s.answer){btns.forEach(x=>{x.disabled=true;if(+x.dataset.i===s.answer)x.classList.add('ok');});
+    v.innerHTML="せいかい！すごいね！"+(s.explain?`<span class="ex">${esc(s.explain)}</span>`:"");candyBurst(scope);chime(true);}
+  else{b.classList.add('ng');b.disabled=true;v.textContent="もういちど、かんがえてみよう。";chime(false);}});}
+function wireCert(scope){const reset=scope.querySelector('#certReset'),nameIn=scope.querySelector('#certName'),png=scope.querySelector('#dlPng'),pdf=scope.querySelector('#dlPdf'),json=scope.querySelector('#dlJson');
+ if(nameIn){nameIn.onclick=e=>e.stopPropagation();nameIn.oninput=()=>{learnerName=nameIn.value;const rc=scope.querySelector('.dip-recip');if(rc)rc.textContent=learnerName||"あなた";};}
+ if(reset)reset.onclick=ev=>{ev.stopPropagation();results={};attempts={};startedAt=Date.now();if(STUDENT_MODE)clearProgress();chime(true);go(0);};
+ if(png)png.onclick=ev=>{ev.stopPropagation();exportCert("png");};
+ if(pdf)pdf.onclick=ev=>{ev.stopPropagation();exportCert("pdf");};
+ if(json)json.onclick=ev=>{ev.stopPropagation();exportResultsJSON();};}
+
+/* ---------- certificate PNG / PDF ---------- */
+function downloadBlob(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);}
+function stamp(){const d=new Date();const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}`;}
+async function buildCertCanvas(){try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+ const W=1684,H=1190,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+ const C={cocoa:"#5a3a26",ink2:"#6a4628",ginger:"#a8682f",gingerD:"#7c4a1e",pink:"#d85f7c",berry:"#7a4090",mint:"#4fa98c",lemon:"#e0b13e"};
+ const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#fffaf3");bg.addColorStop(1,"#ffeedd");g.fillStyle=bg;g.fillRect(0,0,W,H);
+ // candy-stripe border
+ g.lineWidth=14;for(let x=60;x<W-60;x+=28){g.strokeStyle=(x/28)%2?C.pink:"#ffffff";g.beginPath();g.moveTo(x,60);g.lineTo(x+14,60);g.stroke();g.beginPath();g.moveTo(x,H-60);g.lineTo(x+14,H-60);g.stroke();}
+ g.strokeStyle=C.pink;g.lineWidth=4;g.strokeRect(78,78,W-156,H-156);
+ const cx=W/2;g.textAlign="center";
+ g.fillStyle=C.berry;g.font='30px "Kosugi Maru",sans-serif';g.fillText("お か し の 家   そ つ ぎ ょ う 証",cx,180);
+ g.fillStyle=C.pink;g.font='900 104px "Mochiy Pop One","Zen Maru Gothic",sans-serif';g.fillText("そつぎょう証",cx,308);
+ g.strokeStyle=C.mint;g.lineWidth=8;g.beginPath();g.moveTo(cx-200,348);g.lineTo(cx+200,348);g.stroke();
+ const name=(learnerName||"").trim()||"あなた";
+ g.fillStyle=C.ink2;g.font='600 30px "Zen Maru Gothic",sans-serif';g.fillText("つぎの子に、これをおくります", cx,418);
+ g.fillStyle=C.berry;g.font='900 74px "Zen Maru Gothic",sans-serif';g.fillText(name+"　へ",cx,508);
+ g.strokeStyle="rgba(155,91,176,.4)";g.lineWidth=3;g.beginPath();g.moveTo(cx-340,530);g.lineTo(cx+340,530);g.stroke();
+ g.fillStyle=C.ink2;g.font='500 30px "Zen Maru Gothic",sans-serif';g.fillText("Linux ヘンゼルとグレーテル の森をぬけ、コマンドをまなびきりました。めでたし、めでたし。",cx,584);
+ const {total,answered,correct}=stats();const [rk]=rankOf(total?correct/total:0);
+ if(total){g.fillStyle=C.cocoa;g.font='700 46px "Zen Maru Gothic",sans-serif';g.fillText(`手がら ${correct} / ${total} もん`+(answered<total?`　（のこり ${total-answered}）`:""),cx,662);
+   g.fillStyle=C.gingerD;g.font='700 38px "Zen Maru Gothic",sans-serif';g.fillText("しょうごう ── "+rk,cx,716);}
+ const bd=breakdown();if(bd.length){const sY=772,rh=40,cw=560,half=Math.ceil(bd.length/2);g.font='500 24px "Zen Maru Gothic",sans-serif';g.textAlign="left";
+  bd.forEach((b,i)=>{const col=i<half?0:1,row=i<half?i:i-half,x=cx-cw+col*cw,y=sY+row*rh;
+   g.fillStyle=C.ink2;g.fillText(`${b.crumbs}　${b.title}`.slice(0,22),x,y);
+   g.fillStyle=b.state==="ok"?C.mint:(b.state==="miss"?C.pink:"#b89a7a");g.font='700 26px "Zen Maru Gothic",sans-serif';
+   g.fillText(b.state==="ok"?"◯":(b.state==="miss"?"✕":"—"),x+cw-60,y);g.font='500 24px "Zen Maru Gothic",sans-serif';});g.textAlign="center";}
+ const d=new Date();g.fillStyle=C.ink2;g.font='28px "Kosugi Maru",sans-serif';g.fillText(`${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日　お菓子の家より`,cx,H-150);
+ // ロリポップ印
+ g.beginPath();g.arc(W-250,H-205,62,0,7);g.fillStyle=C.lemon;g.fill();g.lineWidth=5;g.strokeStyle="#fff";g.stroke();
+ g.font='54px serif';g.fillText("🍭",W-250,H-188);
+ return cv;}
+function dataURLToBytes(durl){const b=atob(durl.split(",")[1]);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+function buildJpegPDF(jpeg,iw,ih){const PW=842,PH=595;const enc=s=>new TextEncoder().encode(s);
+ const parts=[];let len=0;const off=[];const push=u=>{parts.push(u);len+=u.length;};
+ push(enc("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n"));const obj=(n,b)=>{off[n]=len;push(enc(n+" 0 obj\n"+b+"\nendobj\n"));};
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+ obj(3,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`);
+ const ct=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;obj(4,`<< /Length ${ct.length} >>\nstream\n${ct}\nendstream`);
+ off[5]=len;push(enc(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${iw} /Height ${ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`));
+ push(jpeg);push(enc("\nendstream\nendobj\n"));const xp=len;let x="xref\n0 6\n0000000000 65535 f \n";
+ for(let i=1;i<=5;i++)x+=String(off[i]).padStart(10,"0")+" 00000 n \n";push(enc(x));push(enc(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xp}\n%%EOF`));
+ const out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length;}return out;}
+async function exportCert(kind){const cvc=await buildCertCanvas();
+ if(kind==="png"){cvc.toBlob(b=>{if(b)downloadBlob(b,`Hansel_Gretel_Diploma_${stamp()}.png`);},"image/png");}
+ else{const jpeg=dataURLToBytes(cvc.toDataURL("image/jpeg",0.92));downloadBlob(new Blob([buildJpegPDF(jpeg,cvc.width,cvc.height)],{type:"application/pdf"}),`Hansel_Gretel_Diploma_${stamp()}.pdf`);}}
+async function exportCertificatePDF(){await exportCert("pdf");}
+
+/* ====================== EDITOR ====================== */
+const panel=$("#panel"),dim=$("#dim");
+function openEd(){panel.classList.add('show');dim.classList.add('show');renderList();}
+function closeEd(){panel.classList.remove('show');dim.classList.remove('show');}
+$("#openEditor")&&($("#openEditor").onclick=openEd);
+$("#closeEditor")&&($("#closeEditor").onclick=closeEd);dim.onclick=closeEd;
+$("#f-type").onchange=()=>{const t=$("#f-type").value;document.querySelectorAll('[data-only]').forEach(el=>el.classList.toggle('hidden',!el.dataset.only.split(' ').includes(t)));};
+$("#f-provider").onchange=()=>$("#openaiCfg").classList.toggle('hidden',$("#f-provider").value!=="openai");
+function flash(k,t){const m=$("#aiMsg");m.className="msg "+k;m.textContent=t;setTimeout(()=>{m.className="msg";},4500);}
+function renderList(){const L=$("#sceneList");L.innerHTML="";
+ deck.forEach((s,i)=>{const name=s.titleGrand||s.title||s.question||(s.type==="certificate"?"そつぎょう証（自動）":"（無題）");
+  const row=document.createElement('div');row.className='scene-row'+(i===idx?' cur':'');
+  if(s.type==="certificate"){row.innerHTML=`<span class="nm">${i+1}. ${esc(name)}</span><span style="font-size:.7rem;color:var(--ginger-d)">おわり固定</span>`;row.querySelector('.nm').onclick=()=>go(i);L.appendChild(row);return;}
+  row.innerHTML=`<span class="nm" title="${esc(name)}">${i+1}. ${s.type==="quiz"?"❓ ":""}${esc(name)}</span><button data-up>▲</button><button data-down>▼</button><button data-edit>✎</button><button data-del>🗑</button>`;
+  row.querySelector('.nm').onclick=()=>go(i);
+  row.querySelector('[data-up]').onclick=()=>move(i,-1);row.querySelector('[data-down]').onclick=()=>move(i,1);
+  row.querySelector('[data-edit]').onclick=()=>loadForm(i);row.querySelector('[data-del]').onclick=()=>del(i);
+  L.appendChild(row);});}
+function commit(focus){assignIds();ensureCert();if(focus!=null)idx=focus;idx=Math.max(0,Math.min(idx,deck.length-1));buildTrail();paint();if(panel.classList.contains('show'))renderList();}
+function move(i,dd){const j=i+dd;if(j<0||j>=deck.length)return;if(deck[i].type==="certificate"||deck[j].type==="certificate")return;[deck[i],deck[j]]=[deck[j],deck[i]];if(idx===i)idx=j;else if(idx===j)idx=i;commit();}
+function del(i){if(deck[i].type==="certificate"||deck.length<=2)return;deck.splice(i,1);if(idx>=deck.length)idx=deck.length-1;commit();}
+function insertBeforeEnd(arr){let ins=deck.findIndex(s=>s.type==="certificate");if(ins<0)ins=deck.length;deck.splice(ins,0,...arr);commit(ins);}
+function clearForm(){editIndex=null;["crumbs","title","lead","candies","gingers","moral","q","choices","explain","who"].forEach(k=>{const el=$("#f-"+k);if(el)el.value="";});$("#f-type").value="normal";$("#f-type").onchange();$("#formTitle").textContent="小道をつくる";$("#saveScene").textContent="＋ ついか";}
+$("#clearForm").onclick=clearForm;
+function loadForm(i){editIndex=i;const s=deck[i];
+ $("#f-type").value=s.type==="cover"?"cover":(s.type==="quiz"?"quiz":"normal");$("#f-type").onchange();
+ $("#f-crumbs").value=s.crumbs||"";$("#f-title").value=s.titleGrand||s.title||"";
+ $("#f-lead").value=(s.lead||"").replace(/<br\s*\/?>/g,"\n").replace(/<[^>]+>/g,"");
+ $("#f-candies").value=(s.candies||[]).map(b=>b.replace(/<[^>]+>/g,"")).join("\n");
+ $("#f-gingers").value=(s.gingers||[]).join("\n");$("#f-moral").value=s.moral||"";
+ $("#f-q").value=s.question||"";$("#f-choices").value=(s.choices||[]).map((c,k)=>(k===s.answer?"＊ ":"")+c).join("\n");$("#f-explain").value=s.explain||"";
+ $("#f-who").value=s.who||"";
+ $("#formTitle").textContent="小道をなおす（"+(i+1)+"）";$("#saveScene").textContent="✔ なおす";panel.querySelector('.body').scrollTo({top:0,behavior:'smooth'});}
+function readForm(){const t=$("#f-type").value;const g=k=>($("#f-"+k).value||"").trim();const s={html:false};
+ if(t==="cover"){s.type="cover";s.crumbs=g("crumbs")||"森のはじまり";s.titleGrand=g("title");if(g("lead"))s.lead=g("lead");}
+ else if(t==="quiz"){s.type="quiz";s.crumbs=g("crumbs")||"森の問いかけ";s.title=g("title")||"森の問いかけ";s.question=g("q");
+   const lines=$("#f-choices").value.split("\n").map(x=>x.trim()).filter(Boolean);let ans=0;
+   const choices=lines.map((l,k)=>{if(/^＊|^\*/.test(l)){ans=k;return l.replace(/^＊\s*|^\*\s*/,"");}return l;});s.choices=choices;s.answer=ans;if(g("explain"))s.explain=g("explain");}
+ else{s.crumbs=g("crumbs");s.title=g("title");if(g("lead"))s.lead=g("lead");
+   const ca=$("#f-candies").value.split("\n").map(x=>x.trim()).filter(Boolean);if(ca.length)s.candies=ca;
+   const gi=$("#f-gingers").value.split("\n").map(x=>x.trim()).filter(Boolean);if(gi.length)s.gingers=gi;
+   if(g("moral"))s.moral=g("moral");}
+ if(g("who"))s.who=g("who");
+ return s;}
+$("#saveScene").onclick=()=>{const s=readForm();if(!s.title&&!s.titleGrand&&!s.lead&&!s.candies&&!s.question)return;
+ if(editIndex!=null){deck[editIndex]=s;commit();}else{insertBeforeEnd([s]);}clearForm();};
+
+/* JSON */
+$("#exportBtn").onclick=()=>{$("#f-json").value=JSON.stringify(deck.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;}),null,2);$("#f-json").focus();$("#f-json").select();};
+$("#importBtn").onclick=()=>{try{const d=JSON.parse($("#f-json").value);if(!Array.isArray(d)||!d.length)throw 0;deck=d;results={};commit(0);flash("ok","お話を読み込みました。");}catch(e){flash("err","JSONの形式が正しくありません。");}};
+$("#resetBtn").onclick=()=>{deck=JSON.parse(JSON.stringify(defaultDeck));results={};commit(0);flash("ok","はじめのお話に戻しました。");};
+
+/* ====================== AI ====================== */
+function buildPrompt(topic,kind){
+ if(kind==="lesson")return `あなたは「Linux ヘンゼルとグレーテル」という、グリム童話（お菓子の家・やさしい語り口）の教材作家です。怖さは出さず温かく。お題について、Linux初学者向けに「1つの小道」を作成。本編1小道＋森の問いかけ（3択）1問。やさしい日本語（ひらがな多め）で。\nお題：「${topic}」\n次のJSONだけ返す（前置き・コードフェンス禁止）。\n{"crumbs":"第◯の小道","title":"本編タイトル","lead":"童話調で2〜3文。改行は \\n。HTMLタグ禁止","candies":["教え3〜5個。各15〜30字。空配列可"],"gingers":["コマンド | 注釈 を1〜3行。無ければ空配列"],"moral":"やさしいおしえの一言","who":"小鳥のやさしい一言（〜だよ調）","quiz":{"title":"森の問いかけ","question":"設問1文","choices":["A","B","C"],"answer":0,"explain":"正解理由をやさしく1〜2文","who":"ヒント一言"}}`;
+ if(kind==="quiz")return `あなたは「Linux ヘンゼルとグレーテル」の問いかけ作家です。Linux初学者向け3択を1問。やさしい日本語で。お題：「${topic}」。選択肢は必ず3個・正解1つ。次のJSONだけ返す（前置き禁止）。\n{"crumbs":"森の問いかけ","title":"森の問いかけ","question":"設問1文","choices":["A","B","C"],"answer":0,"explain":"正解理由をやさしく1〜2文","who":"ヒント一言（〜だよ調）"}`;
+ return `あなたは「Linux ヘンゼルとグレーテル」（童話のやさしい語り口）の教材作家です。Linux初学者向けに1小道。やさしい日本語で。お題：「${topic}」。次のJSONだけ返す（前置き禁止）。\n{"crumbs":"第◯の小道","title":"タイトル","lead":"童話調で2〜3文。改行は \\n。HTMLタグ禁止","candies":["教え3〜5個。空配列可"],"gingers":["コマンド | 注釈。無ければ空配列"],"moral":"やさしいおしえ","who":"小鳥の一言（〜だよ調）"}`;}
+function mkQuiz(q){let choices=Array.isArray(q.choices)?q.choices.filter(c=>String(c).trim()).map(c=>String(c).trim()):[];if(choices.length<2)throw new Error("こたえを作れませんでした");let ans=Number(q.answer);if(!Number.isInteger(ans)||ans<0||ans>=choices.length)ans=0;
+ return {type:"quiz",crumbs:q.crumbs||"森の問いかけ",title:q.title||"森の問いかけ",question:q.question||"",choices,answer:ans,explain:q.explain||"",who:q.who||""};}
+function mkScene(o){return {crumbs:o.crumbs||"",title:o.title||"新しい小道",lead:o.lead||"",candies:Array.isArray(o.candies)?o.candies.filter(Boolean):[],gingers:Array.isArray(o.gingers)?o.gingers.filter(Boolean):[],moral:o.moral||"",who:o.who||"",html:false};}
+function parseJSON(t){return JSON.parse(t.replace(/```json|```/g,"").trim());}
+$("#summon").onclick=async()=>{const topic=$("#f-ai").value.trim();const btn=$("#summon");if(!topic){flash("err","お題を入力してください。");return;}
+ const provider=$("#f-provider").value,kind=$("#f-aikind").value;btn.disabled=true;btn.textContent="つくり中…";$("#aiMsg").className="msg";
+ try{const prompt=buildPrompt(topic,kind);const maxT=kind==="lesson"?1600:1000;let obj;
+   if(provider==="openai"){const key=$("#f-key").value.trim();const base=$("#f-base").value.trim().replace(/\/$/,"");const model=$("#f-model").value.trim()||"gpt-4.1-mini";
+     if(!key){flash("err","APIキーを入力してください。");btn.disabled=false;btn.textContent="つくる";return;}
+     const res=await fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model,max_tokens:maxT,response_format:{type:"json_object"},messages:[{role:"system",content:"JSONのみ返す教材作家"},{role:"user",content:prompt}]})});
+     const data=await res.json();if(data.error)throw new Error(data.error.message||"API error");obj=parseJSON(data.choices[0].message.content);}
+   else{const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxT,messages:[{role:"user",content:prompt}]})});
+     const data=await res.json();obj=parseJSON((data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n"));}
+   let entries,name;
+   if(kind==="lesson"){const sc=mkScene(obj);const qz=mkQuiz(obj.quiz||{});entries=[sc,qz];name="小道「"+sc.title+"」";}
+   else if(kind==="quiz"){entries=[mkQuiz(obj)];name="問いかけ「"+(obj.title||obj.question||"")+"」";}
+   else{const sc=mkScene(obj);entries=[sc];name="小道「"+sc.title+"」";}
+   insertBeforeEnd(entries);$("#f-ai").value="";flash("ok",name+"をつくりました。");
+ }catch(err){flash("err","つくれませんでした："+(err.message||err));}finally{btn.disabled=false;btn.textContent="つくる";}};
+
+/* ====================== 配布 ====================== */
+function studentBaseHTML(){const clone=document.documentElement.cloneNode(true);
+ ["#trail","#page","#sceneList","#libList","#statsBody"].forEach(sel=>{const el=clone.querySelector(sel);if(el)el.innerHTML="";});
+ clone.querySelectorAll(".candy-pop").forEach(e=>e.remove());clone.querySelectorAll("script[src]").forEach(e=>e.remove());
+ const d=clone.querySelector("#dim");if(d)d.className="dim";const p=clone.querySelector("#panel");if(p)p.className="panel";const so=clone.querySelector("#statsOverlay");if(so)so.className="stats-overlay";
+ let out="<!DOCTYPE html>\n"+clone.outerHTML;
+ out=out.replace("\nconst STUDENT_MODE=false;","\nconst STUDENT_MODE=true;");
+ out=out.replace(/<title>[^<]*<\/title>/,"<title>Linux ヘンゼルとグレーテル（読み手版） — お菓子の家</title>");
+ return out;}
+function syncTimeLimit(){const el=$("#timeLimit");if(el){const v=parseInt(el.value||"0",10);timeLimitMin=isNaN(v)?0:Math.max(0,Math.min(600,v));}}
+function bakeFrom(base,deckArr){const clean=deckArr.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;});
+ const dj=JSON.stringify(clean).replace(/<\//g,"<\\/");
+ const inject=`<script>window.BAKED_DECK=${dj};window.BAKED_TIMELIMIT=${Number(timeLimitMin)||0};<\/script>\n`;
+ return base.replace("<script>\nconst STUDENT_MODE",inject+"<script>\nconst STUDENT_MODE");}
+function bakeStudent(){syncTimeLimit();return bakeFrom(studentBaseHTML(),deck);}
+$("#exportStudent").onclick=()=>{try{downloadBlob(new Blob([bakeStudent()],{type:"text/html;charset=utf-8"}),`Hansel_Reader_${stamp()}.html`);flash("ok","読み手版を書き出しました。");}catch(e){flash("err","書き出し失敗："+(e.message||e));}};
+$("#exportCertPdf")&&($("#exportCertPdf").onclick=async()=>{await exportCertificatePDF();});
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error("ライブラリ読込失敗（オフライン？）"));document.head.appendChild(s);});}
+
+/* 名前→ASCII */
+const KANA={"きゃ":"kya","きゅ":"kyu","きょ":"kyo","しゃ":"sha","しゅ":"shu","しょ":"sho","ちゃ":"cha","ちゅ":"chu","ちょ":"cho","にゃ":"nya","にゅ":"nyu","にょ":"nyo","ひゃ":"hya","ひゅ":"hyu","ひょ":"hyo","みゃ":"mya","みゅ":"myu","みょ":"myo","りゃ":"rya","りゅ":"ryu","りょ":"ryo","ぎゃ":"gya","ぎゅ":"gyu","ぎょ":"gyo","じゃ":"ja","じゅ":"ju","じょ":"jo","びゃ":"bya","びゅ":"byu","びょ":"byo","ぴゃ":"pya","ぴゅ":"pyu","ぴょ":"pyo","あ":"a","い":"i","う":"u","え":"e","お":"o","か":"ka","き":"ki","く":"ku","け":"ke","こ":"ko","さ":"sa","し":"shi","す":"su","せ":"se","そ":"so","た":"ta","ち":"chi","つ":"tsu","て":"te","と":"to","な":"na","に":"ni","ぬ":"nu","ね":"ne","の":"no","は":"ha","ひ":"hi","ふ":"fu","へ":"he","ほ":"ho","ま":"ma","み":"mi","む":"mu","め":"me","も":"mo","や":"ya","ゆ":"yu","よ":"yo","ら":"ra","り":"ri","る":"ru","れ":"re","ろ":"ro","わ":"wa","を":"o","ん":"n","が":"ga","ぎ":"gi","ぐ":"gu","げ":"ge","ご":"go","ざ":"za","じ":"ji","ず":"zu","ぜ":"ze","ぞ":"zo","だ":"da","ぢ":"ji","づ":"zu","で":"de","ど":"do","ば":"ba","び":"bi","ぶ":"bu","べ":"be","ぼ":"bo","ぱ":"pa","ぴ":"pi","ぷ":"pu","ぺ":"pe","ぽ":"po","ー":"","　":" "};
+function kanaToRomaji(s){s=s.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));let o="",i=0;while(i<s.length){if(s[i]==="っ"){const one=s[i+1];const r=KANA[s.substr(i+1,2)]||KANA[one]||"";if(r)o+=r[0]||"";i++;continue;}const two=s.substr(i,2);if(KANA[two]!==undefined){o+=KANA[two];i+=2;continue;}const one=s[i];if(KANA[one]!==undefined){o+=KANA[one];i++;continue;}o+=one;i++;}return o;}
+function toAsciiName(n){let s=(n||"").trim();try{s=s.normalize("NFKC");}catch(e){}s=kanaToRomaji(s);s=s.replace(/[^A-Za-z0-9]+/g,"_").replace(/^_+|_+$/g,"");return s||"reader";}
+
+/* お話集＋ZIP */
+let library=[];function slug(s){return toAsciiName(s)||"deck";}
+function renderLib(){const L=$("#libList");if(!L)return;L.innerHTML="";library.forEach((it,i)=>{const r=document.createElement('div');r.className='lib-row';
+  r.innerHTML=`<span class="nm">${i+1}. ${esc(it.name)}（${it.deck.filter(s=>s.type!=="certificate").length}小道）</span><button data-x>🗑</button>`;r.querySelector('[data-x]').onclick=()=>{library.splice(i,1);renderLib();};L.appendChild(r);});}
+$("#libAdd")&&($("#libAdd").onclick=()=>{const nm=($("#libName").value||"").trim()||`お話${library.length+1}`;library.push({name:nm,deck:JSON.parse(JSON.stringify(deck))});$("#libName").value="";renderLib();flash("ok",`「${nm}」をお話集に追加（計${library.length}）`);});
+$("#exportZip")&&($("#exportZip").onclick=async()=>{const btn=$("#exportZip"),lab=btn.textContent;btn.disabled=true;btn.textContent="つくり中…";syncTimeLimit();
+ try{if(!window.JSZip)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  const items=library.length?library:[{name:"Linux入門",deck:JSON.parse(JSON.stringify(deck))}];const base=studentBaseHTML();const zip=new window.JSZip();const used={};const man=[];
+  items.forEach(it=>{let nm=slug(it.name);if(used[nm])nm+="_"+(++used[nm]);else used[nm]=1;zip.file(`Hansel_${nm}_Reader.html`,bakeFrom(base,it.deck));man.push(`${it.name}\tHansel_${nm}_Reader.html\t${it.deck.filter(s=>s.type!=="certificate").length} komichi`);});
+  zip.file("README.txt",`${APP_VERSION}\nLinux Hansel & Gretel (Okashi no Ie)\nGenerated: ${new Date().toISOString()}\n\nName\tFile\tKomichi\n`+man.join("\n"));
+  downloadBlob(await zip.generateAsync({type:"blob"}),`Hansel_Distribution_${stamp()}.zip`);flash("ok",`ZIP書き出し（${items.length}件）`);}
+ catch(err){flash("err","ZIP失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+$("#exportFullPack")&&($("#exportFullPack").onclick=async()=>{const btn=$("#exportFullPack"),lab=btn.textContent;btn.disabled=true;btn.textContent="つくり中…";syncTimeLimit();
+ try{if(!window.JSZip)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  const items=library.length?library:[{name:"Linux入門",deck:JSON.parse(JSON.stringify(deck))}];const base=studentBaseHTML();const zip=new window.JSZip();const used={};const man=[];
+  let certBlob=null;try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+  try{const c=await buildCertCanvasWithScore({name:"",acc:"",rank:""});certBlob=await new Promise(r=>c.toBlob(b=>r(b),"image/png"));}catch(e){}
+  for(const it of items){let nm=slug(it.name);if(used[nm])nm+="_"+(++used[nm]);else used[nm]=1;const f=zip.folder(nm);
+   const clean=it.deck.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;});
+   f.file(`Hansel_${nm}_Reader.html`,bakeFrom(base,it.deck));f.file(`Hansel_${nm}_Deck.json`,JSON.stringify(clean,null,2));if(certBlob)f.file(`Hansel_Diploma_Template.png`,certBlob);man.push(`${it.name}\t${nm}/\t${clean.length} komichi`);}
+  const rec=zip.folder("_結果回収");rec.file("ここに結果JSONを集めてください.txt",`読み手がそつぎょう証画面の「結果を提出」で保存したJSON（例：Result_yamada_Hansel_${stamp()}.json）をこのフォルダに集め、お話づくりの「手がら成績の集計」で読み込んでください。`);
+  zip.file("運用手順.txt",`【運用手順】${APP_VERSION}\n1. 各フォルダの *_Reader.html を配布（ブラウザで開くだけ）\n2. よむ→森の問いかけにこたえる→そつぎょう証で名前を書き・PNG/PDF保存\n3. 「結果を提出」のJSONを _結果回収/ に集約\n4. お話づくり→手がら成績の集計でJSONを読み込み、合否判定・合格者そつぎょう証PDF\n※HTML/そつぎょう証/結果JSON/集計はオフライン動作。ZIPのみオンライン。`);
+  zip.file("README.txt",`${APP_VERSION} フル配布パック\nGenerated: ${new Date().toISOString()}\n\n各フォルダ: *_Reader.html / *_Deck.json / Diploma_Template.png\nName\tFolder\tKomichi\n`+man.join("\n"));
+  downloadBlob(await zip.generateAsync({type:"blob"}),`Hansel_FullPack_${stamp()}.zip`);flash("ok",`フルパック書き出し（${items.length}件）`);}
+ catch(err){flash("err","フルパック失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+
+/* ====================== 進捗保存 ====================== */
+function deckSig(){let n=0,s=0;deck.forEach(d=>{if(d.type==="quiz")n++;const t=(d.title||d.titleGrand||"")+"";for(let i=0;i<t.length;i++)s=(s*31+t.charCodeAt(i))>>>0;});return "hansel_"+deck.length+"_"+n+"_"+s.toString(16);}
+function saveProgress(){try{localStorage.setItem(deckSig(),JSON.stringify({idx,results,attempts,startedAt,learnerName,t:Date.now()}));}catch(e){}}
+function loadProgress(){try{const r=localStorage.getItem(deckSig());return r?JSON.parse(r):null;}catch(e){return null;}}
+function clearProgress(){try{localStorage.removeItem(deckSig());}catch(e){}}
+
+/* ====================== タイマー ====================== */
+let timeUpFired=false;
+function fmtClock(sec){sec=Math.max(0,sec);const m=Math.floor(sec/60),s=sec%60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;}
+function tickTimer(){if(!STUDENT_MODE||!timeLimitMin)return;const el=$("#timer");const remain=Math.round((startedAt+timeLimitMin*60000-Date.now())/1000);el.classList.add('show');
+ if(remain>0){el.textContent="のこり "+fmtClock(remain);el.classList.toggle('warn',remain<=60);el.classList.remove('over');}
+ else{el.textContent="おしまいの時間";el.classList.remove('warn');el.classList.add('over');if(!timeUpFired){timeUpFired=true;const last=deck.length-1;if(deck[last]&&deck[last].type==="certificate"&&idx!==last){setTimeout(()=>{if(confirm("時間になりました。そつぎょう証へ進みますか？"))go(last);},100);}}}}
+
+/* ====================== 手がら成績の集計 ====================== */
+let classData=null;
+$("#loadResults")&&($("#loadResults").onclick=()=>$("#resultsFile").click());
+$("#resultsFile")&&($("#resultsFile").onchange=async()=>{const files=[...($("#resultsFile").files||[])];const m=$("#statsMsg");m.className="msg";if(!files.length)return;
+ try{const recs=[];for(const f of files){const txt=await f.text();try{const o=JSON.parse(txt);if(Array.isArray(o))o.forEach(x=>recs.push(x));else recs.push(o);}catch(e){}}
+  if(!recs.length)throw new Error("有効な結果JSONがありません");classData=aggregate(recs);renderStats(classData);$("#resultsFile").value="";}
+ catch(err){m.className="msg err";m.textContent="読み込み失敗："+(err.message||err);}});
+function passLine(){const v=parseInt(($("#passLine")&&$("#passLine").value)||"80",10);return isNaN(v)?80:Math.max(0,Math.min(100,v));}
+function aggregate(recs){const students=(Array.isArray(recs)?recs:[]).map(r=>{r=r||{};const sc=r.score||{};let acc=Number(sc.accuracy_percent);if(!isFinite(acc))acc=0;acc=Math.max(0,Math.min(100,Math.round(acc)));return {name:(r.learner||"(なまえなし)"),acc,rank:r.rank||"",details:Array.isArray(r.details)?r.details:[]};});
+ const qmap=new Map();students.forEach(st=>st.details.forEach(d=>{const key=`${d.crumbs||d.lesson||""}｜${d.title||""}`;if(!qmap.has(key))qmap.set(key,{crumbs:d.crumbs||d.lesson||"",title:d.title||"",correct:0,incorrect:0,unanswered:0});const e=qmap.get(key);if(d.result==="correct")e.correct++;else if(d.result==="incorrect")e.incorrect++;else e.unanswered++;}));
+ const questions=[...qmap.values()].map(e=>{const n=e.correct+e.incorrect+e.unanswered;return {...e,n,rate:n?Math.round(e.correct/n*100):0};});
+ const avg=students.length?Math.round(students.reduce((a,s)=>a+s.acc,0)/students.length):0;return {students,questions,avg,count:students.length};}
+function heatColor(r){return `hsl(${Math.round(r*1.2+340)} 70% 84%)`;}
+function renderStats(d){const body=$("#statsBody");const line=passLine();d.students.forEach(s=>s.pass=s.acc>=line);
+ const passed=d.students.filter(s=>s.pass).length;const prate=d.count?Math.round(passed/d.count*100):0;
+ $("#statsTitle").textContent=`手がら成績（${d.count}人・合格ライン${line}%）`;
+ const rows=d.questions.map(q=>`<tr><td class="lsn">${esc(q.crumbs)}</td><td>${esc(q.title)}</td><td class="rate" style="background:${heatColor(q.rate)}">${q.rate}%</td><td class="num">◯${q.correct} ✕${q.incorrect} —${q.unanswered}</td></tr>`).join("");
+ const studs=d.students.slice().sort((a,b)=>b.acc-a.acc).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.rank)}</td><td><div class="bar"><i style="width:${s.acc}%;background:${heatColor(s.acc)}"></i></div></td><td class="num">${s.acc}%</td><td class="num" style="font-weight:800;color:${s.pass?'#1d6b4f':'#9a3552'}">${s.pass?'合格':'もう一度'}</td></tr>`).join("");
+ const weak=d.questions.slice().sort((a,b)=>a.rate-b.rate).slice(0,3).map(q=>`${q.crumbs} ${q.title}（${q.rate}%）`);
+ body.innerHTML=`<div class="stats-kpi"><div class="kpi"><b>${d.count}</b><span>ていしゅつ人数</span></div><div class="kpi"><b>${d.avg}%</b><span>へいきん正答率</span></div><div class="kpi"><b>${passed}</b><span>合格（≥${line}%）</span></div><div class="kpi"><b>${prate}%</b><span>合格率</span></div></div>
+  ${weak.length?`<div class="stats-sub">つまずいた問いかけ（正答率ワースト）</div><div style="font-size:.86rem;line-height:1.7;color:var(--ginger-d)">・ ${weak.join("<br>・ ")}</div>`:""}
+  <div class="stats-sub">小道べつ ヒートマップ（正答率）</div><table class="heat"><thead><tr><th>小道</th><th>問いかけ</th><th>正答率</th><th>うちわけ</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="stats-sub">読み手べつ（合格ライン ${line}%）</div><table class="heat"><thead><tr><th>なまえ</th><th>しょうごう</th><th>正答率</th><th></th><th>はんてい</th></tr></thead><tbody>${studs}</tbody></table>`;
+ $("#statsOverlay").classList.add('show');}
+$("#passLine")&&($("#passLine").onchange=()=>{if(classData)renderStats(classData);});
+$("#statsClose")&&($("#statsClose").onclick=()=>$("#statsOverlay").classList.remove('show'));
+$("#statsCsv")&&($("#statsCsv").onclick=()=>{if(!classData)return;const line=passLine();const e2=s=>`"${String(s).replace(/"/g,'""')}"`;
+ let csv="\uFEFF合格ライン(%),"+line+"\n\n小道べつ\n小道,問いかけ,正答率(%),正解,不正解,未回答\n";classData.questions.forEach(q=>csv+=[e2(q.crumbs),e2(q.title),q.rate,q.correct,q.incorrect,q.unanswered].join(",")+"\n");
+ csv+="\n読み手べつ\nなまえ,しょうごう,正答率(%),はんてい\n";classData.students.slice().sort((a,b)=>b.acc-a.acc).forEach(s=>csv+=[e2(s.name),e2(s.rank),s.acc,(s.acc>=line?"合格":"もう一度")].join(",")+"\n");
+ downloadBlob(new Blob([csv],{type:"text/csv;charset=utf-8"}),`Hansel_Report_${stamp()}.csv`);});
+$("#statsPass")&&($("#statsPass").onclick=()=>{if(!classData)return;const line=passLine();const e2=s=>`"${String(s).replace(/"/g,'""')}"`;
+ const ps=classData.students.filter(s=>s.acc>=line).sort((a,b)=>b.acc-a.acc);let csv="\uFEFF合格者一覧,Linux ヘンゼルとグレーテル,合格ライン "+line+"%\n\n番号,なまえ,しょうごう,正答率(%)\n";
+ ps.forEach((s,i)=>csv+=[i+1,e2(s.name),e2(s.rank),s.acc].join(",")+"\n");csv+=`\n合格 ${ps.length} 人 / ていしゅつ ${classData.count} 人\n`;
+ downloadBlob(new Blob([csv],{type:"text/csv;charset=utf-8"}),`Hansel_PassList_${stamp()}.csv`);});
+
+/* 合格者のそつぎょう証を一括PDF */
+function buildJpegPDFMulti(jpegs){const PW=842,PH=595;const enc=s=>new TextEncoder().encode(s);const parts=[];let len=0;const off=[];const push=u=>{parts.push(u);len+=u.length;};
+ push(enc("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n"));const N=jpegs.length;const pg=i=>3+i*3,ct=i=>4+i*3,im=i=>5+i*3,tot=2+N*3;const obj=(n,b)=>{off[n]=len;push(enc(n+" 0 obj\n"+b+"\nendobj\n"));};
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,`<< /Type /Pages /Kids [${Array.from({length:N},(_,i)=>pg(i)+" 0 R").join(" ")}] /Count ${N} >>`);
+ jpegs.forEach((j,i)=>{obj(pg(i),`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 ${im(i)} 0 R >> >> /Contents ${ct(i)} 0 R >>`);const c=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;obj(ct(i),`<< /Length ${c.length} >>\nstream\n${c}\nendstream`);
+   off[im(i)]=len;push(enc(`${im(i)} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${j.iw} /Height ${j.ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${j.bytes.length} >>\nstream\n`));push(j.bytes);push(enc("\nendstream\nendobj\n"));});
+ const xp=len;let x=`xref\n0 ${tot+1}\n0000000000 65535 f \n`;for(let i=1;i<=tot;i++)x+=String(off[i]||0).padStart(10,"0")+" 00000 n \n";push(enc(x));push(enc(`trailer\n<< /Size ${tot+1} /Root 1 0 R >>\nstartxref\n${xp}\n%%EOF`));
+ const out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length;}return out;}
+async function buildCertCanvasWithScore(st){try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+ const W=1684,H=1190,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+ const C={cocoa:"#5a3a26",ink2:"#6a4628",ginger:"#a8682f",gingerD:"#7c4a1e",pink:"#d85f7c",berry:"#7a4090",mint:"#4fa98c",lemon:"#e0b13e"};
+ const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#fffaf3");bg.addColorStop(1,"#ffeedd");g.fillStyle=bg;g.fillRect(0,0,W,H);
+ g.lineWidth=14;for(let x=60;x<W-60;x+=28){g.strokeStyle=(x/28)%2?C.pink:"#ffffff";g.beginPath();g.moveTo(x,60);g.lineTo(x+14,60);g.stroke();g.beginPath();g.moveTo(x,H-60);g.lineTo(x+14,H-60);g.stroke();}
+ g.strokeStyle=C.pink;g.lineWidth=4;g.strokeRect(78,78,W-156,H-156);
+ const cx=W/2;g.textAlign="center";g.fillStyle=C.berry;g.font='30px "Kosugi Maru",sans-serif';g.fillText("お か し の 家   そ つ ぎ ょ う 証",cx,180);
+ g.fillStyle=C.pink;g.font='900 104px "Mochiy Pop One","Zen Maru Gothic",sans-serif';g.fillText("そつぎょう証",cx,308);
+ g.strokeStyle=C.mint;g.lineWidth=8;g.beginPath();g.moveTo(cx-200,348);g.lineTo(cx+200,348);g.stroke();
+ g.fillStyle=C.ink2;g.font='600 30px "Zen Maru Gothic",sans-serif';g.fillText("つぎの子に、これをおくります",cx,418);
+ g.fillStyle=C.berry;g.font='900 74px "Zen Maru Gothic",sans-serif';g.fillText((st.name||"あなた")+"　へ",cx,508);
+ g.strokeStyle="rgba(155,91,176,.4)";g.lineWidth=3;g.beginPath();g.moveTo(cx-340,530);g.lineTo(cx+340,530);g.stroke();
+ g.fillStyle=C.ink2;g.font='500 30px "Zen Maru Gothic",sans-serif';g.fillText("Linux ヘンゼルとグレーテル の森をぬけ、コマンドをまなびきりました。めでたし、めでたし。",cx,584);
+ if(st.acc!==""&&st.acc!=null){g.fillStyle=C.cocoa;g.font='700 46px "Zen Maru Gothic",sans-serif';g.fillText(`手がら ${st.acc}%`,cx,662);g.fillStyle=C.gingerD;g.font='700 38px "Zen Maru Gothic",sans-serif';g.fillText("しょうごう ── "+(st.rank||""),cx,716);}
+ const d=new Date();g.fillStyle=C.ink2;g.font='28px "Kosugi Maru",sans-serif';g.fillText(`${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日　お菓子の家より`,cx,H-150);
+ g.beginPath();g.arc(W-250,H-205,62,0,7);g.fillStyle=C.lemon;g.fill();g.lineWidth=5;g.strokeStyle="#fff";g.stroke();g.font='54px serif';g.fillText("🍭",W-250,H-188);return c;}
+$("#statsCertsPdf")&&($("#statsCertsPdf").onclick=async()=>{if(!classData)return;const line=passLine();const ps=classData.students.filter(s=>s.acc>=line).sort((a,b)=>b.acc-a.acc);
+ if(!ps.length){alert("合格者がいません（合格ラインを下げてください）。");return;}const btn=$("#statsCertsPdf"),lab=btn.textContent;btn.disabled=true;btn.textContent="つくり中…";
+ try{const jpegs=[];for(const s of ps){const c=await buildCertCanvasWithScore(s);jpegs.push({bytes:dataURLToBytes(c.toDataURL("image/jpeg",0.92)),iw:c.width,ih:c.height});}
+   downloadBlob(new Blob([buildJpegPDFMulti(jpegs)],{type:"application/pdf"}),`Hansel_Diplomas_${stamp()}.pdf`);}
+ catch(err){alert("そつぎょう証PDFの生成に失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+
+/* 結果JSON提出 */
+function exportResultsJSON(){const {total,answered,correct}=stats();const [rank]=rankOf(total?correct/total:0);
+ const data={course:"Linux Hansel & Gretel (Okashi no Ie)",learner:learnerName||"",issued_at:new Date().toISOString(),
+  score:{total_quizzes:total,answered,first_try_correct:correct,accuracy_percent:total?Math.round(correct/total*100):0},rank,
+  details:breakdown().map(b=>({crumbs:b.crumbs,title:b.title,result:b.state==="ok"?"correct":(b.state==="miss"?"incorrect":"unanswered")}))};
+ downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),`Result_${toAsciiName(learnerName)}_Hansel_${stamp()}.json`);flash&&flash("ok","結果をJSONで提出（保存）しました。");}
+
+/* ---------- 屋根の飴を散らす ---------- */
+(function(){const roof=$("#roof");for(let i=0;i<14;i++){const g=document.createElement('div');g.className='gum';g.style.left=(4+i*7)+"%";
+ g.style.background=`radial-gradient(circle at 35% 30%,#fff8,${GUMC[i%GUMC.length]})`;roof.appendChild(g);}})();
+
+/* ---------- 蛍 ---------- */
+const cv=$("#fly"),fx=cv.getContext('2d');let W,H,P;
+function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;}size();addEventListener('resize',size);
+function spawn(){return{x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.8+.6,s:Math.random()*.4+.1,tw:Math.random()*6.28};}
+P=Array.from({length:46},spawn);
+function loop(){fx.clearRect(0,0,W,H);for(const p of P){p.y-=p.s;p.x+=Math.sin(p.tw)*.4;p.tw+=.02;
+ if(p.y<-10){p.y=H+10;p.x=Math.random()*W;}const fl=.4+.6*Math.abs(Math.sin(p.tw*2));
+ const g=fx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*5);g.addColorStop(0,`rgba(255,240,150,${fl})`);g.addColorStop(.5,`rgba(200,230,120,${fl*.4})`);g.addColorStop(1,"rgba(200,230,120,0)");
+ fx.fillStyle=g;fx.beginPath();fx.arc(p.x,p.y,p.r*5,0,7);fx.fill();}requestAnimationFrame(loop);}loop();
+
+/* ---------- init ---------- */
+assignIds();ensureCert();
+if(STUDENT_MODE){const sv=loadProgress();
+ if(sv&&(sv.idx>0||(sv.results&&Object.keys(sv.results).length))){setTimeout(()=>{
+   if(confirm("つづきから はじめますか？\n（「キャンセル」で さいしょから）")){results=sv.results||{};attempts=sv.attempts||{};if(sv.startedAt)startedAt=sv.startedAt;learnerName=sv.learnerName||"";idx=Math.max(0,Math.min(sv.idx||0,deck.length-1));paint();}
+   else{clearProgress();startedAt=Date.now();}},500);}
+ if(timeLimitMin){tickTimer();setInterval(tickTimer,1000);}}
+buildTrail();paint();
+$("#ver").textContent=APP_VERSION+(STUDENT_MODE?" · 読み手版":"");
+if(STUDENT_MODE){const tb=$(".toolbar");if(tb)tb.style.display="none";}
+$("#f-type")&&$("#f-type").onchange();
+</script>
+</body>
+</html>
