@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学びの魔導劇場 — Grand Théâtre du Savoir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Shippori+Mincho:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --velvet:#6e0f1a;--velvet-d:#480810;--velvet-l:#9c2230;--velvet-x:#2c060c;
+  --gold:#d9a93a;--gold-l:#f7dd8a;--gold-xl:#fff2c2;--gold-d:#a9781f;--gold-deep:#7a5413;
+  --stage:#160a0e;--stage-2:#0a0407;
+  --parch:#f4e6c8;--parch-2:#ecd6ab;--parch-edge:#d6ba87;
+  --ink:#3a2410;--ink-2:#5a3410;
+  --foot:#ffcf6e;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:"Shippori Mincho",serif;color:var(--ink);
+  background:radial-gradient(130% 120% at 50% -20%,#3a141a 0%,#1a0a0e 50%,#070305 100%);
+  position:relative;-webkit-tap-highlight-color:transparent;
+}
+#dust{position:fixed;inset:0;z-index:1;pointer-events:none}
+
+/* ===================== THEATRE FRAME ===================== */
+.house{position:fixed;inset:0;z-index:2;display:flex;align-items:center;justify-content:center}
+.proscenium{
+  position:relative;width:min(94vw,1040px);height:min(90vh,680px);
+}
+/* gilded arch */
+.arch{
+  position:absolute;inset:0;border-radius:18px;
+  background:
+    linear-gradient(180deg,#1d0e12,#0c0507);
+  box-shadow:0 50px 120px -30px rgba(0,0,0,.85);
+  padding:clamp(16px,2.6vw,30px);
+}
+.arch::before{ /* gold inner frame */
+  content:"";position:absolute;inset:clamp(10px,1.8vw,20px);border-radius:12px;
+  border:3px solid transparent;
+  background:linear-gradient(135deg,var(--gold-d),var(--gold-l) 25%,var(--gold-xl) 50%,var(--gold) 75%,var(--gold-deep)) border-box;
+  -webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  box-shadow:0 0 24px rgba(217,169,58,.35),inset 0 0 24px rgba(217,169,58,.25);
+  pointer-events:none;
+}
+/* crest */
+.crest{
+  position:absolute;top:-2px;left:50%;transform:translate(-50%,-50%);z-index:8;
+  width:clamp(70px,12vw,108px);height:clamp(56px,9vw,84px);
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));
+}
+.crest svg{width:100%;height:100%}
+
+/* valance (top drape swag) */
+.valance{position:absolute;top:clamp(10px,1.8vw,20px);left:clamp(10px,1.8vw,20px);right:clamp(10px,1.8vw,20px);height:clamp(46px,8vw,74px);z-index:7;overflow:hidden;border-radius:10px 10px 0 0}
+.valance .swag{
+  position:absolute;top:-40%;width:18%;height:160%;border-radius:0 0 50% 50%;
+  background:
+    radial-gradient(120% 100% at 50% 0%,var(--velvet-l),var(--velvet) 55%,var(--velvet-d));
+  box-shadow:inset -10px 0 18px rgba(0,0,0,.35),inset 10px 0 14px rgba(255,255,255,.06);
+}
+.valance .swag::after{content:"●";position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);color:var(--gold-l);font-size:.8rem;text-shadow:0 0 6px var(--gold)}
+
+/* side curtains */
+.curtain{position:absolute;top:clamp(10px,1.8vw,20px);bottom:clamp(10px,1.8vw,20px);width:30%;z-index:6;overflow:hidden;
+  background:repeating-linear-gradient(90deg,var(--velvet-d) 0,var(--velvet) 7%,var(--velvet-l) 11%,var(--velvet) 15%,var(--velvet-d) 22%);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.6);
+  transition:transform 1.6s cubic-bezier(.7,0,.2,1);
+}
+.curtain.left{left:clamp(10px,1.8vw,20px);border-radius:10px 0 0 10px;transform-origin:left}
+.curtain.right{right:clamp(10px,1.8vw,20px);border-radius:0 10px 10px 0;transform:scaleX(-1);transform-origin:right}
+.curtain::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 60%,rgba(0,0,0,.35));}
+/* opened state: pulled aside with a tie-back pinch */
+.open .curtain.left{transform:translateX(-66%) scaleX(.5)}
+.open .curtain.right{transform:translateX(66%) scaleX(-.5)}
+.tieback{position:absolute;top:46%;width:16px;height:46px;border-radius:8px;z-index:9;
+  background:linear-gradient(180deg,var(--gold-l),var(--gold-d));box-shadow:0 0 10px rgba(217,169,58,.6);opacity:0;transition:opacity .6s .9s}
+.tieback.l{left:calc(30% - 8px)}.tieback.r{right:calc(30% - 8px)}
+.open .tieback{opacity:1}
+
+/* footlights */
+.foot{position:absolute;left:8%;right:8%;bottom:clamp(12px,2vw,22px);height:30px;z-index:7;display:flex;justify-content:space-around;align-items:flex-end;pointer-events:none}
+.foot i{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#fff5d6,var(--foot) 55%,transparent 75%);
+  box-shadow:0 -16px 26px 6px rgba(255,180,70,.28);animation:flick 3.4s ease-in-out infinite}
+.foot i:nth-child(2n){animation-delay:.6s}.foot i:nth-child(3n){animation-delay:1.2s}
+@keyframes flick{0%,100%{opacity:.85}45%{opacity:1}70%{opacity:.7}}
+
+/* spotlight cone */
+.spot{position:absolute;inset:0;z-index:4;pointer-events:none;
+  background:radial-gradient(60% 80% at 50% 6%,rgba(255,224,160,.16),transparent 60%);
+  mix-blend-mode:screen}
+
+/* ===================== STAGE / SCENE ===================== */
+.stage{position:absolute;inset:clamp(28px,4vw,50px);z-index:5;display:flex;align-items:center;justify-content:center}
+.scene{
+  position:relative;width:100%;height:100%;border-radius:8px;
+  background:radial-gradient(130% 120% at 50% 0%,var(--parch),var(--parch-2) 62%,var(--parch-edge));
+  box-shadow:inset 0 0 70px rgba(120,80,30,.4),inset 0 0 10px rgba(60,36,16,.45),0 0 0 6px rgba(0,0,0,.25),0 0 0 8px var(--gold-d);
+  overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:clamp(22px,4.5vw,58px);
+  transition:opacity .42s ease,transform .5s cubic-bezier(.2,.7,.3,1);
+}
+.scene.leaving{opacity:0;transform:translateY(-18px) scale(.985)}
+.scene::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 20% 24%,rgba(150,100,40,.12),transparent 42%),radial-gradient(circle at 82% 78%,rgba(150,100,40,.12),transparent 42%)}
+.scene::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 80px rgba(90,50,10,.4)}
+
+.corner{position:absolute;width:64px;height:64px;opacity:.6;z-index:4}
+.corner svg{width:100%;height:100%;stroke:var(--gold-d);fill:none;stroke-width:1.5}
+.c-tl{top:14px;left:14px}.c-tr{top:14px;right:14px;transform:scaleX(-1)}
+.c-bl{bottom:14px;left:14px;transform:scaleY(-1)}.c-br{bottom:14px;right:14px;transform:scale(-1)}
+
+.content{position:relative;z-index:5;width:100%;max-width:660px}
+.kicker{font-family:"Cinzel",serif;letter-spacing:.42em;font-size:clamp(.6rem,1.5vw,.78rem);
+  color:var(--gold-d);text-transform:uppercase;margin-bottom:.7rem;font-weight:700}
+.act{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(1rem,2.6vw,1.4rem);color:var(--velvet);letter-spacing:.06em;margin-bottom:.2rem}
+.flourish{width:120px;height:14px;margin:.4rem auto .8rem;opacity:.7}
+.flourish svg{width:100%;height:100%;stroke:var(--gold-d);fill:none;stroke-width:1.4}
+.title-grand{font-family:"Cinzel Decorative",serif;font-weight:900;line-height:1.05;letter-spacing:.03em;
+  font-size:clamp(2rem,6.4vw,3.7rem);color:transparent;
+  background:linear-gradient(180deg,#6a3d12 0%,#3a2410 65%);-webkit-background-clip:text;background-clip:text;
+  text-shadow:0 1px 0 rgba(255,255,255,.3)}
+.subtitle{font-family:"Cinzel",serif;font-size:clamp(.85rem,2.2vw,1.2rem);color:var(--ink-2);margin-top:.5rem;letter-spacing:.22em}
+h1{font-weight:800;line-height:1.25;font-size:clamp(1.55rem,4.4vw,2.6rem);color:var(--ink);margin-bottom:.9rem}
+.lead{font-size:clamp(1rem,2.5vw,1.32rem);line-height:1.95;color:#4a3015;margin:.3rem auto 0;max-width:36ch}
+.lead .hi{color:var(--velvet);font-weight:700;border-bottom:2px solid rgba(110,15,26,.35);padding-bottom:1px}
+.lead b{color:var(--ink)}
+.oneliner{margin-top:1.3rem;font-weight:700;font-size:clamp(1.05rem,2.9vw,1.45rem);color:var(--velvet)}
+.spells{list-style:none;margin-top:1.05rem;display:grid;gap:.62rem;text-align:left;max-width:32ch;margin-inline:auto}
+.spells li{display:flex;gap:.7rem;align-items:baseline;font-size:clamp(.95rem,2.3vw,1.16rem);line-height:1.5;color:#4a3015}
+.spells .ru{font-family:"Cinzel",serif;color:var(--velvet);font-weight:700;flex:0 0 auto}
+
+/* sigil */
+.sigil{position:relative;width:clamp(140px,30vw,210px);height:clamp(140px,30vw,210px);margin:0 auto .8rem}
+.sigil svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ring-rot{transform-origin:50% 50%;animation:spin 40s linear infinite}
+.ring-rot.rev{animation-duration:28s;animation-direction:reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sg{stroke:var(--gold-d);fill:none;stroke-width:1.3}
+.sg-glow{stroke:var(--gold-l);fill:none;stroke-width:2.4;opacity:.5;filter:blur(2px)}
+.glyph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(2.8rem,8vw,4.2rem);
+  filter:drop-shadow(0 0 16px rgba(255,170,60,.6));animation:bob 4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(-4px)}50%{transform:translateY(4px)}}
+
+/* cycle */
+.cycle{position:relative;width:clamp(220px,48vw,320px);height:clamp(220px,48vw,320px);margin:.3rem auto}
+.cycle .core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34%;height:34%;border-radius:50%;
+  background:radial-gradient(circle,#fff4dd,#f0c068);display:flex;align-items:center;justify-content:center;
+  font-size:clamp(1.5rem,5vw,2.3rem);box-shadow:0 0 30px rgba(255,160,50,.7),inset 0 0 14px rgba(180,110,20,.5)}
+.node{position:absolute;display:flex;flex-direction:column;align-items:center;gap:.12rem;transform:translate(-50%,-50%)}
+.node .dot{width:clamp(40px,10vw,56px);height:clamp(40px,10vw,56px);border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(1.2rem,3.6vw,1.6rem);background:radial-gradient(circle,#fbe7bd,#e2a948);
+  box-shadow:0 4px 12px rgba(40,20,5,.5),inset 0 0 8px rgba(160,100,20,.4);border:2px solid var(--gold)}
+.node span{font-size:clamp(.7rem,1.9vw,.92rem);font-weight:700;color:var(--ink-2)}
+
+/* curve */
+.curve{width:100%;max-width:440px;margin:.3rem auto 0}
+.curve svg{width:100%;height:auto}
+.curve .axis{stroke:#8a6534;stroke-width:1.5}
+.curve .decay{stroke:var(--velvet);stroke-width:3;fill:none;stroke-linecap:round}
+.curve .review{stroke:#2e7d52;stroke-width:2.5;fill:none;stroke-dasharray:5 4;stroke-linecap:round}
+.curve .lbl{font-size:13px;fill:var(--ink-2);font-family:"Shippori Mincho",serif}
+
+/* MC / familiar */
+.familiar{position:absolute;bottom:clamp(12px,3.5vw,26px);right:clamp(14px,3.6vw,30px);display:flex;align-items:flex-end;gap:.5rem;z-index:6;max-width:62%}
+.familiar .bun{font-size:clamp(1.9rem,5.4vw,2.7rem);animation:hop 2.6s ease-in-out infinite;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))}
+@keyframes hop{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}}
+.familiar .say{background:linear-gradient(180deg,#fff7e6,#f6e2b8);border:1.5px solid var(--gold);border-radius:14px;
+  padding:.5rem .8rem;font-size:clamp(.74rem,1.9vw,.94rem);color:var(--ink-2);line-height:1.45;box-shadow:0 6px 14px rgba(40,20,5,.4);position:relative}
+.familiar .say::after{content:"";position:absolute;right:-7px;bottom:12px;border:7px solid transparent;border-left-color:#f6e2b8}
+
+/* reveal stagger */
+.scene .anim{animation:rise .7s cubic-bezier(.2,.7,.3,1) backwards}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.scene .anim:nth-child(1){animation-delay:.12s}.scene .anim:nth-child(2){animation-delay:.24s}
+.scene .anim:nth-child(3){animation-delay:.36s}.scene .anim:nth-child(4){animation-delay:.48s}
+.scene .anim:nth-child(5){animation-delay:.6s}.scene .anim:nth-child(6){animation-delay:.72s}
+
+/* ===================== CONTROLS ===================== */
+.nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:14px}
+.nav button{font-family:"Cinzel",serif;font-weight:700;background:linear-gradient(180deg,#3a1014,#1c080b);
+  color:var(--gold-l);border:1.5px solid rgba(217,169,58,.55);width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.55),inset 0 0 10px rgba(255,170,60,.15);
+  transition:transform .2s,box-shadow .2s,color .2s}
+.nav button:hover{transform:translateY(-2px);color:#fff;box-shadow:0 10px 22px rgba(0,0,0,.6),0 0 18px rgba(255,170,60,.45)}
+.nav button:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.runes{display:flex;gap:8px;flex-wrap:wrap;max-width:46vw;justify-content:center}
+.rune{width:11px;height:11px;border-radius:2px;transform:rotate(45deg);background:rgba(217,169,58,.25);border:1px solid rgba(217,169,58,.45);cursor:pointer;transition:all .3s}
+.rune.on{background:var(--foot);box-shadow:0 0 12px var(--foot);transform:rotate(45deg) scale(1.28)}
+
+.toolbar{position:fixed;top:16px;right:16px;z-index:30;display:flex;gap:8px}
+.tbtn{font-family:"Cinzel",serif;font-weight:700;letter-spacing:.05em;font-size:.78rem;cursor:pointer;
+  background:linear-gradient(180deg,#3a1014,#1c080b);color:var(--gold-l);border:1.5px solid rgba(217,169,58,.5);
+  padding:.5rem .85rem;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.5);transition:.2s}
+.tbtn:hover{color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.55),0 0 16px rgba(255,170,60,.35)}
+
+.hint{position:fixed;bottom:74px;left:50%;transform:translateX(-50%);z-index:30;font-family:"Cinzel",serif;letter-spacing:.28em;
+  font-size:.62rem;color:rgba(247,221,138,.5);text-transform:uppercase;animation:fade 5s ease forwards;animation-delay:4s}
+@keyframes fade{to{opacity:0;visibility:hidden}}
+
+/* ===================== EDITOR PANEL ===================== */
+.dim{position:fixed;inset:0;background:rgba(8,3,5,.55);z-index:40;opacity:0;visibility:hidden;transition:.3s}
+.dim.show{opacity:1;visibility:visible}
+.panel{position:fixed;top:0;right:0;height:100%;width:min(440px,94vw);z-index:50;
+  background:linear-gradient(180deg,#241015,#160a0d);color:#f0dfc4;
+  border-left:3px solid var(--gold-d);box-shadow:-20px 0 50px rgba(0,0,0,.6);
+  transform:translateX(100%);transition:transform .4s cubic-bezier(.2,.7,.3,1);
+  display:flex;flex-direction:column;font-family:"Shippori Mincho",serif}
+.panel.show{transform:none}
+.panel header{padding:18px 20px;border-bottom:1px solid rgba(217,169,58,.25);display:flex;align-items:center;justify-content:space-between}
+.panel header h2{font-family:"Cinzel Decorative",serif;font-size:1.15rem;color:var(--gold-l)}
+.panel .x{background:none;border:none;color:var(--gold-l);font-size:1.4rem;cursor:pointer}
+.panel .body{padding:16px 20px;overflow-y:auto;flex:1}
+.sec{margin-bottom:22px}
+.sec h3{font-family:"Cinzel",serif;font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;border-bottom:1px dashed rgba(217,169,58,.3);padding-bottom:6px}
+.scene-row{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:8px;background:rgba(255,255,255,.04);margin-bottom:6px;font-size:.86rem}
+.scene-row .nm{flex:1;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scene-row.cur{outline:1px solid var(--gold);background:rgba(217,169,58,.12)}
+.scene-row button{background:rgba(255,255,255,.07);border:none;color:#f0dfc4;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:.8rem;transition:.15s}
+.scene-row button:hover{background:rgba(217,169,58,.3)}
+.fld{margin-bottom:11px}
+.fld label{display:block;font-size:.72rem;letter-spacing:.08em;color:var(--gold-l);margin-bottom:4px}
+.fld input,.fld textarea{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(217,169,58,.3);border-radius:7px;
+  color:#fbeed0;padding:8px 10px;font-family:"Shippori Mincho",serif;font-size:.9rem;resize:vertical}
+.fld textarea{min-height:64px;line-height:1.5}
+.fld input:focus,.fld textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(217,169,58,.2)}
+.act-btn{width:100%;font-family:"Cinzel",serif;font-weight:700;letter-spacing:.06em;cursor:pointer;border:none;border-radius:9px;padding:11px;font-size:.92rem;color:#1c080b;
+  background:linear-gradient(180deg,var(--gold-l),var(--gold-d));box-shadow:0 5px 14px rgba(0,0,0,.4);transition:.2s;margin-top:4px}
+.act-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.act-btn.ghost{background:transparent;color:var(--gold-l);border:1.5px solid var(--gold-d);box-shadow:none}
+.act-btn.summon{background:linear-gradient(135deg,#9c2230,#6e0f1a);color:var(--gold-xl);border:1px solid var(--gold-d)}
+.act-btn:disabled{opacity:.5;cursor:wait}
+.note{font-size:.72rem;line-height:1.5;color:#c9b48c;margin-top:8px}
+.msg{font-size:.78rem;margin-top:8px;padding:8px 10px;border-radius:7px;display:none}
+.msg.err{display:block;background:rgba(156,34,48,.25);border:1px solid #9c2230;color:#ffc9cf}
+.msg.ok{display:block;background:rgba(46,125,82,.2);border:1px solid #2e7d52;color:#bff0d0}
+.row2{display:flex;gap:8px}.row2>*{flex:1}
+@media (max-width:560px){.familiar{position:static;margin-top:.8rem;max-width:100%;justify-content:center}.corner{width:44px;height:44px}}
+</style>
+</head>
+<body>
+<canvas id="dust"></canvas>
+
+<div class="house">
+  <div class="proscenium" id="pros">
+    <div class="arch"></div>
+    <div class="spot"></div>
+
+    <div class="stage"><div class="scene" id="scene"></div></div>
+
+    <!-- gilded ornaments -->
+    <div class="valance" id="valance"></div>
+    <div class="crest">
+      <svg viewBox="0 0 120 90">
+        <defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff2c2"/><stop offset="1" stop-color="#a9781f"/></linearGradient></defs>
+        <path d="M60 4 C40 4 30 16 30 32 C12 30 6 44 14 58 C2 62 4 80 22 82 C40 86 50 70 60 70 C70 70 80 86 98 82 C116 80 118 62 106 58 C114 44 108 30 90 32 C90 16 80 4 60 4Z" fill="url(#gg)" stroke="#7a5413" stroke-width="1.5"/>
+        <circle cx="60" cy="40" r="13" fill="#6e0f1a" stroke="#fff2c2" stroke-width="2"/>
+        <text x="60" y="46" font-size="15" text-anchor="middle" fill="#fff2c2">🐰</text>
+      </svg>
+    </div>
+    <div class="curtain left"></div>
+    <div class="curtain right"></div>
+    <div class="tieback l"></div><div class="tieback r"></div>
+    <div class="foot" id="foot"></div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <button class="tbtn" id="openEditor">🎭 台本</button>
+</div>
+
+<div class="nav">
+  <button id="prev" aria-label="前へ">‹</button>
+  <div class="runes" id="runes"></div>
+  <button id="next" aria-label="次へ">›</button>
+</div>
+<div class="hint">← → / クリックで進む ・ 「🎭 台本」で場面追加＆AI召喚</div>
+
+<!-- ===================== EDITOR ===================== -->
+<div class="dim" id="dim"></div>
+<aside class="panel" id="panel">
+  <header><h2>🎭 台本（だいほん）</h2><button class="x" id="closeEditor">✕</button></header>
+  <div class="body">
+
+    <div class="sec">
+      <h3>場面の一覧</h3>
+      <div id="sceneList"></div>
+    </div>
+
+    <div class="sec">
+      <h3 id="formTitle">場面を追加</h3>
+      <div class="fld"><label>幕・小見出し（例：第二幕 / Chapter II）</label><input id="f-act" placeholder="第◯幕"></div>
+      <div class="fld"><label>演目タイトル</label><input id="f-title" placeholder="例：なぜ学ぶのか"></div>
+      <div class="fld"><label>本文（改行で複数行）</label><textarea id="f-lead" placeholder="セリフ・解説をどうぞ"></textarea></div>
+      <div class="fld"><label>箇条書き（任意・1行ずつ）</label><textarea id="f-bul" placeholder="ひとつめ&#10;ふたつめ"></textarea></div>
+      <div class="fld"><label>締めの一言（任意）</label><input id="f-one" placeholder="この場面のキメ台詞"></div>
+      <div class="fld"><label>座長🐰のひとこと（任意）</label><input id="f-bun" placeholder="うさうさ先生のセリフ"></div>
+      <div class="fld"><label>紋章の絵文字（任意）</label><input id="f-emoji" placeholder="📖 ✨ 🪄 など"></div>
+      <div class="row2">
+        <button class="act-btn" id="saveScene">＋ 追加する</button>
+        <button class="act-btn ghost" id="clearForm">クリア</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>✨ Claudeに場面を召喚させる</h3>
+      <div class="fld"><label>テーマ・お題</label><textarea id="f-ai" placeholder="例：Linuxのパーミッションを劇的に紹介して"></textarea></div>
+      <button class="act-btn summon" id="summon">🪄 召喚する</button>
+      <div class="msg" id="aiMsg"></div>
+      <p class="note">claude.ai のプレビュー内ではそのまま動作します。生成された場面は一覧の末尾に追加され、すぐ編集できます。</p>
+    </div>
+
+    <div class="sec">
+      <h3>📦 台本データ（PPTのように保存・再利用）</h3>
+      <div class="row2" style="margin-bottom:8px">
+        <button class="act-btn ghost" id="exportBtn">書き出し</button>
+        <button class="act-btn ghost" id="importBtn">読み込み</button>
+      </div>
+      <div class="fld"><textarea id="f-json" placeholder="ここにJSONが出力されます／貼り付けて読み込み"></textarea></div>
+      <p class="note">「書き出し」でJSONを取得 → 別の機会に貼り付けて「読み込み」で復元。バックアップや配布に。</p>
+    </div>
+
+  </div>
+</aside>
+
+<script>
+/* ============================================================
+   DECK DATA  （データ駆動：ここに足すだけで場面が増える）
+   ============================================================ */
+const defaultDeck=[
+  {type:"cover",kicker:"A Theatrical Spellbook for Learners",emoji:"🐰",
+   titleGrand:"学びの魔導劇場",subtitle:"GRAND THÉÂTRE DU SAVOIR",
+   lead:"知らぬ呪文は、唱えられぬ。<br>この緞帳の向こうに、<span class='hi'>学ぶ魔法</span>の幕が上がる。",
+   bun:"ようこそ、知の劇場へ！",html:true},
+
+  {act:"第一幕",kicker:"Act the First",title:"なぜ、学ぶのか",
+   lead:"学びとは、世界を<span class='hi'>読み解く魔法</span>。<br>言葉を知らねば語れず、<br>仕組みを知らねば直せない。",
+   one:"知識は、選べる未来の数を増やす。",bun:"知れば、世界の見え方が変わるよ",html:true},
+
+  {act:"第二幕",kicker:"Act the Second",title:"学びとは何か",
+   lead:"<b>定義</b>：できなかったことが、できるようになること。<br><b>比喩</b>：呪文帳に、新しい一行が書き加わること。",
+   one:"＝「昨日の自分」を一歩こえる営み。",bun:"むずかしく考えなくて大丈夫！",html:true},
+
+  {act:"第三幕",kicker:"Act the Third",title:"学びの魔法陣",diagram:"cycle",
+   one:"回すほどに、魔力（実力）は濃くなる。",bun:"この魔法陣を、ぐるぐる回そう🌀"},
+
+  {act:"第四幕",kicker:"Act the Fourth",title:"忘却という呪い",diagram:"curve",
+   one:"復習という詠唱で、薄れる魔力を取り戻せ。",bun:"忘れるのは当たり前。だから復習だよ"},
+
+  {act:"第五幕",kicker:"Act the Fifth",title:"詠唱のコツ・五箇条",
+   bullets:["<b>小さく刻む</b> — 大魔法も、唱えるのは一節ずつ。",
+            "<b>手を動かす</b> — 写すより、自分で作って試す。",
+            "<b>声に出す</b> — 人に説明できて、初めて自分のもの。",
+            "<b>つまずきを記す</b> — 失敗は、次の呪文の材料。",
+            "<b>仲間と唱える</b> — 一人の限界を、仲間が超えさせる。"],
+   bun:"今日から唱えられる呪文ばかりだよ✨",html:true},
+
+  {type:"finale",kicker:"Curtain Call",emoji:"📖",
+   titleGrand:"面白きこともなき世を面白く",
+   lead:"幕を下ろすのは、あなた。<br>続きの呪文は、<span class='hi'>あなたの手</span>で書き足そう。",
+   bun:"さあ、あなたの物語を始めよう🐰",html:true},
+];
+let deck=JSON.parse(JSON.stringify(defaultDeck));
+let idx=0, editIndex=null;
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=t=>(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const nl2br=t=>esc(t).replace(/\n/g,"<br>");
+function leadHTML(s){ if(s.lead==null) return ""; return s.html? s.lead : nl2br(s.lead); }
+const RUNES=["Ⅰ.","Ⅱ.","Ⅲ.","Ⅳ.","Ⅴ.","Ⅵ.","Ⅶ.","Ⅷ.","Ⅸ.","Ⅹ.","ⅩⅠ.","ⅩⅡ."];
+const CORNERS=`
+ <div class="corner c-tl"><svg viewBox="0 0 60 60"><path d="M4 56 Q4 4 56 4"/><path d="M14 56 Q14 14 56 14"/><circle cx="56" cy="4" r="3"/></svg></div>
+ <div class="corner c-tr"><svg viewBox="0 0 60 60"><path d="M4 56 Q4 4 56 4"/><path d="M14 56 Q14 14 56 14"/><circle cx="56" cy="4" r="3"/></svg></div>
+ <div class="corner c-bl"><svg viewBox="0 0 60 60"><path d="M4 56 Q4 4 56 4"/><path d="M14 56 Q14 14 56 14"/><circle cx="56" cy="4" r="3"/></svg></div>
+ <div class="corner c-br"><svg viewBox="0 0 60 60"><path d="M4 56 Q4 4 56 4"/><path d="M14 56 Q14 14 56 14"/><circle cx="56" cy="4" r="3"/></svg></div>`;
+const FLOURISH=`<div class="flourish anim"><svg viewBox="0 0 120 14"><path d="M2 7 H44"/><path d="M118 7 H76"/><path d="M52 7 l8 -5 l8 5 l-8 5 Z"/><circle cx="48" cy="7" r="2"/><circle cx="72" cy="7" r="2"/></svg></div>`;
+
+function sigilHTML(emoji,small){
+  const sz=small?"width:clamp(120px,26vw,170px);height:clamp(120px,26vw,170px)":"";
+  return `<div class="sigil anim" style="${sz}"><svg viewBox="0 0 200 200">
+    <g class="ring-rot"><circle class="sg" cx="100" cy="100" r="92"/><circle class="sg-glow" cx="100" cy="100" r="92"/>
+      <polygon class="sg" points="100,18 170,140 30,140"/><polygon class="sg" points="100,182 30,60 170,60"/></g>
+    <g class="ring-rot rev"><circle class="sg" cx="100" cy="100" r="64"/>
+      <circle class="sg" cx="100" cy="8" r="4"/><circle class="sg" cx="100" cy="192" r="4"/>
+      <circle class="sg" cx="8" cy="100" r="4"/><circle class="sg" cx="192" cy="100" r="4"/></g></svg>
+    <div class="glyph">${emoji||"✨"}</div></div>`;
+}
+function cycleHTML(){return `<div class="cycle anim" data-cycle="1"><div class="core">📖</div></div>`;}
+function curveHTML(){return `<div class="curve anim"><svg viewBox="0 0 440 210">
+  <line class="axis" x1="40" y1="20" x2="40" y2="175"/><line class="axis" x1="40" y1="175" x2="420" y2="175"/>
+  <path class="decay" d="M40,30 C80,120 140,150 420,165"/>
+  <path class="review" d="M40,30 C70,90 100,95 130,55 C160,95 200,98 240,50 C280,90 330,92 420,45"/>
+  <text class="lbl" x="46" y="32">記憶</text><text class="lbl" x="372" y="195">時間 →</text>
+  <text class="lbl" x="250" y="120" fill="#6e0f1a">復習なし</text><text class="lbl" x="250" y="38" fill="#2e7d52">復習あり</text>
+</svg></div>`;}
+
+/* ---------- build one scene's inner HTML ---------- */
+function sceneHTML(s){
+  let c="";
+  if(s.type==="cover"||s.type==="finale"){
+    c+=`<div class="kicker anim">${esc(s.kicker||"")}</div>`;
+    c+=sigilHTML(s.emoji,s.type==="finale");
+    c+=`<h1 class="anim"><span class="title-grand" style="${s.type==='finale'?'font-size:clamp(1.5rem,5vw,2.5rem)':''}">${s.titleGrand||""}</span></h1>`;
+    if(s.subtitle) c+=`<p class="subtitle anim">${esc(s.subtitle)}</p>`;
+    if(s.lead!=null) c+=`<p class="lead anim" style="margin-top:1rem">${leadHTML(s)}</p>`;
+  }else{
+    if(s.kicker) c+=`<div class="kicker anim">${esc(s.kicker)}</div>`;
+    if(s.act) c+=`<div class="act anim">${esc(s.act)}</div>`;
+    c+=`<h1 class="anim">${esc(s.title||"")}</h1>`;
+    c+=FLOURISH;
+    if(s.diagram==="cycle") c+=cycleHTML();
+    else if(s.diagram==="curve") c+=curveHTML();
+    if(s.lead!=null) c+=`<p class="lead anim">${leadHTML(s)}</p>`;
+    if(s.bullets&&s.bullets.length){
+      c+=`<ul class="spells">`+s.bullets.map((b,i)=>
+        `<li class="anim"><span class="ru">${RUNES[i]||((i+1)+".")}</span><span>${s.html?b:nl2br(b)}</span></li>`).join("")+`</ul>`;
+    }
+    if(s.one) c+=`<p class="oneliner anim" style="margin-top:.9rem">${esc(s.one)}</p>`;
+  }
+  return `${CORNERS}<div class="content">${c}</div>
+    <div class="familiar"><div class="say">${esc(s.bun||"")}</div><div class="bun">🐰</div></div>`;
+}
+
+/* ---------- paint cycle nodes (after injection) ---------- */
+function decorateCycle(scope){
+  const cy=scope.querySelector('[data-cycle]'); if(!cy)return;
+  const items=[['📥','インプット'],['🛠️','演習'],['🗣️','アウトプット'],['🔁','ふりかえり']];
+  const R=38;
+  items.forEach(([ic,lb],i)=>{const a=(-90+i*90)*Math.PI/180;const n=document.createElement('div');
+    n.className='node';n.style.left=(50+R*Math.cos(a))+'%';n.style.top=(50+R*Math.sin(a))+'%';
+    n.innerHTML=`<div class="dot">${ic}</div><span>${lb}</span>`;cy.appendChild(n);});
+}
+
+/* ---------- navigation / render ---------- */
+const scene=$("#scene"),runesWrap=$("#runes");
+function buildRunes(){
+  runesWrap.innerHTML="";
+  deck.forEach((_,i)=>{const r=document.createElement('div');r.className='rune'+(i===idx?' on':'');
+    r.onclick=()=>go(i);runesWrap.appendChild(r);});
+}
+function paint(){
+  scene.innerHTML=sceneHTML(deck[idx]);
+  decorateCycle(scene);
+  $("#prev").disabled=idx===0; $("#next").disabled=idx===deck.length-1;
+  [...runesWrap.children].forEach((r,i)=>r.classList.toggle('on',i===idx));
+}
+function go(n){
+  if(n<0||n>=deck.length||n===idx){ if(n===idx) return; if(n<0||n>=deck.length) return; }
+  scene.classList.add('leaving');
+  setTimeout(()=>{ idx=n; paint(); scene.classList.remove('leaving'); },380);
+}
+$("#prev").onclick=()=>go(idx-1);
+$("#next").onclick=()=>go(idx+1);
+document.addEventListener('keydown',e=>{
+  if($("#panel").classList.contains('show'))return;
+  if(['ArrowRight','PageDown',' '].includes(e.key))go(idx+1);
+  if(['ArrowLeft','PageUp'].includes(e.key))go(idx-1);
+  if(e.key==='Home')go(0); if(e.key==='End')go(deck.length-1);
+});
+$("#pros").addEventListener('click',e=>{
+  if(e.target.closest('.nav')||e.target.closest('.toolbar'))return;
+  go(e.clientX<innerWidth*0.32?idx-1:idx+1);
+});
+
+/* ---------- editor ---------- */
+const panel=$("#panel"),dim=$("#dim");
+function openEd(){panel.classList.add('show');dim.classList.add('show');renderList();}
+function closeEd(){panel.classList.remove('show');dim.classList.remove('show');}
+$("#openEditor").onclick=openEd; $("#closeEditor").onclick=closeEd; dim.onclick=closeEd;
+
+function renderList(){
+  const L=$("#sceneList");L.innerHTML="";
+  deck.forEach((s,i)=>{
+    const name=s.titleGrand||s.title||"（無題）";
+    const row=document.createElement('div');
+    row.className='scene-row'+(i===idx?' cur':'');
+    row.innerHTML=`<span class="nm" title="${esc(name)}">${i+1}. ${esc(name)}</span>
+      <button data-up title="上へ">▲</button><button data-down title="下へ">▼</button>
+      <button data-edit title="編集">✎</button><button data-del title="削除">🗑</button>`;
+    row.querySelector('.nm').onclick=()=>{go(i);};
+    row.querySelector('[data-up]').onclick=()=>move(i,-1);
+    row.querySelector('[data-down]').onclick=()=>move(i,1);
+    row.querySelector('[data-edit]').onclick=()=>loadForm(i);
+    row.querySelector('[data-del]').onclick=()=>del(i);
+    L.appendChild(row);
+  });
+}
+function move(i,d){const j=i+d;if(j<0||j>=deck.length)return;[deck[i],deck[j]]=[deck[j],deck[i]];
+  if(idx===i)idx=j;else if(idx===j)idx=i; buildRunes();paint();renderList();}
+function del(i){if(deck.length<=1)return;deck.splice(i,1);if(idx>=deck.length)idx=deck.length-1;buildRunes();paint();renderList();}
+
+function clearForm(){editIndex=null;["act","title","lead","bul","one","bun","emoji"].forEach(k=>$("#f-"+k).value="");
+  $("#formTitle").textContent="場面を追加";$("#saveScene").textContent="＋ 追加する";}
+$("#clearForm").onclick=clearForm;
+function loadForm(i){editIndex=i;const s=deck[i];
+  $("#f-act").value=s.act||"";
+  $("#f-title").value=s.titleGrand||s.title||"";
+  $("#f-lead").value=(s.lead||"").replace(/<br\s*\/?>/g,"\n").replace(/<[^>]+>/g,"");
+  $("#f-bul").value=(s.bullets||[]).map(b=>b.replace(/<[^>]+>/g,"")).join("\n");
+  $("#f-one").value=s.one||"";$("#f-bun").value=s.bun||"";$("#f-emoji").value=s.emoji||"";
+  $("#formTitle").textContent="場面を編集（"+(i+1)+"）";$("#saveScene").textContent="✔ 更新する";
+  panel.querySelector('.body').scrollTo({top:0});
+}
+function readForm(){
+  const act=$("#f-act").value.trim(),title=$("#f-title").value.trim(),
+    lead=$("#f-lead").value.trim(),one=$("#f-one").value.trim(),
+    bun=$("#f-bun").value.trim(),emoji=$("#f-emoji").value.trim(),
+    bullets=$("#f-bul").value.split("\n").map(x=>x.trim()).filter(Boolean);
+  const s={act,title,kicker:act?"":"Scene",html:false};
+  if(lead)s.lead=lead; if(bullets.length)s.bullets=bullets; if(one)s.one=one;
+  if(bun)s.bun=bun; if(emoji)s.emoji=emoji;
+  return s;
+}
+$("#saveScene").onclick=()=>{
+  const s=readForm();
+  if(!s.title&&!(s.lead)&&!(s.bullets)){return;}
+  if(editIndex!=null){deck[editIndex]={...deck[editIndex],...s,html:false};}
+  else{deck.push(s);idx=deck.length-1;}
+  buildRunes();paint();renderList();clearForm();
+};
+
+/* ---------- JSON export / import ---------- */
+$("#exportBtn").onclick=()=>{$("#f-json").value=JSON.stringify(deck,null,2);
+  $("#f-json").focus();$("#f-json").select();};
+$("#importBtn").onclick=()=>{
+  try{const d=JSON.parse($("#f-json").value);if(!Array.isArray(d)||!d.length)throw 0;
+    deck=d;idx=0;buildRunes();paint();renderList();flash("ok","台本を読み込みました。");}
+  catch(e){flash("err","JSONの形式が正しくありません。");}
+};
+function flash(k,t){const m=$("#aiMsg");m.className="msg "+k;m.textContent=t;setTimeout(()=>{m.className="msg";},4000);}
+
+/* ---------- ✨ Claude API: 場面を召喚 ---------- */
+$("#summon").onclick=async()=>{
+  const topic=$("#f-ai").value.trim();
+  const btn=$("#summon"),m=$("#aiMsg");
+  if(!topic){flash("err","お題を入力してね。");return;}
+  btn.disabled=true;btn.textContent="🪄 召喚中…";m.className="msg";
+  const prompt=`あなたは「学びの魔導劇場」という、芝居がかった豪華な魔法劇のスライド作家です。
+次のお題について、観客（IT研修の受講生）を惹きつける1場面ぶんの台本を作ってください。
+お題：「${topic}」
+
+必ず次のJSONだけを返してください（前置き・コードフェンス・説明文は一切なし）。
+{
+ "act": "第◯幕 のような短い幕ラベル（日本語）",
+ "title": "演目タイトル（短く印象的に・日本語）",
+ "lead": "本文。芝居がかった語り口で2〜3文。改行は \\n。HTMLタグは使わない",
+ "bullets": ["要点を3〜5個。各15〜30字。空配列でも可"],
+ "one": "締めの一言（短いキメ台詞・日本語）",
+ "bun": "うさぎの座長🐰がそえる、やさしい一言"
+}`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,
+        messages:[{role:"user",content:prompt}]})});
+    const data=await res.json();
+    const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+    const clean=text.replace(/```json|```/g,"").trim();
+    const o=JSON.parse(clean);
+    const s={act:o.act||"",kicker:"Summoned Scene",title:o.title||"新しい場面",
+      lead:o.lead||"",bullets:Array.isArray(o.bullets)?o.bullets.filter(Boolean):[],
+      one:o.one||"",bun:o.bun||"",emoji:"🪄",html:false};
+    deck.push(s);idx=deck.length-1;buildRunes();paint();renderList();
+    $("#f-ai").value="";flash("ok","「"+s.title+"」を召喚しました！");
+  }catch(err){
+    flash("err","召喚に失敗しました。claude.aiのプレビュー内でお試しください。（"+(err.message||err)+"）");
+  }finally{btn.disabled=false;btn.textContent="🪄 召喚する";}
+};
+
+/* ---------- valance + footlights + dust ---------- */
+(function(){const v=$("#valance");for(let i=0;i<12;i++){const d=document.createElement('div');
+  d.className='swag';d.style.left=(i*9.0-2)+'%';v.appendChild(d);}
+  const f=$("#foot");for(let i=0;i<16;i++)f.appendChild(document.createElement('i'));})();
+
+const cv=$("#dust"),cx=cv.getContext('2d');let W,H,P;
+function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+size();addEventListener('resize',size);
+function spawn(){return{x:Math.random()*W,y:H+Math.random()*H,r:Math.random()*2.2+.5,
+  s:Math.random()*.5+.15,a:Math.random()*.6+.2,tw:Math.random()*6.28,gold:Math.random()>.4};}
+P=Array.from({length:70},spawn);
+function loop(){cx.clearRect(0,0,W,H);
+  for(const p of P){p.y-=p.s;p.x+=Math.sin(p.tw)*.3;p.tw+=.02;
+    if(p.y<-10)Object.assign(p,spawn(),{y:H+10});
+    const fl=p.a*(.6+.4*Math.sin(p.tw*3));
+    const g=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+    const col=p.gold?"255,205,100":"255,150,60";
+    g.addColorStop(0,`rgba(${col},${fl})`);g.addColorStop(.5,`rgba(${col},${fl*.4})`);g.addColorStop(1,`rgba(${col},0)`);
+    cx.fillStyle=g;cx.beginPath();cx.arc(p.x,p.y,p.r*4,0,7);cx.fill();}
+  requestAnimationFrame(loop);}
+loop();
+
+/* ---------- curtain raise on load ---------- */
+buildRunes();paint();
+setTimeout(()=>$("#pros").classList.add('open'),350);
+</script>
+</body>
+</html>
