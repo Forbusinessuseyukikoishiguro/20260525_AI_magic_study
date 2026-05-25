@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux 古典讀本 — A Classic Primer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Cardo:ital@0;1&family=UnifrakturCook:wght@700&family=Shippori+Mincho:wght@500;600;700;800&family=Spectral:ital,wght@0,400;0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-1:#3a2c1c;--bg-2:#23190f;
+  --leather:#5a3a22;--leather-d:#3c2613;--leather-l:#6e4a2c;
+  --gold:#b08a3e;--gold-l:#e6c878;--gold-xl:#f7e6bf;--gold-d:#8a6a2c;
+  --paper:#f4ecd6;--paper-2:#ece0c2;--paper-edge:#d8c79e;
+  --ink:#352a1c;--ink-2:#5a4632;--rubric:#8c2f23;   /* 朱（見出し・装飾） */
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:"Shippori Mincho","Cardo",serif;color:var(--ink);
+  background:
+    radial-gradient(120% 130% at 50% -10%,#4a3826 0%,#291d11 60%,#160f08 100%);
+  position:relative;-webkit-tap-highlight-color:transparent}
+/* faint vignette + grain */
+body::after{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;opacity:.6}
+
+/* ============ BOOK ============ */
+.room{position:fixed;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;padding:18px}
+.book{position:relative;width:min(96vw,1060px);height:min(90vh,690px)}
+/* leather cover slightly larger than pages */
+.cover-board{position:absolute;inset:-14px;border-radius:10px;
+  background:
+    repeating-linear-gradient(135deg,rgba(0,0,0,.04) 0 3px,transparent 3px 6px),
+    linear-gradient(160deg,var(--leather-l),var(--leather) 45%,var(--leather-d));
+  box-shadow:0 40px 90px -26px rgba(0,0,0,.85),inset 0 0 0 2px rgba(0,0,0,.25),inset 0 0 60px rgba(0,0,0,.4)}
+.cover-board::before{content:"";position:absolute;inset:10px;border-radius:7px;border:2px solid rgba(176,138,62,.55);
+  box-shadow:inset 0 0 0 1px rgba(176,138,62,.25)}
+.cover-board::after{content:"";position:absolute;inset:16px;border-radius:5px;border:1px solid rgba(176,138,62,.3)}
+
+/* the open spread */
+.spread{position:absolute;inset:8px;border-radius:5px;display:flex;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.leaf{position:relative;flex:1;min-width:0;
+  background:linear-gradient(180deg,var(--paper),var(--paper-2));
+  overflow:hidden}
+.leaf::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.05'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 20% 18%,rgba(150,110,50,.10),transparent 45%),
+    radial-gradient(circle at 80% 82%,rgba(150,110,50,.10),transparent 45%)}
+/* page edges / foxing near gutter */
+.leaf.left{box-shadow:inset -26px 0 40px -22px rgba(60,40,20,.6)}
+.leaf.right{box-shadow:inset 26px 0 40px -22px rgba(60,40,20,.6)}
+.gutter{width:2px;background:linear-gradient(180deg,transparent,rgba(60,40,20,.5),transparent);box-shadow:0 0 18px 6px rgba(60,40,20,.35);z-index:3}
+
+/* left leaf = ornamental verso (running head + ornament) */
+.verso{display:flex;flex-direction:column;padding:clamp(26px,4vw,48px);height:100%}
+.run-head{font-family:"Cormorant Garamond",serif;font-size:.74rem;letter-spacing:.34em;text-transform:uppercase;color:var(--ink-2);text-align:center;border-bottom:1px solid rgba(90,70,50,.3);padding-bottom:10px}
+.verso-mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px}
+.folio{font-family:"Cormorant Garamond",serif;font-size:.78rem;letter-spacing:.2em;color:var(--ink-2);text-align:center;border-top:1px solid rgba(90,70,50,.3);padding-top:10px}
+.plate{font-size:clamp(3rem,9vw,5rem);color:var(--rubric);filter:drop-shadow(0 2px 0 rgba(255,255,255,.4))}
+.plate-cap{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(1rem,2.6vw,1.34rem);color:var(--ink-2);max-width:24ch;line-height:1.5}
+.orn{width:clamp(120px,30vw,200px);height:auto;opacity:.8}
+.orn path,.orn circle,.orn line{stroke:var(--gold-d);fill:none;stroke-width:1.3}
+.orn .fillr{fill:var(--rubric);stroke:none}
+
+/* right leaf = recto (the reading content) */
+.recto{position:relative;height:100%;padding:clamp(26px,4vw,52px);display:flex;flex-direction:column;
+  transition:opacity .5s ease, transform .55s cubic-bezier(.2,.7,.3,1);transform-origin:left center}
+.recto.leaving{opacity:0;transform:rotateY(-14deg) translateX(-10px)}
+.recto .head{text-align:center;border-bottom:2px solid var(--ink);padding-bottom:.5rem;margin-bottom:1.1rem;position:relative}
+.recto .head::after{content:"";position:absolute;left:0;right:0;bottom:-5px;height:1px;background:var(--ink);opacity:.5}
+.chap{font-family:"Cormorant Garamond",serif;letter-spacing:.32em;text-transform:uppercase;font-size:clamp(.6rem,1.6vw,.78rem);color:var(--rubric);font-weight:600}
+.title{font-family:"Cormorant Garamond","Shippori Mincho",serif;font-weight:700;font-size:clamp(1.35rem,3.6vw,2.1rem);line-height:1.2;color:var(--ink);margin-top:.3rem}
+.title-grand{font-family:"UnifrakturCook","Cormorant Garamond",serif;font-weight:700;font-size:clamp(2.2rem,7vw,3.7rem);line-height:1.05;color:var(--ink);letter-spacing:.01em}
+.subtitle{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(.95rem,2.3vw,1.24rem);color:var(--ink-2);margin-top:.5rem;letter-spacing:.06em}
+.body-scroll{flex:1;overflow:auto;padding-right:6px}
+.body-scroll::-webkit-scrollbar{width:7px}.body-scroll::-webkit-scrollbar-thumb{background:rgba(120,90,50,.4);border-radius:4px}
+
+.prose{font-family:"Spectral","Shippori Mincho",serif;font-size:clamp(1rem,2.3vw,1.18rem);line-height:1.95;color:#3c2e1d;text-align:justify;hyphens:auto}
+.prose.lead{text-align:left}
+/* drop cap on first lesson paragraph */
+.prose.drop::first-letter{font-family:"UnifrakturCook",serif;font-size:3.4em;line-height:.8;float:left;color:var(--rubric);padding:.05em .12em 0 0}
+.prose .hi{color:var(--rubric);font-weight:600}
+.prose b{color:var(--ink);font-weight:700}
+.aside{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(.92rem,2.1vw,1.12rem);color:var(--ink-2);
+  border-left:3px solid var(--rubric);padding:.2rem 0 .2rem .9rem;margin-top:1rem}
+/* enumerated marginalia list */
+.enum{list-style:none;margin-top:1rem;display:grid;gap:.6rem}
+.enum li{display:flex;gap:.8rem;align-items:baseline;font-family:"Spectral",serif;font-size:clamp(.95rem,2.2vw,1.12rem);line-height:1.6;color:#3c2e1d}
+.enum .n{font-family:"Cormorant Garamond",serif;font-weight:700;color:var(--rubric);flex:0 0 auto;font-size:1.1em}
+/* command set as a ruled specimen */
+.specimen{margin-top:1.1rem;border-top:1px solid rgba(90,70,50,.4);border-bottom:1px solid rgba(90,70,50,.4);padding:.7rem 0}
+.specimen .row{font-family:"Cardo",monospace,serif;font-size:clamp(.86rem,2vw,1.04rem);color:#2c2113;line-height:1.8;display:flex;gap:.6rem}
+.specimen .row .cmd{font-weight:600;letter-spacing:.01em}
+.specimen .row .gloss{color:var(--ink-2);font-style:italic;font-family:"Cormorant Garamond",serif}
+.specimen .row .mark{color:var(--rubric)}
+.oneliner{margin-top:1rem;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(1.05rem,2.6vw,1.36rem);color:var(--rubric);text-align:center}
+
+/* quiz as "exercitium" */
+.q-text{font-family:"Spectral",serif;font-weight:500;font-size:clamp(1.05rem,2.6vw,1.34rem);color:var(--ink);margin:.3rem 0 1rem;line-height:1.6}
+.choices{display:grid;gap:.55rem}
+.choice{display:flex;gap:.7rem;align-items:flex-start;cursor:pointer;text-align:left;
+  font-family:"Spectral",serif;font-size:clamp(.96rem,2.2vw,1.14rem);color:#3c2e1d;background:transparent;
+  border:none;border-bottom:1px dotted rgba(120,90,50,.5);padding:.5rem .2rem;transition:.16s}
+.choice:hover:not(:disabled){background:rgba(176,138,62,.1)}
+.choice .lt{font-family:"Cormorant Garamond",serif;font-weight:700;color:var(--rubric);flex:0 0 auto}
+.choice:disabled{cursor:default}
+.choice.ok{background:rgba(120,140,80,.18);border-bottom-color:#5a6e2c}
+.choice.ok .lt{color:#4a5a22}
+.choice.ng{background:rgba(140,47,35,.12);border-bottom-color:var(--rubric);opacity:.85}
+.verdict{margin-top:1rem;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(1rem,2.4vw,1.24rem);color:var(--rubric);min-height:1.4em}
+.verdict .ex{display:block;font-style:normal;font-family:"Spectral",serif;font-size:clamp(.85rem,2vw,1rem);color:var(--ink-2);margin-top:.4rem;line-height:1.6}
+
+/* certificate / colophon */
+.colophon{text-align:center;display:flex;flex-direction:column;height:100%}
+.col-orn{margin:0 auto .4rem;width:clamp(120px,28vw,180px)}
+.col-orn svg{width:100%;height:auto}
+.cert-kicker{font-family:"Cormorant Garamond",serif;letter-spacing:.3em;text-transform:uppercase;font-size:clamp(.62rem,1.6vw,.8rem);color:var(--rubric)}
+.cert-title{font-family:"UnifrakturCook",serif;font-size:clamp(1.8rem,6vw,2.9rem);color:var(--ink);margin:.2rem 0}
+.cert-line{font-family:"Spectral",serif;font-size:clamp(.95rem,2.3vw,1.16rem);line-height:1.9;color:#3c2e1d}
+.cert-recip{font-family:"Cormorant Garamond",serif;color:var(--rubric);font-weight:700;font-size:1.18em;border-bottom:1.5px solid rgba(140,47,35,.4);padding:0 .4em 1px}
+.cert-score{margin-top:.9rem;font-family:"Cormorant Garamond",serif;font-size:clamp(1.05rem,3vw,1.5rem);font-weight:600;color:var(--ink)}
+.cert-score b{color:var(--rubric);font-size:1.15em}
+.cert-rank{margin-top:.4rem;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(1rem,2.6vw,1.3rem);color:var(--gold-d)}
+.cert-rank b{color:var(--rubric)}
+.cert-break{margin:.7rem auto 0;max-width:30ch;display:grid;gap:.16rem;text-align:left;font-family:"Spectral",serif;font-size:clamp(.74rem,1.9vw,.9rem)}
+.cert-break .r{display:flex;gap:.5rem}.cert-break .r .l{flex:0 0 auto;color:var(--rubric);font-family:"Cormorant Garamond",serif;font-style:italic}
+.cert-break .r .t{flex:1;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cert-date{margin-top:auto;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(.85rem,2.2vw,1.08rem);color:var(--ink-2);padding-top:1rem}
+.cert-actions{margin-top:.9rem;display:flex;flex-direction:column;align-items:center;gap:.55rem}
+.cert-name-in{font-family:"Shippori Mincho",serif;font-size:clamp(.9rem,2.3vw,1.08rem);text-align:center;color:var(--ink);
+  background:rgba(255,255,255,.5);border:none;border-bottom:1.5px solid var(--ink-2);padding:.4rem .6rem;width:min(300px,78%)}
+.cert-name-in:focus{outline:none;border-bottom-color:var(--rubric)}
+.cert-btns{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center}
+.wax{font-family:"Cormorant Garamond",serif;font-weight:600;cursor:pointer;color:#fff;border:none;border-radius:999px;padding:.5rem 1rem;
+  background:radial-gradient(circle at 40% 30%,#a8392c,var(--rubric));box-shadow:0 4px 10px rgba(80,20,15,.4);transition:.18s}
+.wax:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.wax.ghost{background:none;color:var(--ink-2);border:1px solid rgba(90,70,50,.5);box-shadow:none}
+.wax.ghost:hover{color:var(--ink);border-color:var(--ink)}
+
+/* reveal (subtle, scholarly) */
+.recto .rise{animation:rise .7s ease backwards}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.recto .rise:nth-child(1){animation-delay:.05s}.recto .rise:nth-child(2){animation-delay:.16s}
+.recto .rise:nth-child(3){animation-delay:.27s}.recto .rise:nth-child(4){animation-delay:.38s}
+.recto .rise:nth-child(5){animation-delay:.49s}
+
+/* nav */
+.nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:14px}
+.nav button{font-family:"Cormorant Garamond",serif;font-weight:700;background:linear-gradient(180deg,var(--leather-l),var(--leather-d));color:var(--gold-l);
+  border:1px solid rgba(176,138,62,.5);width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.2rem;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.5);transition:.18s}
+.nav button:hover{transform:translateY(-2px);color:var(--gold-xl)}
+.nav button:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.ribbon{display:flex;gap:7px;flex-wrap:wrap;max-width:46vw;justify-content:center}
+.tab{width:9px;height:16px;background:rgba(176,138,62,.3);border-radius:0 0 3px 3px;cursor:pointer;transition:.25s}
+.tab.on{background:var(--rubric);height:22px;box-shadow:0 2px 6px rgba(140,47,35,.5)}
+.hint{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:30;font-family:"Cormorant Garamond",serif;letter-spacing:.24em;font-size:.64rem;text-transform:uppercase;color:rgba(230,200,120,.5);animation:fade 5s ease forwards;animation-delay:4s}
+@keyframes fade{to{opacity:0;visibility:hidden}}
+.ver{position:fixed;left:14px;bottom:14px;z-index:25;font-family:"Cormorant Garamond",serif;letter-spacing:.1em;font-size:.62rem;color:rgba(230,200,120,.45)}
+/* timer */
+.timer{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:28;display:none;align-items:center;gap:8px;
+  font-family:"Cormorant Garamond",serif;font-weight:700;font-size:1rem;color:var(--gold-l);
+  background:linear-gradient(180deg,var(--leather-l),var(--leather-d));border:1px solid rgba(176,138,62,.5);border-radius:6px;padding:.35rem .9rem;box-shadow:0 6px 16px rgba(0,0,0,.5)}
+.timer.show{display:flex}
+.timer.warn{color:#f0d6a0;border-color:#b08a3e;animation:tpulse 1s ease-in-out infinite}
+.timer.over{color:#e9b8a8;border-color:var(--rubric)}
+@keyframes tpulse{0%,100%{box-shadow:0 6px 16px rgba(0,0,0,.5)}50%{box-shadow:0 6px 22px rgba(176,138,62,.55)}}
+/* toolbar */
+.toolbar{position:fixed;top:14px;left:14px;z-index:30}
+.tbtn{font-family:"Cormorant Garamond",serif;font-weight:700;letter-spacing:.16em;text-transform:uppercase;font-size:.72rem;cursor:pointer;
+  background:linear-gradient(180deg,var(--leather-l),var(--leather-d));color:var(--gold-l);border:1px solid rgba(176,138,62,.5);
+  padding:.5rem .95rem;border-radius:5px;box-shadow:0 6px 16px rgba(0,0,0,.5);transition:.2s}
+.tbtn:hover{color:var(--gold-xl)}
+/* editor panel — bound notebook feel */
+.dim{position:fixed;inset:0;background:rgba(20,12,6,.55);z-index:40;opacity:0;visibility:hidden;transition:.3s}
+.dim.show{opacity:1;visibility:visible}
+.panel{position:fixed;top:0;right:0;height:100%;width:min(440px,95vw);z-index:50;
+  background:linear-gradient(180deg,#efe4c8,#e2d4b0);color:var(--ink);border-left:6px solid var(--leather-d);
+  box-shadow:-20px 0 50px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .4s cubic-bezier(.2,.7,.3,1);display:flex;flex-direction:column;font-family:"Shippori Mincho",serif}
+.panel.show{transform:none}
+.panel header{padding:18px 20px;border-bottom:1px solid rgba(90,70,50,.3);display:flex;align-items:center;justify-content:space-between}
+.panel header h2{font-family:"Cormorant Garamond",serif;font-weight:700;font-size:1.14rem;color:var(--rubric);letter-spacing:.05em}
+.panel .x{background:none;border:none;color:var(--ink-2);font-size:1.4rem;cursor:pointer}
+.panel .body{padding:16px 20px;overflow-y:auto;flex:1}
+.sec{margin-bottom:22px}
+.sec h3{font-family:"Cormorant Garamond",serif;font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rubric);margin-bottom:10px;border-bottom:1px solid rgba(90,70,50,.3);padding-bottom:6px}
+.scene-row{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:5px;background:rgba(90,58,34,.08);margin-bottom:6px;font-size:.85rem}
+.scene-row .nm{flex:1;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scene-row.cur{outline:1px solid var(--gold-d);background:rgba(176,138,62,.16)}
+.scene-row button{background:rgba(90,58,34,.12);border:none;color:var(--ink);width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:.78rem}
+.scene-row button:hover{background:rgba(176,138,62,.4)}
+.fld{margin-bottom:11px}
+.fld label{display:block;font-size:.71rem;letter-spacing:.04em;color:var(--ink-2);margin-bottom:4px}
+.fld input,.fld textarea,.fld select{width:100%;background:rgba(255,252,242,.7);border:1px solid rgba(90,70,50,.35);border-radius:5px;color:var(--ink);padding:8px 10px;font-family:"Shippori Mincho",serif;font-size:.89rem;resize:vertical}
+.fld textarea{min-height:60px;line-height:1.5}
+.fld textarea.mono{font-family:"Cardo",monospace,serif;font-size:.85rem}
+.fld input:focus,.fld textarea:focus,.fld select:focus{outline:none;border-color:var(--rubric);box-shadow:0 0 0 2px rgba(140,47,35,.15)}
+.act-btn{width:100%;font-family:"Cormorant Garamond",serif;font-weight:700;letter-spacing:.05em;cursor:pointer;border:none;border-radius:5px;padding:11px;font-size:.95rem;color:#fff;
+  background:linear-gradient(180deg,var(--leather-l),var(--leather-d));box-shadow:0 4px 10px rgba(0,0,0,.3);transition:.2s;margin-top:4px}
+.act-btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.act-btn.ghost{background:transparent;color:var(--ink-2);border:1px solid rgba(90,70,50,.5);box-shadow:none}
+.act-btn.ghost:hover{color:var(--ink);border-color:var(--ink)}
+.act-btn.ink{background:radial-gradient(circle at 40% 30%,#a8392c,var(--rubric));color:#fff}
+.act-btn:disabled{opacity:.5;cursor:wait}
+.note{font-size:.71rem;line-height:1.5;color:var(--ink-2);margin-top:8px}
+.msg{font-size:.78rem;margin-top:8px;padding:8px 10px;border-radius:5px;display:none}
+.msg.err{display:block;background:rgba(140,47,35,.14);border:1px solid var(--rubric);color:#7a261c}
+.msg.ok{display:block;background:rgba(90,110,44,.16);border:1px solid #5a6e2c;color:#41521f}
+.row2{display:flex;gap:8px}.row2>*{flex:1}
+.hidden{display:none}
+.lib-row{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:5px;background:rgba(90,58,34,.08);margin-bottom:5px;font-size:.84rem}
+.lib-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-row button{background:rgba(90,58,34,.12);border:none;color:var(--ink);width:24px;height:24px;border-radius:5px;cursor:pointer;font-size:.78rem}
+/* stats overlay */
+.stats-overlay{position:fixed;inset:0;z-index:60;background:rgba(20,12,6,.8);display:none;align-items:center;justify-content:center;padding:18px}
+.stats-overlay.show{display:flex}
+.stats-box{width:min(900px,96vw);max-height:92vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#f4ecd6,#e6dabe);border:1px solid var(--gold-d);border-radius:8px;box-shadow:0 30px 70px rgba(0,0,0,.6);color:var(--ink);font-family:"Shippori Mincho",serif}
+.stats-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(90,70,50,.3);gap:10px;flex-wrap:wrap}
+.stats-head h2{font-family:"Cormorant Garamond",serif;font-weight:700;font-size:1.18rem;color:var(--rubric);letter-spacing:.05em}
+.stats-head-btns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.stats-head .x{background:none;border:none;color:var(--ink-2);font-size:1.4rem;cursor:pointer}
+.stats-body{padding:18px 20px;overflow:auto}
+.stats-kpi{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.kpi{flex:1;min-width:110px;background:rgba(90,58,34,.07);border:1px solid rgba(90,70,50,.25);border-radius:6px;padding:12px 14px;text-align:center}
+.kpi b{display:block;font-size:1.7rem;color:var(--rubric);font-family:"Cormorant Garamond",serif}
+.kpi span{font-size:.72rem;color:var(--ink-2)}
+.stats-sub{font-family:"Cormorant Garamond",serif;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--rubric);margin:16px 0 8px;border-bottom:1px solid rgba(90,70,50,.3);padding-bottom:6px}
+.heat{width:100%;border-collapse:collapse;font-size:.84rem}
+.heat th,.heat td{padding:7px 9px;text-align:left;border-bottom:1px solid rgba(90,70,50,.18)}
+.heat th{color:var(--rubric);font-size:.72rem;letter-spacing:.06em;font-family:"Cormorant Garamond",serif}
+.heat td.rate{text-align:center;font-weight:700;color:#2c2113;border-radius:4px;min-width:58px}
+.heat td.num{text-align:center;color:var(--ink-2);font-family:"Cardo",serif}
+.heat .lsn{color:var(--rubric);font-style:italic;font-family:"Cormorant Garamond",serif}
+.bar{height:8px;border-radius:4px;background:rgba(90,58,34,.14);overflow:hidden}
+.bar i{display:block;height:100%}
+@media (max-width:720px){.leaf.left{display:none}.gutter{display:none}}
+</style>
+</head>
+<body>
+
+<div class="room">
+  <div class="book">
+    <div class="cover-board"></div>
+    <div class="spread">
+      <div class="leaf left"><div class="verso" id="verso"></div></div>
+      <div class="gutter"></div>
+      <div class="leaf right"><div class="recto" id="recto"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="nav"><button id="prev">‹</button><div class="ribbon" id="ribbon"></div><button id="next">›</button></div>
+<div class="toolbar"><button class="tbtn" id="openEditor">編集</button></div>
+<div class="hint">← → でページをめくる ・ 終わりに修了證</div>
+<div class="ver" id="ver"></div>
+<div class="timer" id="timer"></div>
+
+<div class="dim" id="dim"></div>
+<aside class="panel" id="panel">
+  <header><h2>教材編集</h2><button class="x" id="closeEditor">✕</button></header>
+  <div class="body">
+    <div class="sec"><h3>頁の一覧</h3><div id="sceneList"></div></div>
+
+    <div class="sec">
+      <h3 id="formTitle">頁をつくる</h3>
+      <div class="fld"><label>型</label><select id="f-type">
+        <option value="normal">本文の頁（本文・列挙・作例）</option>
+        <option value="quiz">確認の章（3択）</option>
+        <option value="cover">標題（大見出し）</option>
+      </select></div>
+      <div class="fld"><label>章ラベル</label><input id="f-chap" placeholder="例：Caput VIII"></div>
+      <div class="fld"><label>標題</label><input id="f-title" placeholder="例：命令を受くる窓 ── シェル"></div>
+      <div class="fld" data-only="normal cover"><label>本文（改行可）</label><textarea id="f-lead" placeholder="古典の語り口で"></textarea></div>
+      <div class="fld" data-only="normal"><label>列挙（任意・1行ずつ）</label><textarea id="f-enum" placeholder="cd ── 枝を移る&#10;ls ── 葉を見渡す"></textarea></div>
+      <div class="fld" data-only="normal"><label>作例（任意・「命令 | 注釈」を1行ずつ）</label><textarea id="f-spec" class="mono" placeholder="ls -l | 結界を検める"></textarea></div>
+      <div class="fld" data-only="normal"><label>傍注（任意）</label><input id="f-aside" placeholder="欄外の一言"></div>
+      <div class="fld" data-only="normal"><label>結びの一行（任意）</label><input id="f-one" placeholder="この頁の締め"></div>
+      <div class="fld" data-only="quiz"><label>設問</label><textarea id="f-q" placeholder="設問を1文で"></textarea></div>
+      <div class="fld" data-only="quiz"><label>選択肢（3つ・正解の行頭に ＊）</label><textarea id="f-choices" placeholder="＊ 正しい答え&#10;ちがう答え&#10;ちがう答え"></textarea></div>
+      <div class="fld" data-only="quiz"><label>解説（任意）</label><textarea id="f-explain" placeholder="正解の理由"></textarea></div>
+      <div class="row2"><button class="act-btn" id="saveScene">＋ 追加する</button><button class="act-btn ghost" id="clearForm">クリア</button></div>
+    </div>
+
+    <div class="sec">
+      <h3>AIに頁を起草させる</h3>
+      <div class="fld"><label>起草するもの</label><select id="f-aikind">
+        <option value="scene">本文の頁</option>
+        <option value="quiz">確認の章（3択）</option>
+        <option value="lesson">章まるごと（本文＋確認）</option>
+      </select></div>
+      <div class="fld"><label>起草エンジン</label><select id="f-provider">
+        <option value="claude">Claude（claude.ai プレビュー内・鍵不要）</option>
+        <option value="openai">OpenAI互換（gpt-4.1-mini・自分のキー）</option>
+      </select></div>
+      <div id="openaiCfg" class="hidden">
+        <div class="fld"><label>API キー</label><input id="f-key" type="password" placeholder="sk-..."></div>
+        <div class="row2"><div class="fld"><label>Base URL</label><input id="f-base" value="https://api.openai.com/v1"></div>
+          <div class="fld"><label>モデル</label><input id="f-model" value="gpt-4.1-mini"></div></div>
+      </div>
+      <div class="fld"><label>主題・お題</label><textarea id="f-ai" placeholder="例：cronで定期実行を／パーミッションの確認を"></textarea></div>
+      <button class="act-btn ink" id="summon">起草する</button>
+      <div class="msg" id="aiMsg"></div>
+    </div>
+
+    <div class="sec">
+      <h3>教材データ・配布</h3>
+      <div class="row2" style="margin-bottom:8px"><button class="act-btn ghost" id="exportBtn">書き出し</button><button class="act-btn ghost" id="importBtn">読み込み</button></div>
+      <div class="fld"><textarea id="f-json" class="mono" placeholder="JSONを出力／貼り付けて読み込み"></textarea></div>
+      <button class="act-btn ghost" id="resetBtn" style="margin-top:0">初期の教材に戻す</button>
+      <button class="act-btn" id="exportStudent" style="margin-top:8px">受講生版を書き出す（この教材）</button>
+      <div class="fld" style="margin-top:8px"><label>受講生版の制限時間（分・0で無制限）</label><input id="timeLimit" type="number" min="0" max="600" value="0"></div>
+      <button class="act-btn" id="exportCertPdf" style="margin-top:4px">修了證をPDFで保存</button>
+      <div class="row2" style="margin-top:8px">
+        <input id="libName" placeholder="教材名（例：Linux入門）" style="flex:2">
+        <button class="act-btn ghost" id="libAdd" style="margin:0;flex:1">＋ 蔵書に加える</button>
+      </div>
+      <div id="libList" style="margin-top:8px"></div>
+      <button class="act-btn" id="exportZip" style="margin-top:8px">受講生版をまとめてZIP</button>
+      <button class="act-btn ink" id="exportFullPack" style="margin-top:8px">フル配布パックZIP（HTML+JSON+修了證+回収）</button>
+      <p class="note">受講生版は、いまの教材・制限時間を埋め込み、編集機能を隠した閲覧＋確認＋修了證だけのHTML。修了證PDFはオフラインで生成できます。</p>
+    </div>
+
+    <div class="sec">
+      <h3>學績の集計（結果JSONを読み込み）</h3>
+      <button class="act-btn ghost" id="loadResults">受講生の結果JSONを選ぶ（複数可）</button>
+      <input type="file" id="resultsFile" accept=".json,application/json" multiple style="display:none">
+      <div class="fld" style="margin-top:8px"><label>及第点（正答率%）</label><input id="passLine" type="number" min="0" max="100" value="80"></div>
+      <div class="msg" id="statsMsg"></div>
+      <p class="note">受講生が修了證画面の「結果を提出」で保存したJSONをまとめて選ぶと、平均正答率・つまずいた章・及第判定を表示。及第者の修了證を一括PDFで授与できます。</p>
+    </div>
+  </div>
+</aside>
+
+<div class="stats-overlay" id="statsOverlay">
+  <div class="stats-box">
+    <div class="stats-head">
+      <h2 id="statsTitle">學績の集計</h2>
+      <div class="stats-head-btns">
+        <button class="act-btn ghost" id="statsCsv" style="width:auto;margin:0;padding:.5rem .8rem">CSV</button>
+        <button class="act-btn ghost" id="statsPass" style="width:auto;margin:0;padding:.5rem .8rem">及第者一覧</button>
+        <button class="act-btn ghost" id="statsCertsPdf" style="width:auto;margin:0;padding:.5rem .8rem">及第者修了證PDF</button>
+        <button class="x" id="statsClose">✕</button>
+      </div>
+    </div>
+    <div class="stats-body" id="statsBody"></div>
+  </div>
+</div>
+
+<script>
+const STUDENT_MODE=false;
+const APP_VERSION="Linux 古典讀本 v2.0";
+let timeLimitMin=((typeof window!=="undefined"&&window.BAKED_TIMELIMIT)?window.BAKED_TIMELIMIT:0);
+
+/* ============================================================
+   DECK — 古典讀本仕立てのLinux入門（落ち着いた書物トーン）
+   ============================================================ */
+const defaultDeck=[
+ {type:"cover",chap:"A Classic Primer",plate:"❦",
+  titleGrand:"Linux 古典讀本",subtitle:"黒き画面に綴られたる、命令の手引き",
+  lead:"これは、計算機に語りかけるための<span class='hi'>命令（コマンド）</span>を、一頁ずつ学ぶための讀本である。急がず、確かめながら、頁を繰られよ。",
+  caption:"Lectori Salutem — 読者諸氏に挨拶す",html:true},
+
+ {chap:"Caput I",plate:"Ⅰ",caption:"Linuxとは何か",title:"序 ── Linuxとは",
+  lead:"世のサーバーの多くを、表に出ることなく支えてきた<b>無料の基本ソフト（OS）</b>。携帯端末から大型計算機まで、その系譜は広く根を張る。",
+  aside:"見えぬところで世界を動かす、縁の下の技。",
+  drop:true,html:true},
+
+ {type:"quiz",chap:"Exercitium I",caption:"確認の章",title:"確認の章 ・ 其の一",
+  question:"世界のサーバーを最も広く支える基本ソフトは？",
+  choices:["有料の専用OSのみ","Linux","携帯専用のものだけ"],answer:1,
+  explain:"多くのサーバーはLinuxで動く。無償で改良でき、堅牢であることが理由である。"},
+
+ {chap:"Caput II",plate:"Ⅱ",caption:"シェルと喚問符",title:"命令を受くる窓 ── シェル",
+  lead:"シェルは、人の言葉と計算機の核（カーネル）とを取り持つ通辞である。行頭の <b>$</b> は「命令を承る」の符牒。",
+  specimen:["pwd | 今、いずこに在るかを問う","echo Hello | 画面に文字を映す"],
+  aside:"画面の釦の正体は、ことごとく一行の命令にあり。",html:true},
+
+ {type:"quiz",chap:"Exercitium II",caption:"確認の章",title:"確認の章 ・ 其の二",
+  question:"行頭の「$」が表すものは？",
+  choices:["処理が止まった印","命令の入力待ち","電源が切れた印"],answer:1,
+  explain:"$ は入力待ちの符牒。安んじて命令を綴られよ。"},
+
+ {chap:"Caput III",plate:"Ⅲ",caption:"ファイルの樹",title:"広間の地圖 ── ファイルの樹",
+  lead:"万物は <b>/</b>（根）より枝分かれする一本の樹なり。広間（ディレクトリ）は枝、巻物（ファイル）は葉に喩えらる。",
+  enum:["cd ── 枝を移る","ls ── 葉を見渡す","pwd ── 現在地を知る","mkdir ── 新たな枝を生やす"],
+  aside:"迷わば pwd。己が立つ場所を知る者は、道を失わず。",html:true},
+
+ {type:"quiz",chap:"Exercitium III",caption:"確認の章",title:"確認の章 ・ 其の三",
+  question:"今いる場所（現在地）を確かめる命令は？",
+  choices:["ls","pwd","mkdir"],answer:1,
+  explain:"pwd は現在地を映す命令。道に迷わばまず唱えよ。"},
+
+ {chap:"Caput IV",plate:"Ⅳ",caption:"権の結界",title:"巻物の結界 ── パーミッション",
+  lead:"葉の一枚ごとに張らるる結界。<b>読(r)・書(w)・行(x)</b> の権を、主・組・衆へ授ける。",
+  specimen:["ls -l | 結界を検める","chmod 755 a.sh | 結界を張り直す"],
+  aside:"r=4・w=2・x=1。その足し合わせが、結界の鍵となる。",html:true},
+
+ {type:"quiz",chap:"Exercitium IV",caption:"確認の章",title:"確認の章 ・ 其の四",
+  question:"chmod 755 の先頭「7」が表す権は？",
+  choices:["読のみ","読・書・行のすべて","行のみ"],answer:1,
+  explain:"7＝4(読)+2(書)+1(行)。主にすべてを許す結界である。"},
+
+ {chap:"Caput V",plate:"Ⅴ",caption:"使い魔（プロセス）",title:"動く術 ── プロセス",
+  lead:"動きゆく術（プログラム）には、おのおの <b>番号（PID）</b> が宿る。これを掴みて、操るべし。",
+  specimen:["ps aux | 動く術を探す","kill 1234 | 番号にて鎮める"],
+  aside:"暴れる術は、その番号を掴みて鎮むべし。",html:true},
+
+ {type:"quiz",chap:"Exercitium V",caption:"確認の章",title:"確認の章 ・ 其の五",
+  question:"特定のプロセスを止めるとき kill に渡すものは？",
+  choices:["ファイル名","PID（番号）","合言葉"],answer:1,
+  explain:"kill には番号（PID）を渡す。ps や top にて検めよ。"},
+
+ {chap:"Caput VI",plate:"Ⅵ",caption:"道具の召し",title:"道具の召し ── パッケージ",
+  lead:"入用の道具は、一行の命令にて召し出せる。系統により <b>apt</b>（Debian系）・<b>dnf</b>（RHEL系）を使い分ける。",
+  specimen:["sudo apt install tree | Debian系","sudo dnf install tree | RHEL系"],
+  aside:"「自ら入れる」を覚えしとき、術者は独り立つ。",html:true},
+
+ {type:"quiz",chap:"Exercitium VI",caption:"確認の章",title:"確認の章 ・ 其の六",
+  question:"Debian系で道具を導く命令は？",
+  choices:["apt install","format disk","delete all"],answer:0,
+  explain:"Debian系は apt。RHEL系では dnf を用いる。"},
+
+ {chap:"Caput VII",plate:"Ⅶ",caption:"学びの心得",title:"結び ── 五つの心得",
+  enum:["小さく刻め ── 一度に一命令ずつ","手を動かせ ── 写すより自ら唱えよ","声に出せ ── 説けて初めて身につく","つまずきを記せ ── 失敗は次の糧","書を引け ── 困らば man と --help を開け"],
+  aside:"man <命令> と唱うれば、いつでも師が現る。",html:true},
+
+ {type:"quiz",chap:"Exercitium VII",caption:"最終の章",title:"確認の章 ・ 其の七",
+  question:"命令の使い方を調べる“公式の手引き”は？",
+  choices:["man","run","stop"],answer:0,
+  explain:"man（マニュアル）が公式の手引き。--help も簡便にて役立つ。"},
+
+ {type:"certificate"},
+];
+let deck=JSON.parse(JSON.stringify((typeof window!=="undefined"&&window.BAKED_DECK)?window.BAKED_DECK:defaultDeck));
+let idx=0, results={}, attempts={}, startedAt=Date.now(), learnerName="", editIndex=null;
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=t=>(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const nl2br=t=>esc(t).replace(/\n/g,"<br>");
+function leadHTML(s){if(s.lead==null)return"";return s.html?s.lead:nl2br(s.lead);}
+const ROMAN=["Ⅰ","Ⅱ","Ⅲ","Ⅳ","Ⅴ","Ⅵ","Ⅶ","Ⅷ","Ⅸ","Ⅹ"];
+const LETT=["a","b","c","d","e","f"];
+
+/* decorative ornament (rule + lozenge) */
+const ORN=`<svg class="orn" viewBox="0 0 200 26"><line x1="6" y1="13" x2="78" y2="13"/><line x1="194" y1="13" x2="122" y2="13"/>
+ <path d="M100 4 L112 13 L100 22 L88 13 Z" class="fillr"/><circle cx="83" cy="13" r="2.4"/><circle cx="117" cy="13" r="2.4"/></svg>`;
+const COLORN=`<svg viewBox="0 0 200 40"><path d="M20 20 H80" stroke="#8a6a2c" stroke-width="1.2"/><path d="M180 20 H120" stroke="#8a6a2c" stroke-width="1.2"/>
+ <path d="M100 6 C108 14 108 26 100 34 C92 26 92 14 100 6 Z" fill="#8c2f23"/><circle cx="100" cy="20" r="3" fill="#f4ecd6" stroke="#8c2f23"/>
+ <circle cx="86" cy="20" r="2" fill="#8a6a2c"/><circle cx="114" cy="20" r="2" fill="#8a6a2c"/></svg>`;
+
+/* ---------- scoring ---------- */
+let qidSeq=0;
+function assignIds(){deck.forEach(s=>{if(s.type==="quiz"&&!s.qid)s.qid="q"+(++qidSeq);});}
+function ensureCert(){const c=deck.find(s=>s.type==="certificate")||{type:"certificate"};deck=deck.filter(s=>s.type!=="certificate");deck.push(c);}
+function quizzes(){return deck.filter(s=>s.type==="quiz");}
+function stats(){const qs=quizzes();let answered=0,correct=0;qs.forEach(q=>{if(q.qid in results){answered++;if(results[q.qid])correct++;}});return{total:qs.length,answered,correct};}
+function breakdown(){return quizzes().map(q=>({chap:q.chap||"Exerc.",title:(q.caption||q.title||"確認"),state:(q.qid in results)?(results[q.qid]?"ok":"miss"):"none"}));}
+function rankOf(r){if(r>=1)return["碩学（Magister）","✦"];if(r>=.8)return["精究（Doctus）","❧"];if(r>=.5)return["門弟（Discipulus）","❦"];return["初学（Novicius）","·"];}
+
+/* ---------- verso (left page) ---------- */
+function versoHTML(s){
+ const runHead = s.type==="certificate" ? "COLOPHON" : (s.type==="cover" ? "FRONTISPICE" : (s.chap||"LINUX PRIMER"));
+ const folioN = idx===0 ? "—" : (idx+1);
+ let mid;
+ if(s.type==="certificate"){mid=`<div class="plate">✦</div><div class="plate-cap">學びの證として、これを綴る。</div>`;}
+ else if(s.type==="cover"){mid=`<div class="plate">❦</div>${ORN}<div class="plate-cap">古き書物のごとく、ゆるりと読み進められよ。</div>`;}
+ else if(s.type==="quiz"){mid=`<div class="plate">?</div><div class="plate-cap">${esc(s.caption||"確認の章")}</div>`;}
+ else{mid=`<div class="plate">${esc(s.plate||"❦")}</div>${ORN}<div class="plate-cap">${esc(s.caption||"")}</div>`;}
+ return `<div class="run-head">${esc(runHead)}</div><div class="verso-mid">${mid}</div><div class="folio">${folioN===("—")?"Frontispice":("Folio "+folioN)}</div>`;
+}
+
+/* ---------- recto (right page) ---------- */
+function rectoHTML(s){
+ if(s.type==="certificate")return certHTML(s);
+ if(s.type==="quiz"){
+   const opts=(s.choices||[]).map((c,i)=>`<button class="choice" data-i="${i}"><span class="lt">${LETT[i]||i+1}.</span><span>${esc(c)}</span></button>`).join("");
+   return `<div class="head rise"><div class="chap">${esc(s.chap||"Exercitium")}</div><div class="title">${esc(s.title||"確認の章")}</div></div>
+     <div class="body-scroll"><p class="q-text rise">${esc(s.question||"")}</p>
+       <div class="choices rise">${opts}</div>
+       <div class="verdict rise" data-verdict></div></div>`;
+ }
+ let c="";
+ if(s.type==="cover"){
+   c=`<div class="head rise"><div class="chap">${esc(s.chap||"A Classic Primer")}</div></div>
+      <div class="body-scroll" style="display:flex;flex-direction:column;justify-content:center;text-align:center">
+        <div class="title-grand rise">${s.titleGrand||""}</div>
+        ${s.subtitle?`<div class="subtitle rise">${esc(s.subtitle)}</div>`:""}
+        <div class="rise" style="margin:1rem auto">${COLORN}</div>
+        ${s.lead!=null?`<p class="prose rise" style="text-align:center">${leadHTML(s)}</p>`:""}
+        ${s.caption?`<p class="aside rise" style="border:none;text-align:center;font-size:1rem">${esc(s.caption)}</p>`:""}
+      </div>`;
+   return c;
+ }
+ c=`<div class="head rise"><div class="chap">${esc(s.chap||"")}</div><div class="title">${esc(s.title||"")}</div></div><div class="body-scroll">`;
+ if(s.lead!=null)c+=`<p class="prose lead${s.drop?" drop":""} rise">${leadHTML(s)}</p>`;
+ if(s.enum&&s.enum.length)c+=`<ul class="enum rise">`+s.enum.map((b,i)=>`<li><span class="n">${ROMAN[i]||(i+1)}</span><span>${s.html?b:nl2br(b)}</span></li>`).join("")+`</ul>`;
+ if(s.specimen&&s.specimen.length){c+=`<div class="specimen rise">`+s.specimen.map(line=>{
+   const [cmd,gloss]=line.split("|").map(x=>x.trim());
+   return `<div class="row"><span class="mark">¶</span><span class="cmd">${esc(cmd)}</span>${gloss?`<span class="gloss">— ${esc(gloss)}</span>`:""}</div>`;}).join("")+`</div>`;}
+ if(s.aside)c+=`<p class="aside rise">${esc(s.aside)}</p>`;
+ if(s.one)c+=`<p class="oneliner rise">${esc(s.one)}</p>`;
+ c+=`</div>`;
+ return c;
+}
+
+/* ---------- certificate ---------- */
+function certHTML(s){const {total,answered,correct}=stats();const r=total?correct/total:0;const [title]=rankOf(r);
+ const d=new Date();const ymd=`${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日`;
+ const mark={ok:"◯",miss:"✕",none:"—"};const bd=breakdown();
+ const bdHTML=bd.length?`<div class="cert-break rise">`+bd.map(b=>`<div class="r"><span class="l">${esc(b.chap)}</span><span class="t">${esc(b.title)}</span><span style="color:${b.state==='ok'?'#5a6e2c':(b.state==='miss'?'var(--rubric)':'#9a7b4a')};font-weight:700">${mark[b.state]}</span></div>`).join("")+`</div>`:"";
+ const body= total===0
+  ? `<p class="cert-line rise" style="margin-top:.6rem">確認の章に挑めば、ここに成績が記さるる。</p>`
+  : `<div class="cert-score rise">正解 <b>${correct}</b> / ${total} 問 ${answered<total?`<span style="font-size:.7em;color:var(--ink-2)">（未挑戦 ${total-answered}）</span>`:""}</div>
+     <div class="cert-rank rise">称号 ── <b>${title}</b></div>${bdHTML}`;
+ return `<div class="colophon">
+   <div class="col-orn rise">${COLORN}</div>
+   <div class="cert-kicker rise">Testimonium Absolutionis</div>
+   <div class="cert-title rise">修 了 證</div>
+   <p class="cert-line rise">右の者 <span class="cert-recip">${esc(learnerName||"貴方")}</span><br>
+     <b>Linux 古典讀本</b> の全章を読み修め、黒き画面の命令を会得せしことを證す。</p>
+   ${body}
+   <div class="cert-actions rise">
+     <input id="certName" class="cert-name-in" placeholder="氏名を記す" value="${esc(learnerName)}">
+     <div class="cert-btns">
+       <button class="wax" id="dlPng">PNGで保存</button>
+       <button class="wax" id="dlPdf">PDFで保存</button>
+       <button class="wax" id="dlJson">結果を提出</button>
+       <button class="wax ghost" id="certReset">記録を消す</button>
+     </div>
+   </div>
+   <div class="cert-date rise">${ymd}　—　A Classic Primer</div>
+ </div>`;
+}
+
+/* ---------- sound + nav ---------- */
+let actx;
+function chime(good){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+ const t=actx.currentTime;const notes=good?[392,523,659]:[196,165];
+ notes.forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;o.connect(g);g.connect(actx.destination);
+  const st=t+i*0.08;g.gain.setValueAtTime(0.0001,st);g.gain.exponentialRampToValueAtTime(0.14,st+0.02);g.gain.exponentialRampToValueAtTime(0.0001,st+0.3);
+  o.start(st);o.stop(st+0.32);});}catch(e){}}
+
+const recto=$("#recto"),verso=$("#verso"),ribbon=$("#ribbon");
+function buildRibbon(){ribbon.innerHTML="";deck.forEach((_,i)=>{const t=document.createElement('div');t.className='tab'+(i===idx?' on':'');t.onclick=()=>go(i);ribbon.appendChild(t);});}
+function paint(){verso.innerHTML=versoHTML(deck[idx]);recto.innerHTML=rectoHTML(deck[idx]);
+ if(deck[idx].type==="quiz")wireQuiz(recto,deck[idx]);
+ if(deck[idx].type==="certificate")wireCert(recto);
+ if(STUDENT_MODE)saveProgress();
+ $("#prev").disabled=idx===0;$("#next").disabled=idx===deck.length-1;
+ [...ribbon.children].forEach((t,i)=>t.classList.toggle('on',i===idx));}
+function go(n){if(n<0||n>=deck.length||n===idx)return;recto.classList.add('leaving');
+ setTimeout(()=>{idx=n;paint();recto.classList.remove('leaving');},380);}
+$("#prev").onclick=()=>go(idx-1);$("#next").onclick=()=>go(idx+1);
+document.addEventListener('keydown',e=>{const tag=(e.target.tagName||"").toLowerCase();if(tag==="input")return;
+ if(['ArrowRight','PageDown',' '].includes(e.key))go(idx+1);
+ if(['ArrowLeft','PageUp'].includes(e.key))go(idx-1);
+ if(e.key==='Home')go(0);if(e.key==='End')go(deck.length-1);});
+$(".book").addEventListener('click',e=>{if(e.target.closest('.nav')||e.target.closest('.choice')||e.target.closest('.cert-actions'))return;
+ const r=$(".book").getBoundingClientRect();go(e.clientX<r.left+r.width*0.45?idx-1:idx+1);});
+
+function wireQuiz(scope,s){const v=scope.querySelector('[data-verdict]');const btns=[...scope.querySelectorAll('.choice')];
+ btns.forEach(b=>b.onclick=ev=>{ev.stopPropagation();const i=+b.dataset.i;
+  const firstTry=!(s.qid in results);if(firstTry)results[s.qid]=(i===s.answer);
+  attempts[s.qid]=(attempts[s.qid]||0)+1;if(STUDENT_MODE)saveProgress();
+  if(i===s.answer){btns.forEach(x=>{x.disabled=true;if(+x.dataset.i===s.answer)x.classList.add('ok');});
+    v.innerHTML="正解なり。"+(s.explain?`<span class="ex">${esc(s.explain)}</span>`:"");chime(true);}
+  else{b.classList.add('ng');b.disabled=true;v.textContent="いま一度、思い起こされよ。";chime(false);}});}
+function wireCert(scope){const reset=scope.querySelector('#certReset'),nameIn=scope.querySelector('#certName'),png=scope.querySelector('#dlPng'),pdf=scope.querySelector('#dlPdf'),json=scope.querySelector('#dlJson');
+ if(nameIn){nameIn.onclick=e=>e.stopPropagation();nameIn.oninput=()=>{learnerName=nameIn.value;const rc=scope.querySelector('.cert-recip');if(rc)rc.textContent=learnerName||"貴方";};}
+ if(reset)reset.onclick=ev=>{ev.stopPropagation();results={};attempts={};startedAt=Date.now();if(STUDENT_MODE)clearProgress();chime(true);go(0);};
+ if(png)png.onclick=ev=>{ev.stopPropagation();exportCert("png");};
+ if(pdf)pdf.onclick=ev=>{ev.stopPropagation();exportCert("pdf");};
+ if(json)json.onclick=ev=>{ev.stopPropagation();exportResultsJSON();};}
+
+/* ---------- certificate PNG / PDF ---------- */
+function downloadBlob(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);}
+function stamp(){const d=new Date();const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}`;}
+async function buildCertCanvas(){try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+ const W=1684,H=1190,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+ const C={ink:"#352a1c",ink2:"#5a4632",gold:"#b08a3e",goldD:"#8a6a2c",rub:"#8c2f23",green:"#5a6e2c"};
+ const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#f6efda");bg.addColorStop(1,"#e6dabe");g.fillStyle=bg;g.fillRect(0,0,W,H);
+ g.strokeStyle=C.goldD;g.lineWidth=4;g.strokeRect(60,60,W-120,H-120);g.lineWidth=1.5;g.strokeStyle=C.gold;g.strokeRect(76,76,W-152,H-152);
+ const cx=W/2;g.textAlign="center";
+ g.fillStyle=C.rub;g.font='30px "Cormorant Garamond",serif';g.fillText("T E S T I M O N I U M   A B S O L U T I O N I S",cx,180);
+ g.fillStyle=C.ink;g.font='900 104px "UnifrakturCook","Shippori Mincho",serif';g.fillText("修 了 證",cx,310);
+ g.strokeStyle=C.goldD;g.lineWidth=1.5;g.beginPath();g.moveTo(cx-200,348);g.lineTo(cx+200,348);g.stroke();
+ const name=(learnerName||"").trim()||"貴方";
+ g.fillStyle=C.ink2;g.font='500 30px "Shippori Mincho",serif';g.fillText("右の者、これを修めたるを證す",cx,420);
+ g.fillStyle=C.rub;g.font='700 74px "Shippori Mincho",serif';g.fillText(name+"　殿",cx,508);
+ g.strokeStyle="rgba(140,47,35,.4)";g.lineWidth=2;g.beginPath();g.moveTo(cx-340,530);g.lineTo(cx+340,530);g.stroke();
+ g.fillStyle=C.ink2;g.font='500 30px "Shippori Mincho",serif';g.fillText("Linux 古典讀本 の全章を読み修め、黒き画面の命令を会得せり。",cx,584);
+ const {total,answered,correct}=stats();const [rk]=rankOf(total?correct/total:0);
+ if(total){g.fillStyle=C.ink;g.font='700 46px "Shippori Mincho",serif';g.fillText(`正解 ${correct} / ${total} 問`+(answered<total?`　（未挑戦 ${total-answered}）`:""),cx,664);
+   g.fillStyle=C.goldD;g.font='italic 38px "Cormorant Garamond",serif';g.fillText("称号 ── "+rk,cx,718);}
+ const bd=breakdown();if(bd.length){const sY=772,rh=40,cw=560,half=Math.ceil(bd.length/2);g.font='500 24px "Shippori Mincho",serif';g.textAlign="left";
+  bd.forEach((b,i)=>{const col=i<half?0:1,row=i<half?i:i-half,x=cx-cw+col*cw,y=sY+row*rh;
+   g.fillStyle=C.ink2;g.fillText(`${b.chap}　${b.title}`.slice(0,22),x,y);
+   g.fillStyle=b.state==="ok"?C.green:(b.state==="miss"?C.rub:"#9a7b4a");g.font='700 26px "Shippori Mincho",serif';
+   g.fillText(b.state==="ok"?"◯":(b.state==="miss"?"✕":"—"),x+cw-60,y);g.font='500 24px "Shippori Mincho",serif';});g.textAlign="center";}
+ const d=new Date();g.fillStyle=C.ink2;g.font='italic 30px "Cormorant Garamond",serif';g.fillText(`${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日　—　A Classic Primer`,cx,H-150);
+ // wax seal
+ g.beginPath();g.arc(W-250,H-205,66,0,7);g.fillStyle=C.rub;g.fill();g.lineWidth=3;g.strokeStyle=C.goldD;g.stroke();g.fillStyle="#f4ecd6";g.font='44px "Cormorant Garamond",serif';g.fillText("❦",W-250,H-190);
+ return cv;}
+function dataURLToBytes(durl){const b=atob(durl.split(",")[1]);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+function buildJpegPDF(jpeg,iw,ih){const PW=842,PH=595;const enc=s=>new TextEncoder().encode(s);
+ const parts=[];let len=0;const off=[];const push=u=>{parts.push(u);len+=u.length;};
+ push(enc("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n"));const obj=(n,b)=>{off[n]=len;push(enc(n+" 0 obj\n"+b+"\nendobj\n"));};
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+ obj(3,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`);
+ const ct=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;obj(4,`<< /Length ${ct.length} >>\nstream\n${ct}\nendstream`);
+ off[5]=len;push(enc(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${iw} /Height ${ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`));
+ push(jpeg);push(enc("\nendstream\nendobj\n"));const xp=len;let x="xref\n0 6\n0000000000 65535 f \n";
+ for(let i=1;i<=5;i++)x+=String(off[i]).padStart(10,"0")+" 00000 n \n";push(enc(x));push(enc(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xp}\n%%EOF`));
+ const out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length;}return out;}
+async function exportCert(kind){const cv=await buildCertCanvas();
+ if(kind==="png"){cv.toBlob(b=>{if(b)downloadBlob(b,`Classic_Primer_Certificate_${stamp()}.png`);},"image/png");}
+ else{const jpeg=dataURLToBytes(cv.toDataURL("image/jpeg",0.92));downloadBlob(new Blob([buildJpegPDF(jpeg,cv.width,cv.height)],{type:"application/pdf"}),`Classic_Primer_Certificate_${stamp()}.pdf`);}}
+async function exportCertificatePDF(){await exportCert("pdf");}
+
+/* ====================== EDITOR ====================== */
+const panel=$("#panel"),dim=$("#dim");
+function openEd(){panel.classList.add('show');dim.classList.add('show');renderList();}
+function closeEd(){panel.classList.remove('show');dim.classList.remove('show');}
+$("#openEditor")&&($("#openEditor").onclick=openEd);
+$("#closeEditor")&&($("#closeEditor").onclick=closeEd);dim.onclick=closeEd;
+$("#f-type").onchange=()=>{const t=$("#f-type").value;document.querySelectorAll('[data-only]').forEach(el=>el.classList.toggle('hidden',!el.dataset.only.split(' ').includes(t)));};
+$("#f-provider").onchange=()=>$("#openaiCfg").classList.toggle('hidden',$("#f-provider").value!=="openai");
+function flash(k,t){const m=$("#aiMsg");m.className="msg "+k;m.textContent=t;setTimeout(()=>{m.className="msg";},4500);}
+function renderList(){const L=$("#sceneList");L.innerHTML="";
+ deck.forEach((s,i)=>{const name=s.titleGrand||s.title||s.question||(s.type==="certificate"?"修了證（自動）":"（無題）");
+  const row=document.createElement('div');row.className='scene-row'+(i===idx?' cur':'');
+  if(s.type==="certificate"){row.innerHTML=`<span class="nm">${i+1}. ${esc(name)}</span><span style="font-size:.7rem;color:var(--ink-2)">末尾固定</span>`;row.querySelector('.nm').onclick=()=>go(i);L.appendChild(row);return;}
+  row.innerHTML=`<span class="nm" title="${esc(name)}">${i+1}. ${s.type==="quiz"?"? ":""}${esc(name)}</span><button data-up>▲</button><button data-down>▼</button><button data-edit>✎</button><button data-del>🗑</button>`;
+  row.querySelector('.nm').onclick=()=>go(i);
+  row.querySelector('[data-up]').onclick=()=>move(i,-1);row.querySelector('[data-down]').onclick=()=>move(i,1);
+  row.querySelector('[data-edit]').onclick=()=>loadForm(i);row.querySelector('[data-del]').onclick=()=>del(i);
+  L.appendChild(row);});}
+function commit(focus){assignIds();ensureCert();if(focus!=null)idx=focus;idx=Math.max(0,Math.min(idx,deck.length-1));buildRibbon();paint();if(panel.classList.contains('show'))renderList();}
+function move(i,dd){const j=i+dd;if(j<0||j>=deck.length)return;if(deck[i].type==="certificate"||deck[j].type==="certificate")return;[deck[i],deck[j]]=[deck[j],deck[i]];if(idx===i)idx=j;else if(idx===j)idx=i;commit();}
+function del(i){if(deck[i].type==="certificate"||deck.length<=2)return;deck.splice(i,1);if(idx>=deck.length)idx=deck.length-1;commit();}
+function insertBeforeEnd(arr){let ins=deck.findIndex(s=>s.type==="certificate");if(ins<0)ins=deck.length;deck.splice(ins,0,...arr);commit(ins);}
+function clearForm(){editIndex=null;["chap","title","lead","enum","spec","aside","one","q","choices","explain"].forEach(k=>{const el=$("#f-"+k);if(el)el.value="";});$("#f-type").value="normal";$("#f-type").onchange();$("#formTitle").textContent="頁をつくる";$("#saveScene").textContent="＋ 追加する";}
+$("#clearForm").onclick=clearForm;
+function loadForm(i){editIndex=i;const s=deck[i];
+ $("#f-type").value=s.type==="cover"?"cover":(s.type==="quiz"?"quiz":"normal");$("#f-type").onchange();
+ $("#f-chap").value=s.chap||"";$("#f-title").value=s.titleGrand||s.title||"";
+ $("#f-lead").value=(s.lead||"").replace(/<br\s*\/?>/g,"\n").replace(/<[^>]+>/g,"");
+ $("#f-enum").value=(s.enum||[]).map(b=>b.replace(/<[^>]+>/g,"")).join("\n");
+ $("#f-spec").value=(s.specimen||[]).join("\n");$("#f-aside").value=s.aside||"";$("#f-one").value=s.one||"";
+ $("#f-q").value=s.question||"";$("#f-choices").value=(s.choices||[]).map((c,k)=>(k===s.answer?"＊ ":"")+c).join("\n");$("#f-explain").value=s.explain||"";
+ $("#formTitle").textContent="頁を編集（"+(i+1)+"）";$("#saveScene").textContent="✔ 更新する";panel.querySelector('.body').scrollTo({top:0,behavior:'smooth'});}
+function readForm(){const t=$("#f-type").value;const g=k=>($("#f-"+k).value||"").trim();const s={html:false};
+ if(t==="cover"){s.type="cover";s.chap=g("chap")||"A Classic Primer";s.titleGrand=g("title");if(g("lead"))s.lead=g("lead");}
+ else if(t==="quiz"){s.type="quiz";s.chap=g("chap")||"Exercitium";s.caption="確認の章";s.title=g("title")||"確認の章";s.question=g("q");
+   const lines=$("#f-choices").value.split("\n").map(x=>x.trim()).filter(Boolean);let ans=0;
+   const choices=lines.map((l,k)=>{if(/^＊|^\*/.test(l)){ans=k;return l.replace(/^＊\s*|^\*\s*/,"");}return l;});s.choices=choices;s.answer=ans;if(g("explain"))s.explain=g("explain");}
+ else{s.chap=g("chap");s.title=g("title");if(g("lead"))s.lead=g("lead");
+   const en=$("#f-enum").value.split("\n").map(x=>x.trim()).filter(Boolean);if(en.length)s.enum=en;
+   const sp=$("#f-spec").value.split("\n").map(x=>x.trim()).filter(Boolean);if(sp.length)s.specimen=sp;
+   if(g("aside"))s.aside=g("aside");if(g("one"))s.one=g("one");}
+ return s;}
+$("#saveScene").onclick=()=>{const s=readForm();if(!s.title&&!s.titleGrand&&!s.lead&&!s.enum&&!s.question)return;
+ if(editIndex!=null){deck[editIndex]=s;commit();}else{insertBeforeEnd([s]);}clearForm();};
+
+/* JSON */
+$("#exportBtn").onclick=()=>{$("#f-json").value=JSON.stringify(deck.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;}),null,2);$("#f-json").focus();$("#f-json").select();};
+$("#importBtn").onclick=()=>{try{const d=JSON.parse($("#f-json").value);if(!Array.isArray(d)||!d.length)throw 0;deck=d;results={};commit(0);flash("ok","教材を読み込みました。");}catch(e){flash("err","JSONの形式が正しくありません。");}};
+$("#resetBtn").onclick=()=>{deck=JSON.parse(JSON.stringify(defaultDeck));results={};commit(0);flash("ok","初期の教材に戻しました。");};
+
+/* ====================== AI ====================== */
+function buildPrompt(topic,kind){
+ if(kind==="lesson")return `あなたは「Linux 古典讀本」という、落ち着いた古典書物の語り口の教材作家です。お題について、Linux初学者向けに「1つの章」を作成。本編1頁＋確認の章（3択）1問。\nお題：「${topic}」\n次のJSONだけ返す（前置き・コードフェンス禁止）。\n{"chap":"Caput ◯","title":"本編タイトル","lead":"古典書物らしい語り口で2〜3文。改行は \\n。HTMLタグ禁止","enum":["列挙3〜5個。各15〜30字。空配列可"],"specimen":["コマンド | 注釈 を1〜3行。無ければ空配列"],"aside":"傍注の一言","one":"結びの一行","quiz":{"title":"確認の章","question":"設問1文","choices":["A","B","C"],"answer":0,"explain":"正解理由を1〜2文"}}`;
+ if(kind==="quiz")return `あなたは「Linux 古典讀本」の試験作家です。Linux初学者向け3択を1問。お題：「${topic}」。選択肢は必ず3個・正解1つ。次のJSONだけ返す（前置き禁止）。\n{"chap":"Exercitium ◯","title":"確認の章","question":"設問1文","choices":["A","B","C"],"answer":0,"explain":"正解理由を1〜2文"}`;
+ return `あなたは「Linux 古典讀本」（古典書物の語り口）の教材作家です。Linux初学者向けに1頁。お題：「${topic}」。次のJSONだけ返す（前置き禁止）。\n{"chap":"Caput ◯","title":"タイトル","lead":"古典書物らしい語り口で2〜3文。改行は \\n。HTMLタグ禁止","enum":["列挙3〜5個。空配列可"],"specimen":["コマンド | 注釈。無ければ空配列"],"aside":"傍注","one":"結びの一行"}`;}
+function mkQuiz(q){let choices=Array.isArray(q.choices)?q.choices.filter(c=>String(c).trim()).map(c=>String(c).trim()):[];if(choices.length<2)throw new Error("選択肢を生成できませんでした");let ans=Number(q.answer);if(!Number.isInteger(ans)||ans<0||ans>=choices.length)ans=0;
+ return {type:"quiz",chap:q.chap||"Exercitium",caption:"確認の章",title:q.title||"確認の章",question:q.question||"",choices,answer:ans,explain:q.explain||""};}
+function mkScene(o){return {chap:o.chap||"",title:o.title||"新しい頁",lead:o.lead||"",enum:Array.isArray(o.enum)?o.enum.filter(Boolean):[],specimen:Array.isArray(o.specimen)?o.specimen.filter(Boolean):[],aside:o.aside||"",one:o.one||"",html:false};}
+function parseJSON(t){return JSON.parse(t.replace(/```json|```/g,"").trim());}
+$("#summon").onclick=async()=>{const topic=$("#f-ai").value.trim();const btn=$("#summon");if(!topic){flash("err","お題を入力してください。");return;}
+ const provider=$("#f-provider").value,kind=$("#f-aikind").value;btn.disabled=true;btn.textContent="起草中…";$("#aiMsg").className="msg";
+ try{const prompt=buildPrompt(topic,kind);const maxT=kind==="lesson"?1600:1000;let obj;
+   if(provider==="openai"){const key=$("#f-key").value.trim();const base=$("#f-base").value.trim().replace(/\/$/,"");const model=$("#f-model").value.trim()||"gpt-4.1-mini";
+     if(!key){flash("err","APIキーを入力してください。");btn.disabled=false;btn.textContent="起草する";return;}
+     const res=await fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model,max_tokens:maxT,response_format:{type:"json_object"},messages:[{role:"system",content:"JSONのみ返す教材作家"},{role:"user",content:prompt}]})});
+     const data=await res.json();if(data.error)throw new Error(data.error.message||"API error");obj=parseJSON(data.choices[0].message.content);}
+   else{const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxT,messages:[{role:"user",content:prompt}]})});
+     const data=await res.json();obj=parseJSON((data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n"));}
+   let entries,name;
+   if(kind==="lesson"){const sc=mkScene(obj);const qz=mkQuiz(obj.quiz||{});entries=[sc,qz];name="章「"+sc.title+"」";}
+   else if(kind==="quiz"){entries=[mkQuiz(obj)];name="確認の章「"+(obj.title||obj.question||"")+"」";}
+   else{const sc=mkScene(obj);entries=[sc];name="頁「"+sc.title+"」";}
+   insertBeforeEnd(entries);$("#f-ai").value="";flash("ok",name+"を起草しました。");
+ }catch(err){flash("err","起草に失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent="起草する";}};
+
+/* ====================== 配布 ====================== */
+function studentBaseHTML(){const clone=document.documentElement.cloneNode(true);
+ ["#ribbon","#recto","#verso","#sceneList","#libList","#statsBody"].forEach(sel=>{const el=clone.querySelector(sel);if(el)el.innerHTML="";});
+ clone.querySelectorAll("script[src]").forEach(e=>e.remove());
+ const d=clone.querySelector("#dim");if(d)d.className="dim";const p=clone.querySelector("#panel");if(p)p.className="panel";const so=clone.querySelector("#statsOverlay");if(so)so.className="stats-overlay";
+ let out="<!DOCTYPE html>\n"+clone.outerHTML;
+ out=out.replace("\nconst STUDENT_MODE=false;","\nconst STUDENT_MODE=true;");
+ out=out.replace(/<title>[^<]*<\/title>/,"<title>Linux 古典讀本（受講生版） — A Classic Primer</title>");
+ return out;}
+function syncTimeLimit(){const el=$("#timeLimit");if(el){const v=parseInt(el.value||"0",10);timeLimitMin=isNaN(v)?0:Math.max(0,Math.min(600,v));}}
+function bakeFrom(base,deckArr){const clean=deckArr.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;});
+ const dj=JSON.stringify(clean).replace(/<\//g,"<\\/");
+ const inject=`<script>window.BAKED_DECK=${dj};window.BAKED_TIMELIMIT=${Number(timeLimitMin)||0};<\/script>\n`;
+ return base.replace("<script>\nconst STUDENT_MODE",inject+"<script>\nconst STUDENT_MODE");}
+function bakeStudent(){syncTimeLimit();return bakeFrom(studentBaseHTML(),deck);}
+$("#exportStudent").onclick=()=>{try{downloadBlob(new Blob([bakeStudent()],{type:"text/html;charset=utf-8"}),`Classic_Primer_Student_${stamp()}.html`);flash("ok","受講生版を書き出しました。");}catch(e){flash("err","書き出し失敗："+(e.message||e));}};
+$("#exportCertPdf")&&($("#exportCertPdf").onclick=async()=>{await exportCertificatePDF();});
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error("ライブラリ読込失敗（オフライン？）"));document.head.appendChild(s);});}
+
+/* 名前→ASCII */
+const KANA={"きゃ":"kya","きゅ":"kyu","きょ":"kyo","しゃ":"sha","しゅ":"shu","しょ":"sho","ちゃ":"cha","ちゅ":"chu","ちょ":"cho","にゃ":"nya","にゅ":"nyu","にょ":"nyo","ひゃ":"hya","ひゅ":"hyu","ひょ":"hyo","みゃ":"mya","みゅ":"myu","みょ":"myo","りゃ":"rya","りゅ":"ryu","りょ":"ryo","ぎゃ":"gya","ぎゅ":"gyu","ぎょ":"gyo","じゃ":"ja","じゅ":"ju","じょ":"jo","びゃ":"bya","びゅ":"byu","びょ":"byo","ぴゃ":"pya","ぴゅ":"pyu","ぴょ":"pyo","あ":"a","い":"i","う":"u","え":"e","お":"o","か":"ka","き":"ki","く":"ku","け":"ke","こ":"ko","さ":"sa","し":"shi","す":"su","せ":"se","そ":"so","た":"ta","ち":"chi","つ":"tsu","て":"te","と":"to","な":"na","に":"ni","ぬ":"nu","ね":"ne","の":"no","は":"ha","ひ":"hi","ふ":"fu","へ":"he","ほ":"ho","ま":"ma","み":"mi","む":"mu","め":"me","も":"mo","や":"ya","ゆ":"yu","よ":"yo","ら":"ra","り":"ri","る":"ru","れ":"re","ろ":"ro","わ":"wa","を":"o","ん":"n","が":"ga","ぎ":"gi","ぐ":"gu","げ":"ge","ご":"go","ざ":"za","じ":"ji","ず":"zu","ぜ":"ze","ぞ":"zo","だ":"da","ぢ":"ji","づ":"zu","で":"de","ど":"do","ば":"ba","び":"bi","ぶ":"bu","べ":"be","ぼ":"bo","ぱ":"pa","ぴ":"pi","ぷ":"pu","ぺ":"pe","ぽ":"po","ー":"","　":" "};
+function kanaToRomaji(s){s=s.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));let o="",i=0;while(i<s.length){if(s[i]==="っ"){const one=s[i+1];const r=KANA[s.substr(i+1,2)]||KANA[one]||"";if(r)o+=r[0]||"";i++;continue;}const two=s.substr(i,2);if(KANA[two]!==undefined){o+=KANA[two];i+=2;continue;}const one=s[i];if(KANA[one]!==undefined){o+=KANA[one];i++;continue;}o+=one;i++;}return o;}
+function toAsciiName(n){let s=(n||"").trim();try{s=s.normalize("NFKC");}catch(e){}s=kanaToRomaji(s);s=s.replace(/[^A-Za-z0-9]+/g,"_").replace(/^_+|_+$/g,"");return s||"student";}
+
+/* 蔵書＋ZIP */
+let library=[];function slug(s){return toAsciiName(s)||"deck";}
+function renderLib(){const L=$("#libList");if(!L)return;L.innerHTML="";library.forEach((it,i)=>{const r=document.createElement('div');r.className='lib-row';
+  r.innerHTML=`<span class="nm">${i+1}. ${esc(it.name)}（${it.deck.filter(s=>s.type!=="certificate").length}頁）</span><button data-x>🗑</button>`;r.querySelector('[data-x]').onclick=()=>{library.splice(i,1);renderLib();};L.appendChild(r);});}
+$("#libAdd")&&($("#libAdd").onclick=()=>{const nm=($("#libName").value||"").trim()||`教材${library.length+1}`;library.push({name:nm,deck:JSON.parse(JSON.stringify(deck))});$("#libName").value="";renderLib();flash("ok",`「${nm}」を蔵書に追加（計${library.length}）`);});
+$("#exportZip")&&($("#exportZip").onclick=async()=>{const btn=$("#exportZip"),lab=btn.textContent;btn.disabled=true;btn.textContent="生成中…";syncTimeLimit();
+ try{if(!window.JSZip)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  const items=library.length?library:[{name:"Linux入門",deck:JSON.parse(JSON.stringify(deck))}];const base=studentBaseHTML();const zip=new window.JSZip();const used={};const man=[];
+  items.forEach(it=>{let nm=slug(it.name);if(used[nm])nm+="_"+(++used[nm]);else used[nm]=1;zip.file(`Classic_${nm}_Student.html`,bakeFrom(base,it.deck));man.push(`${it.name}\tClassic_${nm}_Student.html\t${it.deck.filter(s=>s.type!=="certificate").length} pages`);});
+  zip.file("README.txt",`${APP_VERSION}\nLinux 古典讀本 (A Classic Primer)\nGenerated: ${new Date().toISOString()}\n\nName\tFile\tPages\n`+man.join("\n"));
+  downloadBlob(await zip.generateAsync({type:"blob"}),`Classic_Distribution_${stamp()}.zip`);flash("ok",`ZIP書き出し（${items.length}件）`);}
+ catch(err){flash("err","ZIP失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+$("#exportFullPack")&&($("#exportFullPack").onclick=async()=>{const btn=$("#exportFullPack"),lab=btn.textContent;btn.disabled=true;btn.textContent="生成中…";syncTimeLimit();
+ try{if(!window.JSZip)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  const items=library.length?library:[{name:"Linux入門",deck:JSON.parse(JSON.stringify(deck))}];const base=studentBaseHTML();const zip=new window.JSZip();const used={};const man=[];
+  let certBlob=null;try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+  try{const cv=await buildCertCanvasWithScore({name:"",acc:"",rank:""});certBlob=await new Promise(r=>cv.toBlob(b=>r(b),"image/png"));}catch(e){}
+  for(const it of items){let nm=slug(it.name);if(used[nm])nm+="_"+(++used[nm]);else used[nm]=1;const f=zip.folder(nm);
+   const clean=it.deck.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;});
+   f.file(`Classic_${nm}_Student.html`,bakeFrom(base,it.deck));f.file(`Classic_${nm}_Deck.json`,JSON.stringify(clean,null,2));if(certBlob)f.file(`Classic_Certificate_Template.png`,certBlob);man.push(`${it.name}\t${nm}/\t${clean.length} pages`);}
+  const rec=zip.folder("_結果回収");rec.file("ここに結果JSONを集めてください.txt",`受講生が修了證画面の「結果を提出」で保存したJSON（例：Result_yamada_Classic_${stamp()}.json）をこのフォルダに集め、教材編集の「學績の集計」で読み込んでください。`);
+  zip.file("運用手順.txt",`【運用手順】${APP_VERSION}\n1. 各フォルダの *_Student.html を配布（ブラウザで開くだけ）\n2. 受講→確認の章に回答→修了證で氏名入力・PNG/PDF保存\n3. 「結果を提出」のJSONを _結果回収/ に集約\n4. 教材編集→學績の集計でJSONを読み込み、及第判定・及第者修了證PDF\n※HTML/修了證/結果JSON/集計はオフライン動作。ZIPのみオンライン。`);
+  zip.file("README.txt",`${APP_VERSION} フル配布パック\nGenerated: ${new Date().toISOString()}\n\n各フォルダ: *_Student.html / *_Deck.json / Certificate_Template.png\nName\tFolder\tPages\n`+man.join("\n"));
+  downloadBlob(await zip.generateAsync({type:"blob"}),`Classic_FullPack_${stamp()}.zip`);flash("ok",`フルパック書き出し（${items.length}件）`);}
+ catch(err){flash("err","フルパック失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+
+/* ====================== 進捗保存 ====================== */
+function deckSig(){let n=0,s=0;deck.forEach(d=>{if(d.type==="quiz")n++;const t=(d.title||d.titleGrand||"")+"";for(let i=0;i<t.length;i++)s=(s*31+t.charCodeAt(i))>>>0;});return "classic_"+deck.length+"_"+n+"_"+s.toString(16);}
+function saveProgress(){try{localStorage.setItem(deckSig(),JSON.stringify({idx,results,attempts,startedAt,learnerName,t:Date.now()}));}catch(e){}}
+function loadProgress(){try{const r=localStorage.getItem(deckSig());return r?JSON.parse(r):null;}catch(e){return null;}}
+function clearProgress(){try{localStorage.removeItem(deckSig());}catch(e){}}
+
+/* ====================== タイマー ====================== */
+let timeUpFired=false;
+function fmtClock(sec){sec=Math.max(0,sec);const m=Math.floor(sec/60),s=sec%60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;}
+function tickTimer(){if(!STUDENT_MODE||!timeLimitMin)return;const el=$("#timer");const remain=Math.round((startedAt+timeLimitMin*60000-Date.now())/1000);el.classList.add('show');
+ if(remain>0){el.textContent="残り "+fmtClock(remain);el.classList.toggle('warn',remain<=60);el.classList.remove('over');}
+ else{el.textContent="時間終了";el.classList.remove('warn');el.classList.add('over');if(!timeUpFired){timeUpFired=true;const last=deck.length-1;if(deck[last]&&deck[last].type==="certificate"&&idx!==last){setTimeout(()=>{if(confirm("制限時間になりました。修了證へ進みますか？"))go(last);},100);}}}}
+
+/* ====================== 學績の集計 ====================== */
+let classData=null;
+$("#loadResults")&&($("#loadResults").onclick=()=>$("#resultsFile").click());
+$("#resultsFile")&&($("#resultsFile").onchange=async()=>{const files=[...($("#resultsFile").files||[])];const m=$("#statsMsg");m.className="msg";if(!files.length)return;
+ try{const recs=[];for(const f of files){const txt=await f.text();try{const o=JSON.parse(txt);if(Array.isArray(o))o.forEach(x=>recs.push(x));else recs.push(o);}catch(e){}}
+  if(!recs.length)throw new Error("有効な結果JSONがありません");classData=aggregate(recs);renderStats(classData);$("#resultsFile").value="";}
+ catch(err){m.className="msg err";m.textContent="読み込み失敗："+(err.message||err);}});
+function passLine(){const v=parseInt(($("#passLine")&&$("#passLine").value)||"80",10);return isNaN(v)?80:Math.max(0,Math.min(100,v));}
+function aggregate(recs){const students=(Array.isArray(recs)?recs:[]).map(r=>{r=r||{};const sc=r.score||{};let acc=Number(sc.accuracy_percent);if(!isFinite(acc))acc=0;acc=Math.max(0,Math.min(100,Math.round(acc)));return {name:(r.learner||"(無名)"),acc,rank:r.rank||"",details:Array.isArray(r.details)?r.details:[]};});
+ const qmap=new Map();students.forEach(st=>st.details.forEach(d=>{const key=`${d.chap||d.lesson||""}｜${d.title||""}`;if(!qmap.has(key))qmap.set(key,{chap:d.chap||d.lesson||"",title:d.title||"",correct:0,incorrect:0,unanswered:0});const e=qmap.get(key);if(d.result==="correct")e.correct++;else if(d.result==="incorrect")e.incorrect++;else e.unanswered++;}));
+ const questions=[...qmap.values()].map(e=>{const n=e.correct+e.incorrect+e.unanswered;return {...e,n,rate:n?Math.round(e.correct/n*100):0};});
+ const avg=students.length?Math.round(students.reduce((a,s)=>a+s.acc,0)/students.length):0;return {students,questions,avg,count:students.length};}
+function heatColor(r){return `hsl(${Math.round(r*1.1+10)} 45% 72%)`;}
+function renderStats(d){const body=$("#statsBody");const line=passLine();d.students.forEach(s=>s.pass=s.acc>=line);
+ const passed=d.students.filter(s=>s.pass).length;const prate=d.count?Math.round(passed/d.count*100):0;
+ $("#statsTitle").textContent=`學績の集計（${d.count}名・及第点${line}%）`;
+ const rows=d.questions.map(q=>`<tr><td class="lsn">${esc(q.chap)}</td><td>${esc(q.title)}</td><td class="rate" style="background:${heatColor(q.rate)}">${q.rate}%</td><td class="num">◯${q.correct} ✕${q.incorrect} —${q.unanswered}</td></tr>`).join("");
+ const studs=d.students.slice().sort((a,b)=>b.acc-a.acc).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.rank)}</td><td><div class="bar"><i style="width:${s.acc}%;background:${heatColor(s.acc)}"></i></div></td><td class="num">${s.acc}%</td><td class="num" style="font-weight:800;color:${s.pass?'#41521f':'#7a261c'}">${s.pass?'及第':'再'}</td></tr>`).join("");
+ const weak=d.questions.slice().sort((a,b)=>a.rate-b.rate).slice(0,3).map(q=>`${q.chap} ${q.title}（${q.rate}%）`);
+ body.innerHTML=`<div class="stats-kpi"><div class="kpi"><b>${d.count}</b><span>提出人数</span></div><div class="kpi"><b>${d.avg}%</b><span>平均正答率</span></div><div class="kpi"><b>${passed}</b><span>及第（≥${line}%）</span></div><div class="kpi"><b>${prate}%</b><span>及第率</span></div></div>
+  ${weak.length?`<div class="stats-sub">つまずいた章（正答率ワースト）</div><div style="font-size:.86rem;line-height:1.7;color:var(--ink-2)">・ ${weak.join("<br>・ ")}</div>`:""}
+  <div class="stats-sub">章別ヒートマップ（正答率）</div><table class="heat"><thead><tr><th>章</th><th>確認</th><th>正答率</th><th>内訳</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="stats-sub">受講生別（及第点 ${line}%）</div><table class="heat"><thead><tr><th>氏名</th><th>称号</th><th>正答率</th><th></th><th>判定</th></tr></thead><tbody>${studs}</tbody></table>`;
+ $("#statsOverlay").classList.add('show');}
+$("#passLine")&&($("#passLine").onchange=()=>{if(classData)renderStats(classData);});
+$("#statsClose")&&($("#statsClose").onclick=()=>$("#statsOverlay").classList.remove('show'));
+$("#statsCsv")&&($("#statsCsv").onclick=()=>{if(!classData)return;const line=passLine();const e2=s=>`"${String(s).replace(/"/g,'""')}"`;
+ let csv="\uFEFF及第点(%),"+line+"\n\n章別\n章,確認,正答率(%),正解,不正解,未回答\n";classData.questions.forEach(q=>csv+=[e2(q.chap),e2(q.title),q.rate,q.correct,q.incorrect,q.unanswered].join(",")+"\n");
+ csv+="\n受講生別\n氏名,称号,正答率(%),判定\n";classData.students.slice().sort((a,b)=>b.acc-a.acc).forEach(s=>csv+=[e2(s.name),e2(s.rank),s.acc,(s.acc>=line?"及第":"再")].join(",")+"\n");
+ downloadBlob(new Blob([csv],{type:"text/csv;charset=utf-8"}),`Classic_Report_${stamp()}.csv`);});
+$("#statsPass")&&($("#statsPass").onclick=()=>{if(!classData)return;const line=passLine();const e2=s=>`"${String(s).replace(/"/g,'""')}"`;
+ const ps=classData.students.filter(s=>s.acc>=line).sort((a,b)=>b.acc-a.acc);let csv="\uFEFF及第者一覧,Linux 古典讀本,及第点 "+line+"%\n\n番号,氏名,称号,正答率(%)\n";
+ ps.forEach((s,i)=>csv+=[i+1,e2(s.name),e2(s.rank),s.acc].join(",")+"\n");csv+=`\n及第 ${ps.length} 名 / 提出 ${classData.count} 名\n`;
+ downloadBlob(new Blob([csv],{type:"text/csv;charset=utf-8"}),`Classic_PassList_${stamp()}.csv`);});
+
+/* 及第者の修了證を一括PDF */
+function buildJpegPDFMulti(jpegs){const PW=842,PH=595;const enc=s=>new TextEncoder().encode(s);const parts=[];let len=0;const off=[];const push=u=>{parts.push(u);len+=u.length;};
+ push(enc("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n"));const N=jpegs.length;const pg=i=>3+i*3,ct=i=>4+i*3,im=i=>5+i*3,tot=2+N*3;const obj=(n,b)=>{off[n]=len;push(enc(n+" 0 obj\n"+b+"\nendobj\n"));};
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,`<< /Type /Pages /Kids [${Array.from({length:N},(_,i)=>pg(i)+" 0 R").join(" ")}] /Count ${N} >>`);
+ jpegs.forEach((j,i)=>{obj(pg(i),`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 ${im(i)} 0 R >> >> /Contents ${ct(i)} 0 R >>`);const c=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;obj(ct(i),`<< /Length ${c.length} >>\nstream\n${c}\nendstream`);
+   off[im(i)]=len;push(enc(`${im(i)} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${j.iw} /Height ${j.ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${j.bytes.length} >>\nstream\n`));push(j.bytes);push(enc("\nendstream\nendobj\n"));});
+ const xp=len;let x=`xref\n0 ${tot+1}\n0000000000 65535 f \n`;for(let i=1;i<=tot;i++)x+=String(off[i]||0).padStart(10,"0")+" 00000 n \n";push(enc(x));push(enc(`trailer\n<< /Size ${tot+1} /Root 1 0 R >>\nstartxref\n${xp}\n%%EOF`));
+ const out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length;}return out;}
+async function buildCertCanvasWithScore(st){try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+ const W=1684,H=1190,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+ const C={ink:"#352a1c",ink2:"#5a4632",gold:"#b08a3e",goldD:"#8a6a2c",rub:"#8c2f23"};
+ const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#f6efda");bg.addColorStop(1,"#e6dabe");g.fillStyle=bg;g.fillRect(0,0,W,H);
+ g.strokeStyle=C.goldD;g.lineWidth=4;g.strokeRect(60,60,W-120,H-120);g.lineWidth=1.5;g.strokeStyle=C.gold;g.strokeRect(76,76,W-152,H-152);
+ const cx=W/2;g.textAlign="center";g.fillStyle=C.rub;g.font='30px "Cormorant Garamond",serif';g.fillText("T E S T I M O N I U M   A B S O L U T I O N I S",cx,180);
+ g.fillStyle=C.ink;g.font='900 104px "UnifrakturCook","Shippori Mincho",serif';g.fillText("修 了 證",cx,310);g.strokeStyle=C.goldD;g.lineWidth=1.5;g.beginPath();g.moveTo(cx-200,348);g.lineTo(cx+200,348);g.stroke();
+ g.fillStyle=C.ink2;g.font='500 30px "Shippori Mincho",serif';g.fillText("右の者、これを修めたるを證す",cx,420);
+ g.fillStyle=C.rub;g.font='700 74px "Shippori Mincho",serif';g.fillText((st.name||"貴方")+"　殿",cx,508);
+ g.strokeStyle="rgba(140,47,35,.4)";g.lineWidth=2;g.beginPath();g.moveTo(cx-340,530);g.lineTo(cx+340,530);g.stroke();
+ g.fillStyle=C.ink2;g.font='500 30px "Shippori Mincho",serif';g.fillText("Linux 古典讀本 の全章を読み修め、黒き画面の命令を会得せり。",cx,584);
+ if(st.acc!==""&&st.acc!=null){g.fillStyle=C.ink;g.font='700 46px "Shippori Mincho",serif';g.fillText(`正答率 ${st.acc}%`,cx,664);g.fillStyle=C.goldD;g.font='italic 38px "Cormorant Garamond",serif';g.fillText("称号 ── "+(st.rank||""),cx,718);}
+ const d=new Date();g.fillStyle=C.ink2;g.font='italic 30px "Cormorant Garamond",serif';g.fillText(`${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日　—　A Classic Primer`,cx,H-150);
+ g.beginPath();g.arc(W-250,H-205,66,0,7);g.fillStyle=C.rub;g.fill();g.lineWidth=3;g.strokeStyle=C.goldD;g.stroke();g.fillStyle="#f4ecd6";g.font='44px "Cormorant Garamond",serif';g.fillText("❦",W-250,H-190);return cv;}
+$("#statsCertsPdf")&&($("#statsCertsPdf").onclick=async()=>{if(!classData)return;const line=passLine();const ps=classData.students.filter(s=>s.acc>=line).sort((a,b)=>b.acc-a.acc);
+ if(!ps.length){alert("及第者がいません（及第点を下げてください）。");return;}const btn=$("#statsCertsPdf"),lab=btn.textContent;btn.disabled=true;btn.textContent="生成中…";
+ try{const jpegs=[];for(const s of ps){const cv=await buildCertCanvasWithScore(s);jpegs.push({bytes:dataURLToBytes(cv.toDataURL("image/jpeg",0.92)),iw:cv.width,ih:cv.height});}
+   downloadBlob(new Blob([buildJpegPDFMulti(jpegs)],{type:"application/pdf"}),`Classic_Certificates_${stamp()}.pdf`);}
+ catch(err){alert("修了證PDFの生成に失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+
+/* 結果JSON提出 */
+function exportResultsJSON(){const {total,answered,correct}=stats();const [rank]=rankOf(total?correct/total:0);
+ const data={course:"Linux 古典讀本 (A Classic Primer)",learner:learnerName||"",issued_at:new Date().toISOString(),
+  score:{total_quizzes:total,answered,first_try_correct:correct,accuracy_percent:total?Math.round(correct/total*100):0},rank,
+  details:breakdown().map(b=>({chap:b.chap,title:b.title,result:b.state==="ok"?"correct":(b.state==="miss"?"incorrect":"unanswered")}))};
+ downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),`Result_${toAsciiName(learnerName)}_Classic_${stamp()}.json`);flash&&flash("ok","結果をJSONで提出（保存）しました。");}
+
+/* ---------- init ---------- */
+assignIds();ensureCert();
+if(STUDENT_MODE){const sv=loadProgress();
+ if(sv&&(sv.idx>0||(sv.results&&Object.keys(sv.results).length))){setTimeout(()=>{
+   if(confirm("前回の続きから再開しますか？\n（「キャンセル」で最初から）")){results=sv.results||{};attempts=sv.attempts||{};if(sv.startedAt)startedAt=sv.startedAt;learnerName=sv.learnerName||"";idx=Math.max(0,Math.min(sv.idx||0,deck.length-1));paint();}
+   else{clearProgress();startedAt=Date.now();}},500);}
+ if(timeLimitMin){tickTimer();setInterval(tickTimer,1000);}}
+buildRibbon();paint();
+$("#ver").textContent=APP_VERSION+(STUDENT_MODE?" · 受講生版":"");
+if(STUDENT_MODE){const tb=$(".toolbar");if(tb)tb.style.display="none";}
+$("#f-type")&&$("#f-type").onchange();
+</script>
+</body>
+</html>
