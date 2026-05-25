@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux 映画館 — Cinéma du Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Shippori+Mincho:wght@500;600;700;800&family=Limelight&display=swap" rel="stylesheet">
+<style>
+:root{
+  --house:#0c0a10;--house-2:#070509;--house-3:#040308;
+  --screen:#f4f0e6;--screen-2:#e4ddc9;--screen-glow:#fff8e6;
+  --velvet:#7a1322;--velvet-l:#a8253a;--velvet-d:#56091a;   /* 赤いカーテン／座席 */
+  --gold:#cfa64a;--gold-l:#f0d384;--gold-d:#9a7a2e;
+  --neon:#ff4d6d;--neon-2:#39d0d8;                          /* マーキーのネオン */
+  --ink:#241f17;--ink-2:#4a4031;
+  --film:#1a1a1f;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:"Shippori Mincho","Oswald",serif;color:var(--ink);
+  background:radial-gradient(130% 120% at 50% -18%,#1c1722 0%,#0c0a12 56%,#040308 100%);
+  position:relative;-webkit-tap-highlight-color:transparent}
+/* スクリーンの投影光 */
+.projection{position:fixed;top:-12%;left:50%;transform:translateX(-50%);z-index:1;pointer-events:none;
+  width:min(78vw,720px);height:60%;
+  background:radial-gradient(60% 80% at 50% 0%,rgba(255,248,230,.16),rgba(255,240,200,.05) 55%,transparent 75%);
+  filter:blur(8px)}
+/* フィルム粒子（埃の舞う光線） */
+#dust{position:fixed;inset:0;z-index:1;pointer-events:none}
+/* 床の照り返し */
+body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:30%;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(207,166,74,.05))}
+
+/* ===== シアター（カード） ===== */
+.theater{position:fixed;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;padding:16px}
+.auditorium{position:relative;width:min(96vw,1040px);height:min(90vh,684px)}
+/* マーキー（電飾看板）＝上部の蓋 */
+.marquee{position:absolute;top:-4px;left:-10px;right:-10px;height:44px;z-index:6;border-radius:12px 12px 0 0;
+  background:linear-gradient(180deg,#1a1620,#0d0a12);border:1px solid rgba(207,166,74,.35);
+  box-shadow:0 6px 16px rgba(0,0,0,.6),inset 0 2px 0 rgba(255,255,255,.05);
+  display:flex;align-items:center;justify-content:center;gap:8px;overflow:hidden}
+.marquee .bulb{width:7px;height:7px;border-radius:50%;background:var(--gold-l);box-shadow:0 0 6px var(--gold-l);animation:blink 1.6s ease-in-out infinite}
+.marquee .label{font-family:"Limelight",serif;letter-spacing:.28em;font-size:.74rem;color:var(--gold-l);text-shadow:0 0 8px rgba(240,211,132,.5);white-space:nowrap}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+/* 赤いカーテン（左右） */
+.curtain{position:absolute;top:40px;bottom:0;width:46px;z-index:6;pointer-events:none;
+  background:repeating-linear-gradient(90deg,var(--velvet-d) 0 10px,var(--velvet) 10px 16px,var(--velvet-l) 16px 20px,var(--velvet) 20px 26px);
+  box-shadow:inset 0 0 20px rgba(0,0,0,.5)}
+.curtain.l{left:-6px;border-radius:0 0 0 14px}
+.curtain.r{right:-6px;border-radius:0 0 14px 0;transform:scaleX(-1)}
+.curtain::before{content:"";position:absolute;top:0;left:0;right:0;height:20px;background:linear-gradient(180deg,rgba(0,0,0,.4),transparent)}
+
+/* スクリーン（カード本体） */
+.screen{position:absolute;inset:38px 40px 0;z-index:4;border-radius:6px 6px 14px 14px;overflow:hidden;
+  background:linear-gradient(180deg,var(--screen),var(--screen-2));
+  box-shadow:0 0 60px rgba(255,248,230,.18),0 30px 70px -26px rgba(0,0,0,.85),inset 0 0 0 3px rgba(154,122,46,.3),inset 0 0 50px rgba(120,90,40,.12)}
+.screen::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E")}
+/* フィルムの送り穴（左右の縁） */
+.sprockets{position:absolute;top:44px;bottom:6px;width:18px;z-index:5;pointer-events:none;
+  background:repeating-linear-gradient(180deg,transparent 0 10px,rgba(26,26,31,.5) 10px 20px);opacity:.5}
+.sprockets.l{left:44px}.sprockets.r{right:44px}
+
+.page{position:absolute;inset:58px clamp(40px,6vw,64px) clamp(56px,7vw,70px);z-index:5;display:flex;flex-direction:column;
+  transition:opacity .42s ease,transform .5s cubic-bezier(.2,.7,.3,1)}
+.page.leaving{opacity:0;transform:translateY(-10px) scale(.99)}
+
+/* 見出し */
+.head{text-align:center;margin-bottom:1rem}
+.reel{font-family:"Bebas Neue","Oswald",sans-serif;letter-spacing:.3em;font-size:clamp(.7rem,1.8vw,.9rem);color:var(--velvet);font-weight:700}
+.rating{display:inline-block;font-family:"Oswald",sans-serif;font-weight:600;font-size:.64rem;letter-spacing:.1em;color:#fff;background:var(--ink);border:1.5px solid var(--ink);border-radius:3px;padding:.05rem .4rem;margin-top:.25rem;vertical-align:middle}
+.title{font-family:"Bebas Neue","Shippori Mincho",sans-serif;font-weight:700;font-size:clamp(1.5rem,4.2vw,2.4rem);color:var(--ink);line-height:1.18;margin-top:.3rem;letter-spacing:.02em}
+.title-grand{font-family:"Bebas Neue","Shippori Mincho",sans-serif;font-size:clamp(2.3rem,8vw,4.2rem);line-height:1;letter-spacing:.03em;
+  color:transparent;background:linear-gradient(180deg,#2a2419,#16120b 78%);-webkit-background-clip:text;background-clip:text}
+.subtitle{font-family:"Limelight",serif;font-size:clamp(1.1rem,2.8vw,1.6rem);color:var(--velvet);margin-top:.35rem;letter-spacing:.06em}
+.filmstrip{width:clamp(140px,34vw,220px);height:18px;margin:.55rem auto .2rem;border-radius:3px;
+  background:var(--film);position:relative;
+  box-shadow:0 2px 5px rgba(0,0,0,.4)}
+.filmstrip::before,.filmstrip::after{content:"";position:absolute;left:4px;right:4px;height:4px;
+  background:repeating-linear-gradient(90deg,var(--gold-l) 0 4px,transparent 4px 10px)}
+.filmstrip::before{top:2px}.filmstrip::after{bottom:2px}
+
+.body-scroll{flex:1;overflow:auto;padding-right:6px}
+.body-scroll::-webkit-scrollbar{width:7px}.body-scroll::-webkit-scrollbar-thumb{background:var(--velvet);border-radius:4px}
+
+.prose{font-family:"Shippori Mincho",serif;font-size:clamp(1.04rem,2.5vw,1.28rem);line-height:1.92;color:#352c1f;text-align:justify}
+.prose.opening::first-letter{font-family:"Bebas Neue",sans-serif;font-size:3em;line-height:.78;float:left;color:var(--velvet);padding:.04em .12em 0 0}
+.prose .hi{color:var(--velvet);font-weight:700}
+.prose b{color:var(--ink);font-weight:700}
+.tagline{margin-top:1rem;font-family:"Limelight",serif;font-size:clamp(1.05rem,2.6vw,1.36rem);color:var(--velvet);text-align:center;letter-spacing:.02em}
+/* 教え＝スター（出演者リスト） */
+.cast{list-style:none;margin-top:1rem;display:grid;gap:.55rem}
+.cast li{display:flex;gap:.8rem;align-items:baseline;font-family:"Shippori Mincho",serif;font-size:clamp(1rem,2.3vw,1.2rem);line-height:1.6;color:#352c1f}
+.cast .star{flex:0 0 auto;color:var(--gold-d);font-size:1.1em}
+/* コマンド＝字幕（サブタイトル） */
+.subs{margin-top:1.1rem;border-radius:8px;overflow:hidden;border:1.5px solid var(--ink);box-shadow:0 4px 10px rgba(0,0,0,.3)}
+.subs .row{display:flex;gap:.6rem;align-items:center;font-family:ui-monospace,Menlo,Consolas,monospace;
+  background:linear-gradient(180deg,#16141a,#0e0c12);color:#f3e9c8;padding:.5rem .85rem;font-size:clamp(.84rem,2vw,1.02rem);border-bottom:1px solid rgba(207,166,74,.15)}
+.subs .row:last-child{border-bottom:none}
+.subs .row .mark{color:var(--neon);user-select:none;font-family:"Bebas Neue",sans-serif;letter-spacing:.1em}
+.subs .row .cmd{font-weight:600}
+.subs .row .gloss{color:#b59a5e;font-style:italic;font-family:"Shippori Mincho",serif}
+
+/* 予告編クイズ（クイズ） */
+.preview-q{font-family:"Shippori Mincho",serif;font-weight:600;font-size:clamp(1.08rem,2.7vw,1.42rem);color:var(--ink);margin:.4rem auto 1rem;max-width:32ch;line-height:1.5;text-align:center}
+.choices{display:grid;gap:.6rem;max-width:34ch;margin:0 auto}
+.choice{display:flex;gap:.7rem;align-items:center;cursor:pointer;text-align:left;font-family:"Shippori Mincho",serif;font-size:clamp(1rem,2.3vw,1.18rem);color:#352c1f;
+  background:linear-gradient(180deg,#fffdf5,#efe7d0);border:1.5px solid var(--ink);border-radius:8px;padding:.55rem .85rem;
+  box-shadow:0 2px 6px rgba(40,30,12,.2);transition:.16s}
+.choice:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 14px rgba(40,30,12,.28)}
+.choice .seat{flex:0 0 auto;font-family:"Bebas Neue",sans-serif;font-weight:700;letter-spacing:.06em;color:#fff;background:var(--velvet);border-radius:4px;width:1.7em;height:1.7em;display:inline-flex;align-items:center;justify-content:center;font-size:.9em}
+.choice:disabled{cursor:default}
+.choice.ok{background:linear-gradient(180deg,#dcecca,#bedda0);border-color:#5f8a3a;color:#3a5018}
+.choice.ok .seat{background:#5f8a3a}
+.choice.ng{background:linear-gradient(180deg,#f1d3d8,#e3aab2);border-color:var(--velvet);color:#7a2233}
+.verdict{margin-top:1rem;font-family:"Limelight",serif;font-size:clamp(1.05rem,2.5vw,1.32rem);color:var(--velvet);min-height:1.4em;text-align:center}
+.verdict .ex{display:block;font-family:"Shippori Mincho",serif;font-size:clamp(.83rem,2vw,.99rem);color:var(--ink-2);margin-top:.4rem;line-height:1.6}
+.reel-pop{position:absolute;font-size:1.4rem;pointer-events:none;z-index:8;animation:reelfly 1.4s ease forwards}
+@keyframes reelfly{0%{opacity:0;transform:translateY(0) scale(.5) rotate(0)}18%{opacity:1}100%{opacity:0;transform:translateY(-120px) scale(1.2) rotate(30deg)}}
+
+/* 鑑賞証明書（修了証） */
+.ticket{text-align:center;display:flex;flex-direction:column;height:100%}
+.ticket-frame{position:relative;margin:.2rem auto 0;padding:clamp(18px,4vw,38px) clamp(16px,4vw,38px);border-radius:10px;flex:1;display:flex;flex-direction:column;justify-content:center;
+  background:radial-gradient(120% 120% at 50% 0%,#fffdf3,#efe7cf);border:2px dashed var(--velvet);
+  box-shadow:inset 0 0 0 4px rgba(207,166,74,.2),inset 0 0 40px rgba(120,90,40,.14)}
+.ticket-frame::before,.ticket-frame::after{content:"";position:absolute;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;background:var(--house);}
+.ticket-frame::before{left:-14px}.ticket-frame::after{right:-14px}
+.ticket-kicker{font-family:"Bebas Neue",sans-serif;letter-spacing:.28em;font-size:clamp(.66rem,1.7vw,.84rem);color:var(--velvet)}
+.ticket-title{font-family:"Bebas Neue","Shippori Mincho",sans-serif;font-size:clamp(1.8rem,5.6vw,2.9rem);color:var(--ink);margin:.1rem 0;letter-spacing:.03em}
+.ticket-script{font-family:"Limelight",serif;font-size:clamp(1.4rem,3.6vw,2.1rem);color:var(--velvet);margin-bottom:.2rem}
+.ticket-rule{width:160px;height:8px;margin:.4rem auto .8rem;border-radius:3px;background:var(--film);position:relative}
+.ticket-rule::before{content:"";position:absolute;left:3px;right:3px;top:2px;height:4px;background:repeating-linear-gradient(90deg,var(--gold-l) 0 4px,transparent 4px 9px)}
+.ticket-line{font-family:"Shippori Mincho",serif;font-size:clamp(.96rem,2.4vw,1.18rem);line-height:1.85;color:#352c1f}
+.ticket-line b{color:var(--velvet)}
+.ticket-recip{color:var(--velvet);font-weight:700;font-size:1.16em;border-bottom:2px solid rgba(122,19,34,.4);padding:0 .4em 1px}
+.ticket-score{margin-top:1rem;font-family:"Bebas Neue",sans-serif;font-size:clamp(1.2rem,3.4vw,1.7rem);letter-spacing:.04em;color:var(--ink)}
+.ticket-score b{color:var(--velvet);font-size:1.1em}
+.ticket-rank{margin-top:.4rem;font-family:"Limelight",serif;font-size:clamp(1rem,2.6vw,1.3rem);color:var(--gold-d)}
+.ticket-rank b{color:var(--velvet)}
+.ticket-break{margin:.7rem auto 0;max-width:30ch;display:grid;gap:.16rem;text-align:left;font-family:"Shippori Mincho",serif;font-size:clamp(.75rem,1.9vw,.9rem)}
+.ticket-break .r{display:flex;gap:.5rem}.ticket-break .r .l{flex:0 0 auto;color:var(--velvet)}
+.ticket-break .r .t{flex:1;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ticket-seal{position:absolute;right:clamp(10px,3vw,20px);bottom:clamp(8px,2.5vw,16px);width:clamp(50px,11vw,72px);height:clamp(50px,11vw,72px);
+  display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:clamp(1.4rem,4vw,2rem);
+  background:radial-gradient(circle at 40% 30%,var(--velvet-l),var(--velvet-d));border:3px solid var(--gold-l);color:#fff;
+  box-shadow:0 3px 8px rgba(86,9,26,.5);transform:rotate(-8deg)}
+.ticket-date{margin-top:1rem;font-family:"Oswald",sans-serif;font-size:clamp(.85rem,2.2vw,1.06rem);color:var(--ink-2);letter-spacing:.04em}
+.ticket-actions{margin-top:1rem;display:flex;flex-direction:column;align-items:center;gap:.6rem}
+.ticket-name-in{font-family:"Shippori Mincho",serif;font-size:clamp(.9rem,2.3vw,1.08rem);text-align:center;color:var(--ink);
+  background:#fffdf3;border:1.5px solid var(--velvet);border-radius:6px;padding:.5rem .9rem;width:min(320px,80%)}
+.ticket-name-in:focus{outline:none;border-color:var(--gold-d);box-shadow:0 0 0 2px rgba(207,166,74,.16)}
+.ticket-btns{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center}
+.cinema-btn{font-family:"Bebas Neue",sans-serif;font-weight:700;letter-spacing:.06em;cursor:pointer;color:#fff;border:none;border-radius:6px;padding:.5rem 1.2rem;font-size:1rem;
+  background:linear-gradient(180deg,var(--velvet-l),var(--velvet-d));box-shadow:0 4px 10px rgba(86,9,26,.4);transition:.2s}
+.cinema-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.cinema-btn.ghost{background:none;color:var(--ink-2);border:1px solid rgba(74,64,49,.5);box-shadow:none}
+.cinema-btn.ghost:hover{color:var(--ink);border-color:var(--ink)}
+
+/* reveal */
+.page .rise{animation:rise .65s cubic-bezier(.2,.7,.3,1) backwards}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.page .rise:nth-child(1){animation-delay:.06s}.page .rise:nth-child(2){animation-delay:.18s}
+.page .rise:nth-child(3){animation-delay:.3s}.page .rise:nth-child(4){animation-delay:.42s}
+.page .rise:nth-child(5){animation-delay:.54s}
+
+/* 案内役（場内アテンダント🎬） */
+.usher{display:flex;align-items:flex-end;gap:.5rem;justify-content:center;margin-top:.8rem}
+.usher .who{font-size:clamp(1.6rem,4.6vw,2.3rem);animation:sway 3s ease-in-out infinite;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))}
+@keyframes sway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.usher .say{background:linear-gradient(180deg,#fffdf3,#efe7d0);border:1.5px solid var(--gold);border-radius:14px;padding:.45rem .8rem;
+  font-family:"Shippori Mincho",serif;font-size:clamp(.84rem,2vw,1.02rem);color:var(--ink-2);line-height:1.45;box-shadow:0 5px 12px rgba(40,30,12,.25);position:relative;max-width:34ch}
+.usher .say::after{content:"";position:absolute;left:-8px;bottom:12px;border:8px solid transparent;border-right-color:var(--gold)}
+
+/* nav */
+.nav{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:14px}
+.nav button{font-family:"Bebas Neue",sans-serif;font-weight:700;background:linear-gradient(180deg,var(--velvet-l),var(--velvet-d));color:#fff;
+  border:1.5px solid rgba(207,166,74,.55);width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:1.2rem;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.55);transition:.2s}
+.nav button:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.6),0 0 16px rgba(122,19,34,.5)}
+.nav button:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+/* 座席ナビ（チケットの半券） */
+.seats{display:flex;gap:8px;flex-wrap:wrap;max-width:48vw;justify-content:center}
+.seat{width:13px;height:11px;border-radius:3px 3px 5px 5px;background:linear-gradient(180deg,var(--velvet),var(--velvet-d));border:1px solid rgba(207,166,74,.3);cursor:pointer;transition:.25s;opacity:.65}
+.seat.on{background:linear-gradient(180deg,var(--gold-l),var(--gold));border-color:var(--gold-d);transform:scale(1.3) translateY(-1px);opacity:1;box-shadow:0 0 10px var(--gold)}
+.hint{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);z-index:30;font-family:"Bebas Neue",sans-serif;letter-spacing:.24em;font-size:.66rem;color:rgba(207,166,74,.55);animation:fade 5s ease forwards;animation-delay:4.5s}
+@keyframes fade{to{opacity:0;visibility:hidden}}
+.ver{position:fixed;left:14px;bottom:14px;z-index:25;font-family:"Bebas Neue",sans-serif;letter-spacing:.12em;font-size:.66rem;color:rgba(207,166,74,.45)}
+/* timer */
+.timer{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:28;display:none;align-items:center;gap:8px;
+  font-family:"Bebas Neue",sans-serif;letter-spacing:.06em;font-size:1.05rem;color:var(--gold-l);
+  background:linear-gradient(180deg,#1a1620,#0d0a12);border:1.5px solid rgba(207,166,74,.55);border-radius:999px;padding:.38rem .95rem;box-shadow:0 6px 16px rgba(0,0,0,.5)}
+.timer.show{display:flex}
+.timer.warn{color:#ffe6a8;border-color:var(--gold);animation:tpulse 1s ease-in-out infinite}
+.timer.over{color:#ffc9d6;border-color:var(--velvet-l)}
+@keyframes tpulse{0%,100%{box-shadow:0 6px 16px rgba(0,0,0,.5)}50%{box-shadow:0 6px 22px rgba(207,166,74,.55)}}
+/* toolbar */
+.toolbar{position:fixed;top:14px;left:14px;z-index:30}
+.tbtn{font-family:"Bebas Neue",sans-serif;letter-spacing:.14em;font-size:.82rem;cursor:pointer;
+  background:linear-gradient(180deg,#1a1620,#0d0a12);color:var(--gold-l);border:1.5px solid rgba(207,166,74,.55);
+  padding:.5rem 1rem;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.5);transition:.2s}
+.tbtn:hover{color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.55),0 0 16px rgba(207,166,74,.35)}
+/* editor panel */
+.dim{position:fixed;inset:0;background:rgba(4,3,8,.62);z-index:40;opacity:0;visibility:hidden;transition:.3s}
+.dim.show{opacity:1;visibility:visible}
+.panel{position:fixed;top:0;right:0;height:100%;width:min(444px,95vw);z-index:50;
+  background:linear-gradient(180deg,#fffdf3,#efe7cf);color:var(--ink);border-left:6px solid var(--velvet);
+  box-shadow:-20px 0 50px rgba(0,0,0,.55);transform:translateX(100%);transition:transform .4s cubic-bezier(.2,.7,.3,1);display:flex;flex-direction:column;font-family:"Shippori Mincho",serif}
+.panel.show{transform:none}
+.panel header{padding:18px 20px;border-bottom:1px solid rgba(154,122,46,.3);display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(180deg,var(--velvet),var(--velvet-d))}
+.panel header h2{font-family:"Bebas Neue",sans-serif;letter-spacing:.08em;font-size:1.3rem;color:var(--gold-l)}
+.panel .x{background:none;border:none;color:var(--gold-l);font-size:1.4rem;cursor:pointer}
+.panel .body{padding:16px 20px;overflow-y:auto;flex:1}
+.sec{margin-bottom:22px}
+.sec h3{font-family:"Bebas Neue",sans-serif;font-size:.92rem;letter-spacing:.1em;color:var(--velvet);margin-bottom:10px;border-bottom:1px solid rgba(154,122,46,.3);padding-bottom:6px}
+.scene-row{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:8px;background:rgba(122,19,34,.06);margin-bottom:6px;font-size:.85rem}
+.scene-row .nm{flex:1;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scene-row.cur{outline:1px solid var(--gold-d);background:rgba(207,166,74,.18)}
+.scene-row button{background:rgba(122,19,34,.1);border:none;color:var(--ink);width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:.78rem}
+.scene-row button:hover{background:rgba(207,166,74,.4)}
+.fld{margin-bottom:11px}
+.fld label{display:block;font-size:.71rem;letter-spacing:.04em;color:var(--ink-2);margin-bottom:4px}
+.fld input,.fld textarea,.fld select{width:100%;background:#fffdf3;border:1px solid rgba(154,122,46,.35);border-radius:8px;color:var(--ink);padding:8px 10px;font-family:"Shippori Mincho",serif;font-size:.89rem;resize:vertical}
+.fld textarea{min-height:60px;line-height:1.5}
+.fld textarea.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.83rem}
+.fld input:focus,.fld textarea:focus,.fld select:focus{outline:none;border-color:var(--velvet);box-shadow:0 0 0 2px rgba(122,19,34,.14)}
+.act-btn{width:100%;font-family:"Bebas Neue",sans-serif;letter-spacing:.06em;cursor:pointer;border:none;border-radius:8px;padding:11px;font-size:1rem;color:#1c1208;
+  background:linear-gradient(180deg,var(--gold-l),var(--gold-d));box-shadow:0 4px 10px rgba(40,30,8,.3);transition:.2s;margin-top:4px}
+.act-btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.act-btn.ghost{background:transparent;color:var(--velvet);border:1.5px solid rgba(154,122,46,.5);box-shadow:none}
+.act-btn.ghost:hover{background:rgba(154,122,46,.08)}
+.act-btn.velvet{background:linear-gradient(180deg,var(--velvet-l),var(--velvet-d));color:var(--gold-l)}
+.act-btn:disabled{opacity:.5;cursor:wait}
+.note{font-size:.71rem;line-height:1.5;color:var(--ink-2);margin-top:8px}
+.msg{font-size:.78rem;margin-top:8px;padding:8px 10px;border-radius:8px;display:none}
+.msg.err{display:block;background:rgba(122,19,34,.12);border:1px solid var(--velvet);color:#7a2233}
+.msg.ok{display:block;background:rgba(95,138,58,.16);border:1px solid #5f8a3a;color:#3a5018}
+.row2{display:flex;gap:8px}.row2>*{flex:1}
+.hidden{display:none}
+.lib-row{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:8px;background:rgba(122,19,34,.06);margin-bottom:5px;font-size:.84rem}
+.lib-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-row button{background:rgba(122,19,34,.1);border:none;color:var(--ink);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:.78rem}
+/* stats overlay */
+.stats-overlay{position:fixed;inset:0;z-index:60;background:rgba(4,3,8,.82);display:none;align-items:center;justify-content:center;padding:18px}
+.stats-overlay.show{display:flex}
+.stats-box{width:min(900px,96vw);max-height:92vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#fffdf3,#efe7cf);border:2px solid var(--gold-d);border-radius:12px;box-shadow:0 30px 70px rgba(0,0,0,.6);color:var(--ink);font-family:"Shippori Mincho",serif}
+.stats-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(154,122,46,.3);gap:10px;flex-wrap:wrap;background:linear-gradient(180deg,var(--velvet),var(--velvet-d));border-radius:10px 10px 0 0}
+.stats-head h2{font-family:"Bebas Neue",sans-serif;letter-spacing:.06em;font-size:1.35rem;color:var(--gold-l)}
+.stats-head-btns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.stats-head .x{background:none;border:none;color:var(--gold-l);font-size:1.4rem;cursor:pointer}
+.stats-head .act-btn.ghost{color:var(--gold-l);border-color:rgba(207,166,74,.5)}
+.stats-body{padding:18px 20px;overflow:auto}
+.stats-kpi{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.kpi{flex:1;min-width:110px;background:rgba(122,19,34,.06);border:1px solid rgba(122,19,34,.16);border-radius:10px;padding:12px 14px;text-align:center}
+.kpi b{display:block;font-size:1.7rem;color:var(--velvet);font-family:"Bebas Neue",sans-serif}
+.kpi span{font-size:.72rem;color:var(--ink-2)}
+.stats-sub{font-family:"Bebas Neue",sans-serif;font-size:.92rem;letter-spacing:.08em;color:var(--velvet);margin:16px 0 8px;border-bottom:1px solid rgba(154,122,46,.25);padding-bottom:6px}
+.heat{width:100%;border-collapse:collapse;font-size:.84rem}
+.heat th,.heat td{padding:7px 9px;text-align:left;border-bottom:1px solid rgba(154,122,46,.14)}
+.heat th{color:var(--velvet);font-size:.74rem;letter-spacing:.04em;font-family:"Bebas Neue",sans-serif}
+.heat td.rate{text-align:center;font-weight:700;color:#241f17;border-radius:6px;min-width:58px}
+.heat td.num{text-align:center;color:var(--ink-2)}
+.heat .lsn{color:var(--velvet);font-style:italic}
+.bar{height:8px;border-radius:4px;background:rgba(122,19,34,.12);overflow:hidden}
+.bar i{display:block;height:100%}
+@media (max-width:560px){.usher .say{max-width:100%}.curtain{width:24px}.screen{inset:38px 24px 0}.sprockets{display:none}.page{inset:58px 34px 56px}}
+</style>
+</head>
+<body>
+<div class="projection"></div>
+<canvas id="dust"></canvas>
+
+<div class="theater">
+  <div class="auditorium" id="auditorium">
+    <div class="marquee" id="marquee"></div>
+    <div class="curtain l"></div><div class="curtain r"></div>
+    <div class="sprockets l"></div><div class="sprockets r"></div>
+    <div class="screen"><div class="page" id="page"></div></div>
+  </div>
+</div>
+
+<div class="nav"><button id="prev">‹</button><div class="seats" id="seats"></div><button id="next">›</button></div>
+<div class="toolbar"><button class="tbtn" id="openEditor">上映作品編集</button></div>
+<div class="hint">← → / クリックで上映を進める ・ 本編後に鑑賞証明書</div>
+<div class="ver" id="ver"></div>
+<div class="timer" id="timer"></div>
+
+<div class="dim" id="dim"></div>
+<aside class="panel" id="panel">
+  <header><h2>上映作品編集</h2><button class="x" id="closeEditor">✕</button></header>
+  <div class="body">
+    <div class="sec"><h3>巻の一覧</h3><div id="sceneList"></div></div>
+
+    <div class="sec">
+      <h3 id="formTitle">巻をつくる</h3>
+      <div class="fld"><label>型</label><select id="f-type">
+        <option value="normal">巻（本文・出演者・字幕）</option>
+        <option value="quiz">予告編クイズ（3択）</option>
+        <option value="cover">表紙（大見出し）</option>
+      </select></div>
+      <div class="fld"><label>巻ラベル</label><input id="f-reel" placeholder="例：第七巻"></div>
+      <div class="fld" data-only="normal"><label>区分（任意・G/PG等）</label><input id="f-rating" placeholder="例：PG"></div>
+      <div class="fld"><label>標題</label><input id="f-title" placeholder="例：切符売り場 ── シェル"></div>
+      <div class="fld" data-only="normal cover"><label>本文（改行可）</label><textarea id="f-lead" placeholder="映画館らしい語り口で"></textarea></div>
+      <div class="fld" data-only="normal"><label>出演者（箇条書き・1行ずつ）</label><textarea id="f-cast" placeholder="cd … 上映室を移る&#10;ls … 上映作を見渡す"></textarea></div>
+      <div class="fld" data-only="normal"><label>字幕（コマンド・1行ずつ／#で注釈）</label><textarea id="f-subs" class="mono" placeholder="ls -l              # 区分を検める&#10;chmod 755 movie.sh # 区分を付け直す"></textarea></div>
+      <div class="fld" data-only="normal cover"><label>キャッチコピー・結び（任意）</label><input id="f-tagline" placeholder="この巻のキメ言葉"></div>
+      <div class="fld" data-only="quiz"><label>設問</label><textarea id="f-q" placeholder="予告編クイズを1文で"></textarea></div>
+      <div class="fld" data-only="quiz"><label>選択肢（3つ・正解の行頭に ＊）</label><textarea id="f-choices" placeholder="＊ 正しい答え&#10;ちがう答え&#10;ちがう答え"></textarea></div>
+      <div class="fld" data-only="quiz"><label>解説（任意）</label><textarea id="f-explain" placeholder="正解の理由"></textarea></div>
+      <div class="fld"><label>案内役🎬の一言（任意）</label><input id="f-who" placeholder="やさしい一言"></div>
+      <div class="row2"><button class="act-btn" id="saveScene">＋ 追加する</button><button class="act-btn ghost" id="clearForm">クリア</button></div>
+    </div>
+
+    <div class="sec">
+      <h3>AIに巻を撮影させる</h3>
+      <div class="fld"><label>撮影するもの</label><select id="f-aikind">
+        <option value="scene">巻（本文）</option>
+        <option value="quiz">予告編クイズ（3択）</option>
+        <option value="lesson">巻まるごと（本文＋予告編クイズ）</option>
+      </select></div>
+      <div class="fld"><label>撮影エンジン</label><select id="f-provider">
+        <option value="claude">Claude（claude.ai プレビュー内・鍵不要）</option>
+        <option value="openai">OpenAI互換（gpt-4.1-mini・自分のキー）</option>
+      </select></div>
+      <div id="openaiCfg" class="hidden">
+        <div class="fld"><label>API キー</label><input id="f-key" type="password" placeholder="sk-..."></div>
+        <div class="row2"><div class="fld"><label>Base URL</label><input id="f-base" value="https://api.openai.com/v1"></div>
+          <div class="fld"><label>モデル</label><input id="f-model" value="gpt-4.1-mini"></div></div>
+      </div>
+      <div class="fld"><label>主題・お題</label><textarea id="f-ai" placeholder="例：cronで定期実行を／パーミッションの予告編クイズを"></textarea></div>
+      <button class="act-btn velvet" id="summon">撮影する</button>
+      <div class="msg" id="aiMsg"></div>
+    </div>
+
+    <div class="sec">
+      <h3>上映作品データ・配布</h3>
+      <div class="row2" style="margin-bottom:8px"><button class="act-btn ghost" id="exportBtn">書き出し</button><button class="act-btn ghost" id="importBtn">読み込み</button></div>
+      <div class="fld"><textarea id="f-json" class="mono" placeholder="JSONを出力／貼り付けて読み込み"></textarea></div>
+      <button class="act-btn ghost" id="resetBtn" style="margin-top:0">初めの上映作品に戻す</button>
+      <button class="act-btn" id="exportStudent" style="margin-top:8px">観客版を書き出す（この上映作品）</button>
+      <div class="fld" style="margin-top:8px"><label>観客版の制限時間（分・0で無制限）</label><input id="timeLimit" type="number" min="0" max="600" value="0"></div>
+      <button class="act-btn" id="exportCertPdf" style="margin-top:4px">鑑賞証明書をPDFで保存</button>
+      <div class="row2" style="margin-top:8px">
+        <input id="libName" placeholder="作品名（例：Linux入門）" style="flex:2">
+        <button class="act-btn ghost" id="libAdd" style="margin:0;flex:1">＋ 上映作品集に加える</button>
+      </div>
+      <div id="libList" style="margin-top:8px"></div>
+      <button class="act-btn" id="exportZip" style="margin-top:8px">観客版をまとめてZIP</button>
+      <button class="act-btn velvet" id="exportFullPack" style="margin-top:8px">フル配布パックZIP（HTML+JSON+鑑賞証明書+回収）</button>
+      <p class="note">観客版は、いまの上映作品・制限時間を埋め込み、編集機能を隠した上映＋予告編クイズ＋鑑賞証明書だけのHTML。鑑賞証明書PDFはオフラインで生成できます。</p>
+    </div>
+
+    <div class="sec">
+      <h3>興行成績の集計（結果JSONを読み込み）</h3>
+      <button class="act-btn ghost" id="loadResults">観客の結果JSONを選ぶ（複数可）</button>
+      <input type="file" id="resultsFile" accept=".json,application/json" multiple style="display:none">
+      <div class="fld" style="margin-top:8px"><label>合格ライン（正答率%）</label><input id="passLine" type="number" min="0" max="100" value="80"></div>
+      <div class="msg" id="statsMsg"></div>
+      <p class="note">観客が鑑賞証明書画面の「結果を提出」で保存したJSONをまとめて選ぶと、平均正答率・つまずいた予告編クイズ・合否を表示。合格者の鑑賞証明書を一括PDFで授与できます。</p>
+    </div>
+  </div>
+</aside>
+
+<div class="stats-overlay" id="statsOverlay">
+  <div class="stats-box">
+    <div class="stats-head">
+      <h2 id="statsTitle">興行成績の集計</h2>
+      <div class="stats-head-btns">
+        <button class="act-btn ghost" id="statsCsv" style="width:auto;margin:0;padding:.5rem .8rem">CSV</button>
+        <button class="act-btn ghost" id="statsPass" style="width:auto;margin:0;padding:.5rem .8rem">合格者一覧</button>
+        <button class="act-btn ghost" id="statsCertsPdf" style="width:auto;margin:0;padding:.5rem .8rem">合格者鑑賞証明書PDF</button>
+        <button class="x" id="statsClose">✕</button>
+      </div>
+    </div>
+    <div class="stats-body" id="statsBody"></div>
+  </div>
+</div>
+
+<script>
+const STUDENT_MODE=false;
+const APP_VERSION="Linux 映画館 v3.0";
+let timeLimitMin=((typeof window!=="undefined"&&window.BAKED_TIMELIMIT)?window.BAKED_TIMELIMIT:0);
+
+/* ============================================================
+   DECK — 映画館（シネマ）仕立てのLinux入門
+   ============================================================ */
+const defaultDeck=[
+ {type:"cover",reel:"Now Showing",titleGrand:"Linux 映画館",subtitle:"Cinéma du Terminal",
+  lead:"ようこそ、黒い画面の映画館へ。これより、<span class='hi'>命令（コマンド）</span>という名の名作を、一本ずつ上映いたします。携帯はマナーモードに、どうぞお席で ごゆっくり。",
+  who:"まもなく開演です。ポップコーンはいかが？🍿",html:true},
+
+ {reel:"第一巻",rating:"G",title:"予告編 ── Linuxとは",
+  lead:"世の劇場（サーバー）の多くを、スクリーンの裏で支える名作。それが<b>無料の基本ソフト（OS）</b>、Linux でした。小さな映写機から巨大シアターまで、その光は広くゆきわたります。",
+  tagline:"スクリーンの裏で世界を映す、縁の下の映写技師。",who:"多くの劇場はLinuxが動かしているんですよ",html:true},
+
+ {type:"quiz",reel:"予告編クイズ・1",title:"予告編クイズ ・ その一",
+  question:"世の劇場（サーバー）を最も広く支える基本ソフトは？",
+  choices:["有料の専用OSのみ","Linux","携帯専用のものだけ"],answer:1,
+  explain:"多くのサーバーはLinux。無償で改良でき、堅牢なのが理由です。",who:"気軽に、お席を選んでみて"},
+
+ {reel:"第二巻",rating:"PG",title:"切符売り場 ── シェル",
+  lead:"シェルは、観客の言葉と映写機（カーネル）をつなぐ案内係。行頭の <b>$</b> は「ご用件をどうぞ」の合図です。",
+  subs:["pwd        # 今、館内のどこに居るかを問う","echo Action # 画面に言葉を映す"],
+  tagline:"画面のボタンの正体は、すべて一行の台詞。",who:"$ が出たら、あなたの出番です",html:true},
+
+ {type:"quiz",reel:"予告編クイズ・2",title:"予告編クイズ ・ その二",
+  question:"行頭の「$」が意味するのは？",
+  choices:["上映が止まった印","命令の入力待ち","上映終了の印"],answer:1,
+  explain:"$ は入力待ちの合図。安心して命令を打ちましょう。",who:"困ったら、まず $ を確かめて"},
+
+ {reel:"第三巻",rating:"G",title:"館内案内図 ── ファイルの樹",
+  lead:"すべては <b>/</b>（根）から枝分かれする一本の樹。上映室（ディレクトリ）は枝、フィルム（ファイル）は葉に喩えられます。",
+  cast:["cd … 上映室を移る","ls … 上映作を見渡す","pwd … 今いる室を知る","mkdir … 新しい上映室を作る"],
+  tagline:"迷ったら pwd。今いる席を知る者は、館内で迷わない。",who:"まずは ls と cd に慣れて",html:true},
+
+ {type:"quiz",reel:"予告編クイズ・3",title:"予告編クイズ ・ その三",
+  question:"今いる場所（上映室）を確かめる命令は？",
+  choices:["ls","pwd","mkdir"],answer:1,
+  explain:"pwd は現在地を映す命令。迷ったらまず打ちましょう。",who:"pwd＝print working directory"},
+
+ {reel:"第四巻",rating:"PG",title:"年齢制限 ── パーミッション",
+  lead:"フィルム一本ごとに付けられた鑑賞区分。<b>読(r)・書(w)・実行(x)</b> の許しを、館主・スタッフ・観客へ授けます。",
+  subs:["ls -l              # 区分を検める","chmod 755 movie.sh # 区分を付け直す"],
+  tagline:"r=4 / w=2 / x=1。その合計が、入場の合鍵となる。",who:"755＝館主は全部、観客は観て実行だけ",html:true},
+
+ {type:"quiz",reel:"予告編クイズ・4",title:"予告編クイズ ・ その四",
+  question:"chmod 755 の先頭「7」が表す許しは？",
+  choices:["読のみ","読・書・実行のすべて","実行のみ"],answer:1,
+  explain:"7＝4(読)+2(書)+1(実行)。館主にすべてを許す区分です。",who:"数字は r=4 / w=2 / x=1 の合計"},
+
+ {reel:"第五巻",rating:"PG",title:"上映中の作品 ── プロセス",
+  lead:"館内で上映中の作品（プログラム）には、それぞれ <b>整理番号（PID）</b> が与えられます。これを掴んで、進行を差配するのです。",
+  subs:["ps aux | grep nginx  # 上映作を探す","kill 1234            # 番号で上映を終える"],
+  tagline:"暴れる上映は、その番号を掴んで静かに幕引きを。",who:"top で、今かかっている作品を覗けます",html:true},
+
+ {type:"quiz",reel:"予告編クイズ・5",title:"予告編クイズ ・ その五",
+  question:"ある上映作（プロセス）を終えるとき kill に渡すのは？",
+  choices:["作品の題名","PID（整理番号）","合言葉"],answer:1,
+  explain:"kill には番号（PID）を渡します。ps や top で調べましょう。",who:"まず ps で番号を探して"},
+
+ {reel:"第六巻",rating:"G",title:"新作の取り寄せ ── パッケージ",
+  lead:"観たい新作（道具）は、一行の注文で取り寄せられます。配給系統により <b>apt</b>（Debian系）/ <b>dnf</b>（RHEL系）を使い分けます。",
+  subs:["sudo apt install tree   # Debian系","sudo dnf install tree   # RHEL系"],
+  tagline:"「自ら新作を取り寄せる」を覚えた時、観客は支配人になる。",who:"sudo は“支配人の名において”の合図",html:true},
+
+ {type:"quiz",reel:"予告編クイズ・6",title:"予告編クイズ ・ その六",
+  question:"Debian系で道具を取り寄せる命令は？",
+  choices:["apt install","format disk","delete all"],answer:0,
+  explain:"Debian系は apt。RHEL系では dnf を使います。",who:"Ubuntuなら apt"},
+
+ {reel:"本編エンドロール",rating:"G",title:"エンドロール ── 五つの心得",
+  cast:["<b>小さく分けて観よ</b> ── 一度に一場面ずつ。","<b>手を動かせ</b> ── 観るより、自ら打って確かめる。","<b>声に出せ</b> ── 人に語れて、初めて身につく。","<b>NG集を残せ</b> ── 失敗は、次の名場面の素。","<b>脚本を引け</b> ── 困れば man と --help を開け。"],
+  tagline:"man command と打てば、いつでも監督が現れる。",who:"わからない時は man と --help を",html:true},
+
+ {type:"quiz",reel:"予告編クイズ・本編",title:"アンコール ── 本編チェック",
+  question:"命令の使い方を調べる“公式の脚本”は？",
+  choices:["man","run","stop"],answer:0,
+  explain:"man（マニュアル）が公式の脚本。--help も手軽で便利です。",who:"man の他に --help もね"},
+
+ {type:"certificate"},
+];
+let deck=JSON.parse(JSON.stringify((typeof window!=="undefined"&&window.BAKED_DECK)?window.BAKED_DECK:defaultDeck));
+let idx=0, results={}, attempts={}, startedAt=Date.now(), learnerName="", editIndex=null;
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=t=>(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const nl2br=t=>esc(t).replace(/\n/g,"<br>");
+function leadHTML(s){if(s.lead==null)return"";return s.html?s.lead:nl2br(s.lead);}
+const SEATL=["A","B","C","D","E","F"];
+const STARG=["★","☆","✦","✧","✪","✩"];
+const FILMSTRIP=`<div class="filmstrip rise"></div>`;
+
+/* ---------- scoring ---------- */
+let qidSeq=0;
+function assignIds(){deck.forEach(s=>{if(s.type==="quiz"&&!s.qid)s.qid="q"+(++qidSeq);});}
+function ensureCert(){const c=deck.find(s=>s.type==="certificate")||{type:"certificate"};deck=deck.filter(s=>s.type!=="certificate");deck.push(c);}
+function quizzes(){return deck.filter(s=>s.type==="quiz");}
+function stats(){const qs=quizzes();let answered=0,correct=0;qs.forEach(q=>{if(q.qid in results){answered++;if(results[q.qid])correct++;}});return{total:qs.length,answered,correct};}
+function breakdown(){return quizzes().map(q=>({reel:q.reel||"予告編クイズ",title:q.title||"予告編クイズ",state:(q.qid in results)?(results[q.qid]?"ok":"miss"):"none"}));}
+function rankOf(r){if(r>=1)return["巨匠監督","🎬"];if(r>=.8)return["主演スター","🌟"];if(r>=.5)return["助演俳優","🎞"];return["エキストラ","🎟"];}
+
+/* ---------- subs ---------- */
+function subsHTML(arr){if(!arr||!arr.length)return"";return `<div class="subs rise">`+arr.map(line=>{const t=line.trim();if(!t)return"";
+  const i=line.indexOf("#");if(i>0){const c=line.slice(0,i).trim(),g=line.slice(i).trim();return `<div class="row"><span class="mark">SUB</span><span class="cmd">${esc(c)}</span><span class="gloss">${esc(g)}</span></div>`;}
+  return `<div class="row"><span class="mark">SUB</span><span class="cmd">${esc(t)}</span></div>`;}).join("")+`</div>`;}
+
+/* ---------- page ---------- */
+function pageHTML(s){
+ if(s.type==="certificate")return certHTML(s);
+ if(s.type==="quiz"){
+   const opts=(s.choices||[]).map((c,i)=>`<button class="choice" data-i="${i}"><span class="seat">${SEATL[i]||i+1}</span><span>${esc(c)}</span></button>`).join("");
+   return `<div class="head rise"><div class="reel">${esc(s.reel||"予告編クイズ")}</div><div class="title">${esc(s.title||"予告編クイズ")}</div></div>
+     <div class="body-scroll"><p class="preview-q rise">${esc(s.question||"")}</p>
+       <div class="choices rise">${opts}</div>
+       <div class="verdict rise" data-verdict></div>
+       ${s.who?`<div class="usher rise"><div class="who">🎬</div><div class="say">${esc(s.who)}</div></div>`:""}
+     </div>`;
+ }
+ if(s.type==="cover"){
+   return `<div class="head rise"><div class="reel">${esc(s.reel||"Now Showing")}</div></div>
+     <div class="body-scroll" style="display:flex;flex-direction:column;justify-content:center;text-align:center">
+       <div class="title-grand rise">${s.titleGrand||""}</div>
+       ${s.subtitle?`<div class="subtitle rise">${esc(s.subtitle)}</div>`:""}
+       ${FILMSTRIP}
+       ${s.lead!=null?`<p class="prose rise" style="text-align:center;margin-top:.6rem">${leadHTML(s)}</p>`:""}
+       ${s.who?`<div class="usher rise"><div class="who">🎬</div><div class="say">${esc(s.who)}</div></div>`:""}
+     </div>`;
+ }
+ let c=`<div class="head rise"><div class="reel">${esc(s.reel||"")}</div>${s.rating?`<span class="rating">${esc(s.rating)}</span>`:""}<div class="title">${esc(s.title||"")}</div></div>${FILMSTRIP}<div class="body-scroll">`;
+ if(s.lead!=null)c+=`<p class="prose opening rise">${leadHTML(s)}</p>`;
+ if(s.cast&&s.cast.length)c+=`<ul class="cast rise">`+s.cast.map((b,i)=>`<li><span class="star">${STARG[i%STARG.length]}</span><span>${s.html?b:nl2br(b)}</span></li>`).join("")+`</ul>`;
+ if(s.subs&&s.subs.length)c+=subsHTML(s.subs);
+ if(s.tagline)c+=`<p class="tagline rise">${esc(s.tagline)}</p>`;
+ if(s.who)c+=`<div class="usher rise"><div class="who">🎬</div><div class="say">${esc(s.who)}</div></div>`;
+ c+=`</div>`;
+ return c;
+}
+
+/* ---------- certificate ---------- */
+function certHTML(s){const {total,answered,correct}=stats();const r=total?correct/total:0;const [title,badge]=rankOf(r);
+ const d=new Date();const ymd=`${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日`;
+ const mark={ok:"◯",miss:"✕",none:"—"};const bd=breakdown();
+ const bdHTML=bd.length?`<div class="ticket-break rise">`+bd.map(b=>`<div class="r"><span class="l">${esc(b.reel)}</span><span class="t">${esc(b.title)}</span><span style="color:${b.state==='ok'?'#5f8a3a':(b.state==='miss'?'var(--velvet)':'#9a8a6a')};font-weight:700">${mark[b.state]}</span></div>`).join("")+`</div>`:"";
+ const body= total===0
+  ? `<p class="ticket-line rise" style="margin-top:.6rem">予告編クイズに挑むと、ここに成績が刻まれます。</p>`
+  : `<div class="ticket-score rise">名場面 <b>${correct}</b> / ${total} 本 ${answered<total?`<span style="font-size:.7em;color:var(--ink-2)">（未鑑賞 ${total-answered}）</span>`:""}</div>
+     <div class="ticket-rank rise">${badge} 称号：<b>${title}</b> ${badge}</div>${bdHTML}`;
+ return `<div class="ticket">
+   <div class="ticket-kicker rise">Admit One — 鑑賞証明書</div>
+   <div class="ticket-frame rise">
+     <div class="ticket-script">The End</div>
+     <div class="ticket-title">鑑賞証明書</div><div class="ticket-rule"></div>
+     <p class="ticket-line rise"><span class="ticket-recip">${esc(learnerName||"あなた")}</span> 様<br>
+       <b>Linux 映画館</b> の全巻を観終え、黒き銀幕の名作を鑑賞し修めしことを証す。</p>
+     ${body}
+     <div class="ticket-date rise">${ymd}　—　Cinéma du Terminal</div>
+     <div class="ticket-seal rise">🎬</div>
+   </div>
+   <div class="ticket-actions rise">
+     <input id="certName" class="ticket-name-in" placeholder="観客の名を記す" value="${esc(learnerName)}">
+     <div class="ticket-btns">
+       <button class="cinema-btn" id="dlPng">PNGで保存</button>
+       <button class="cinema-btn" id="dlPdf">PDFで保存</button>
+       <button class="cinema-btn" id="dlJson">結果を提出</button>
+       <button class="cinema-btn ghost" id="certReset">記録をリセット</button>
+     </div>
+   </div>
+ </div>`;
+}
+
+/* ---------- sound + reel burst ---------- */
+let actx;
+function chime(good){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+ const t=actx.currentTime;const notes=good?[523,659,784,1047]:[294,233];
+ notes.forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type=good?"triangle":"sine";o.frequency.value=f;
+  o.connect(g);g.connect(actx.destination);const st=t+i*0.09;g.gain.setValueAtTime(0.0001,st);
+  g.gain.exponentialRampToValueAtTime(0.15,st+0.02);g.gain.exponentialRampToValueAtTime(0.0001,st+0.4);
+  o.start(st);o.stop(st+0.42);});}catch(e){}}
+function reelBurst(scope){const E=["🎬","🎞","🍿","⭐","🎟","✨"];for(let i=0;i<13;i++){const s=document.createElement('div');
+ s.className='reel-pop';s.textContent=E[i%E.length];s.style.left=(15+Math.random()*70)+"%";s.style.top=(40+Math.random()*25)+"%";
+ s.style.animationDelay=(Math.random()*0.3)+"s";scope.appendChild(s);setTimeout(()=>s.remove(),1450);}}
+
+/* ---------- nav / render ---------- */
+const page=$("#page"),seatsWrap=$("#seats"),auditorium=$("#auditorium");
+function buildSeats(){seatsWrap.innerHTML="";deck.forEach((_,i)=>{const t=document.createElement('div');t.className='seat'+(i===idx?' on':'');t.onclick=()=>go(i);seatsWrap.appendChild(t);});}
+function paint(){page.innerHTML=pageHTML(deck[idx]);
+ if(deck[idx].type==="quiz")wireQuiz(page,deck[idx]);
+ if(deck[idx].type==="certificate")wireCert(page);
+ if(STUDENT_MODE)saveProgress();
+ $("#prev").disabled=idx===0;$("#next").disabled=idx===deck.length-1;
+ [...seatsWrap.children].forEach((t,i)=>t.classList.toggle('on',i===idx));}
+function go(n){if(n<0||n>=deck.length||n===idx)return;page.classList.add('leaving');
+ setTimeout(()=>{idx=n;paint();page.classList.remove('leaving');},380);}
+$("#prev").onclick=()=>go(idx-1);$("#next").onclick=()=>go(idx+1);
+document.addEventListener('keydown',e=>{const tag=(e.target.tagName||"").toLowerCase();if(tag==="input")return;
+ if(['ArrowRight','PageDown',' '].includes(e.key))go(idx+1);
+ if(['ArrowLeft','PageUp'].includes(e.key))go(idx-1);
+ if(e.key==='Home')go(0);if(e.key==='End')go(deck.length-1);});
+auditorium.addEventListener('click',e=>{if(e.target.closest('.nav')||e.target.closest('.choice')||e.target.closest('.ticket-actions'))return;
+ const r=auditorium.getBoundingClientRect();go(e.clientX<r.left+r.width*0.42?idx-1:idx+1);});
+
+function wireQuiz(scope,s){const v=scope.querySelector('[data-verdict]');const btns=[...scope.querySelectorAll('.choice')];
+ btns.forEach(b=>b.onclick=ev=>{ev.stopPropagation();const i=+b.dataset.i;
+  const firstTry=!(s.qid in results);if(firstTry)results[s.qid]=(i===s.answer);
+  attempts[s.qid]=(attempts[s.qid]||0)+1;if(STUDENT_MODE)saveProgress();
+  if(i===s.answer){btns.forEach(x=>{x.disabled=true;if(+x.dataset.i===s.answer)x.classList.add('ok');});
+    v.innerHTML="カット！最高の名演！"+(s.explain?`<span class="ex">${esc(s.explain)}</span>`:"");reelBurst(scope);chime(true);}
+  else{b.classList.add('ng');b.disabled=true;v.textContent="もう一度、テイク2。";chime(false);}});}
+function wireCert(scope){const reset=scope.querySelector('#certReset'),nameIn=scope.querySelector('#certName'),png=scope.querySelector('#dlPng'),pdf=scope.querySelector('#dlPdf'),json=scope.querySelector('#dlJson');
+ if(nameIn){nameIn.onclick=e=>e.stopPropagation();nameIn.oninput=()=>{learnerName=nameIn.value;const rc=scope.querySelector('.ticket-recip');if(rc)rc.textContent=learnerName||"あなた";};}
+ if(reset)reset.onclick=ev=>{ev.stopPropagation();results={};attempts={};startedAt=Date.now();if(STUDENT_MODE)clearProgress();chime(true);go(0);};
+ if(png)png.onclick=ev=>{ev.stopPropagation();exportCert("png");};
+ if(pdf)pdf.onclick=ev=>{ev.stopPropagation();exportCert("pdf");};
+ if(json)json.onclick=ev=>{ev.stopPropagation();exportResultsJSON();};}
+
+/* ---------- certificate PNG / PDF ---------- */
+function downloadBlob(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);}
+function stamp(){const d=new Date();const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}`;}
+async function buildCertCanvas(){try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+ const W=1684,H=1190,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+ const C={ink:"#241f17",ink2:"#4a4031",gold:"#cfa64a",goldD:"#9a7a2e",goldL:"#f0d384",velvet:"#7a1322",velvetD:"#56091a",green:"#5f8a3a"};
+ const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#fffdf3");bg.addColorStop(1,"#efe7cf");g.fillStyle=bg;g.fillRect(0,0,W,H);
+ // チケットの破線枠
+ g.strokeStyle=C.velvet;g.lineWidth=6;g.setLineDash([18,12]);g.strokeRect(60,60,W-120,H-120);g.setLineDash([]);
+ g.lineWidth=2;g.strokeStyle=C.gold;g.strokeRect(80,80,W-160,H-160);
+ const cx=W/2;g.textAlign="center";
+ g.fillStyle=C.velvet;g.font='30px "Oswald",sans-serif';g.fillText("A D M I T   O N E   —   鑑 賞 証 明 書",cx,196);
+ g.fillStyle=C.ink;g.font='900 104px "Bebas Neue","Shippori Mincho",sans-serif';g.fillText("鑑 賞 証 明 書",cx,310);
+ g.strokeStyle=C.goldD;g.lineWidth=2;g.beginPath();g.moveTo(cx-200,348);g.lineTo(cx+200,348);g.stroke();
+ const name=(learnerName||"").trim()||"あなた";
+ g.fillStyle=C.ink2;g.font='600 30px "Shippori Mincho",serif';g.fillText("次の観客に、これを贈る",cx,418);
+ g.fillStyle=C.velvet;g.font='700 74px "Shippori Mincho",serif';g.fillText(name+"　様",cx,506);
+ g.strokeStyle="rgba(122,19,34,.4)";g.lineWidth=2;g.beginPath();g.moveTo(cx-340,528);g.lineTo(cx+340,528);g.stroke();
+ g.fillStyle=C.ink2;g.font='500 30px "Shippori Mincho",serif';g.fillText("Linux 映画館 の全巻を観終え、黒き銀幕の名作を鑑賞し修めり。",cx,582);
+ const {total,answered,correct}=stats();const [rk]=rankOf(total?correct/total:0);
+ if(total){g.fillStyle=C.ink;g.font='800 46px "Shippori Mincho",serif';g.fillText(`名場面 ${correct} / ${total} 本`+(answered<total?`　（未鑑賞 ${total-answered}）`:""),cx,660);
+   g.fillStyle=C.goldD;g.font='italic 38px "Oswald",sans-serif';g.fillText("称号 ── "+rk,cx,714);}
+ const bd=breakdown();if(bd.length){const sY=768,rh=40,cw=560,half=Math.ceil(bd.length/2);g.font='500 24px "Shippori Mincho",serif';g.textAlign="left";
+  bd.forEach((b,i)=>{const col=i<half?0:1,row=i<half?i:i-half,x=cx-cw+col*cw,y=sY+row*rh;
+   g.fillStyle=C.ink2;g.fillText(`${b.reel}　${b.title}`.slice(0,22),x,y);
+   g.fillStyle=b.state==="ok"?C.green:(b.state==="miss"?C.velvet:"#9a8a6a");g.font='700 26px "Shippori Mincho",serif';
+   g.fillText(b.state==="ok"?"◯":(b.state==="miss"?"✕":"—"),x+cw-60,y);g.font='500 24px "Shippori Mincho",serif';});g.textAlign="center";}
+ const d=new Date();g.fillStyle=C.ink2;g.font='28px "Oswald",sans-serif';g.fillText(`${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日　—　Cinéma du Terminal`,cx,H-150);
+ // フィルムリール印
+ g.beginPath();g.arc(W-250,H-205,64,0,7);g.fillStyle=C.velvet;g.fill();g.lineWidth=4;g.strokeStyle=C.goldL;g.stroke();
+ g.font='52px serif';g.fillStyle="#fff";g.fillText("🎬",W-250,H-188);
+ return cv;}
+function dataURLToBytes(durl){const b=atob(durl.split(",")[1]);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+function buildJpegPDF(jpeg,iw,ih){const PW=842,PH=595;const enc=s=>new TextEncoder().encode(s);
+ const parts=[];let len=0;const off=[];const push=u=>{parts.push(u);len+=u.length;};
+ push(enc("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n"));const obj=(n,b)=>{off[n]=len;push(enc(n+" 0 obj\n"+b+"\nendobj\n"));};
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+ obj(3,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`);
+ const ct=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;obj(4,`<< /Length ${ct.length} >>\nstream\n${ct}\nendstream`);
+ off[5]=len;push(enc(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${iw} /Height ${ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`));
+ push(jpeg);push(enc("\nendstream\nendobj\n"));const xp=len;let x="xref\n0 6\n0000000000 65535 f \n";
+ for(let i=1;i<=5;i++)x+=String(off[i]).padStart(10,"0")+" 00000 n \n";push(enc(x));push(enc(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xp}\n%%EOF`));
+ const out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length;}return out;}
+async function exportCert(kind){const cvc=await buildCertCanvas();
+ if(kind==="png"){cvc.toBlob(b=>{if(b)downloadBlob(b,`Cinema_Ticket_${stamp()}.png`);},"image/png");}
+ else{const jpeg=dataURLToBytes(cvc.toDataURL("image/jpeg",0.92));downloadBlob(new Blob([buildJpegPDF(jpeg,cvc.width,cvc.height)],{type:"application/pdf"}),`Cinema_Ticket_${stamp()}.pdf`);}}
+async function exportCertificatePDF(){await exportCert("pdf");}
+
+/* ====================== EDITOR ====================== */
+const panel=$("#panel"),dim=$("#dim");
+function openEd(){panel.classList.add('show');dim.classList.add('show');renderList();}
+function closeEd(){panel.classList.remove('show');dim.classList.remove('show');}
+$("#openEditor")&&($("#openEditor").onclick=openEd);
+$("#closeEditor")&&($("#closeEditor").onclick=closeEd);dim.onclick=closeEd;
+$("#f-type").onchange=()=>{const t=$("#f-type").value;document.querySelectorAll('[data-only]').forEach(el=>el.classList.toggle('hidden',!el.dataset.only.split(' ').includes(t)));};
+$("#f-provider").onchange=()=>$("#openaiCfg").classList.toggle('hidden',$("#f-provider").value!=="openai");
+function flash(k,t){const m=$("#aiMsg");m.className="msg "+k;m.textContent=t;setTimeout(()=>{m.className="msg";},4500);}
+function renderList(){const L=$("#sceneList");L.innerHTML="";
+ deck.forEach((s,i)=>{const name=s.titleGrand||s.title||s.question||(s.type==="certificate"?"鑑賞証明書（自動）":"（無題）");
+  const row=document.createElement('div');row.className='scene-row'+(i===idx?' cur':'');
+  if(s.type==="certificate"){row.innerHTML=`<span class="nm">${i+1}. ${esc(name)}</span><span style="font-size:.7rem;color:var(--ink-2)">本編後固定</span>`;row.querySelector('.nm').onclick=()=>go(i);L.appendChild(row);return;}
+  row.innerHTML=`<span class="nm" title="${esc(name)}">${i+1}. ${s.type==="quiz"?"🎞 ":""}${esc(name)}</span><button data-up>▲</button><button data-down>▼</button><button data-edit>✎</button><button data-del>🗑</button>`;
+  row.querySelector('.nm').onclick=()=>go(i);
+  row.querySelector('[data-up]').onclick=()=>move(i,-1);row.querySelector('[data-down]').onclick=()=>move(i,1);
+  row.querySelector('[data-edit]').onclick=()=>loadForm(i);row.querySelector('[data-del]').onclick=()=>del(i);
+  L.appendChild(row);});}
+function commit(focus){assignIds();ensureCert();if(focus!=null)idx=focus;idx=Math.max(0,Math.min(idx,deck.length-1));buildSeats();paint();if(panel.classList.contains('show'))renderList();}
+function move(i,dd){const j=i+dd;if(j<0||j>=deck.length)return;if(deck[i].type==="certificate"||deck[j].type==="certificate")return;[deck[i],deck[j]]=[deck[j],deck[i]];if(idx===i)idx=j;else if(idx===j)idx=i;commit();}
+function del(i){if(deck[i].type==="certificate"||deck.length<=2)return;deck.splice(i,1);if(idx>=deck.length)idx=deck.length-1;commit();}
+function insertBeforeEnd(arr){let ins=deck.findIndex(s=>s.type==="certificate");if(ins<0)ins=deck.length;deck.splice(ins,0,...arr);commit(ins);}
+function clearForm(){editIndex=null;["reel","rating","title","lead","cast","subs","tagline","q","choices","explain","who"].forEach(k=>{const el=$("#f-"+k);if(el)el.value="";});$("#f-type").value="normal";$("#f-type").onchange();$("#formTitle").textContent="巻をつくる";$("#saveScene").textContent="＋ 追加する";}
+$("#clearForm").onclick=clearForm;
+function loadForm(i){editIndex=i;const s=deck[i];
+ $("#f-type").value=s.type==="cover"?"cover":(s.type==="quiz"?"quiz":"normal");$("#f-type").onchange();
+ $("#f-reel").value=s.reel||"";$("#f-rating").value=s.rating||"";$("#f-title").value=s.titleGrand||s.title||"";
+ $("#f-lead").value=(s.lead||"").replace(/<br\s*\/?>/g,"\n").replace(/<[^>]+>/g,"");
+ $("#f-cast").value=(s.cast||[]).map(b=>b.replace(/<[^>]+>/g,"")).join("\n");
+ $("#f-subs").value=(s.subs||[]).join("\n");$("#f-tagline").value=s.tagline||"";
+ $("#f-q").value=s.question||"";$("#f-choices").value=(s.choices||[]).map((c,k)=>(k===s.answer?"＊ ":"")+c).join("\n");$("#f-explain").value=s.explain||"";
+ $("#f-who").value=s.who||"";
+ $("#formTitle").textContent="巻を編集（"+(i+1)+"）";$("#saveScene").textContent="✔ 更新する";panel.querySelector('.body').scrollTo({top:0,behavior:'smooth'});}
+function readForm(){const t=$("#f-type").value;const g=k=>($("#f-"+k).value||"").trim();const s={html:false};
+ if(t==="cover"){s.type="cover";s.reel=g("reel")||"Now Showing";s.titleGrand=g("title");if(g("lead"))s.lead=g("lead");}
+ else if(t==="quiz"){s.type="quiz";s.reel=g("reel")||"予告編クイズ";s.title=g("title")||"予告編クイズ";s.question=g("q");
+   const lines=$("#f-choices").value.split("\n").map(x=>x.trim()).filter(Boolean);let ans=0;
+   const choices=lines.map((l,k)=>{if(/^＊|^\*/.test(l)){ans=k;return l.replace(/^＊\s*|^\*\s*/,"");}return l;});s.choices=choices;s.answer=ans;if(g("explain"))s.explain=g("explain");}
+ else{s.reel=g("reel");if(g("rating"))s.rating=g("rating");s.title=g("title");if(g("lead"))s.lead=g("lead");
+   const ca=$("#f-cast").value.split("\n").map(x=>x.trim()).filter(Boolean);if(ca.length)s.cast=ca;
+   const su=$("#f-subs").value.split("\n").map(x=>x.replace(/\r/g,"")).filter(x=>x.trim());if(su.length)s.subs=su;
+   if(g("tagline"))s.tagline=g("tagline");}
+ if(g("who"))s.who=g("who");
+ return s;}
+$("#saveScene").onclick=()=>{const s=readForm();if(!s.title&&!s.titleGrand&&!s.lead&&!s.cast&&!s.question)return;
+ if(editIndex!=null){deck[editIndex]=s;commit();}else{insertBeforeEnd([s]);}clearForm();};
+
+/* JSON */
+$("#exportBtn").onclick=()=>{$("#f-json").value=JSON.stringify(deck.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;}),null,2);$("#f-json").focus();$("#f-json").select();};
+$("#importBtn").onclick=()=>{try{const d=JSON.parse($("#f-json").value);if(!Array.isArray(d)||!d.length)throw 0;deck=d;results={};commit(0);flash("ok","上映作品を読み込みました。");}catch(e){flash("err","JSONの形式が正しくありません。");}};
+$("#resetBtn").onclick=()=>{deck=JSON.parse(JSON.stringify(defaultDeck));results={};commit(0);flash("ok","初めの上映作品に戻しました。");};
+
+/* ====================== AI ====================== */
+function buildPrompt(topic,kind){
+ if(kind==="lesson")return `あなたは「Linux 映画館」という、映画館（シネマ）の語り口の教材作家です。お題について、Linux初学者向けに「1つの巻」を作成。本編1巻＋予告編クイズ（3択）1問。\nお題：「${topic}」\n次のJSONだけ返す（前置き・コードフェンス禁止）。\n{"reel":"第◯巻","rating":"G/PG等の区分","title":"本編タイトル","lead":"映画館らしい語り口で2〜3文。改行は \\n。HTMLタグ禁止","cast":["出演者(教え)3〜5個。各15〜30字。空配列可"],"subs":["コマンド  # 注釈 を1〜3行。#で注釈可。無ければ空配列"],"tagline":"キャッチコピーの一言","who":"案内役のやさしい一言","quiz":{"title":"予告編クイズ","question":"設問1文","choices":["A","B","C"],"answer":0,"explain":"正解理由を1〜2文","who":"ヒント一言"}}`;
+ if(kind==="quiz")return `あなたは「Linux 映画館」の試験作家です。Linux初学者向け3択を1問。お題：「${topic}」。選択肢は必ず3個・正解1つ。次のJSONだけ返す（前置き禁止）。\n{"reel":"予告編クイズ","title":"予告編クイズ","question":"設問1文","choices":["A","B","C"],"answer":0,"explain":"正解理由を1〜2文","who":"ヒント一言"}`;
+ return `あなたは「Linux 映画館」（映画館の語り口）の教材作家です。Linux初学者向けに1巻。お題：「${topic}」。次のJSONだけ返す（前置き禁止）。\n{"reel":"第◯巻","rating":"区分","title":"タイトル","lead":"映画館らしい語り口で2〜3文。改行は \\n。HTMLタグ禁止","cast":["出演者3〜5個。空配列可"],"subs":["コマンド # 注釈。無ければ空配列"],"tagline":"キャッチコピー","who":"案内役の一言"}`;}
+function mkQuiz(q){let choices=Array.isArray(q.choices)?q.choices.filter(c=>String(c).trim()).map(c=>String(c).trim()):[];if(choices.length<2)throw new Error("選択肢を生成できませんでした");let ans=Number(q.answer);if(!Number.isInteger(ans)||ans<0||ans>=choices.length)ans=0;
+ return {type:"quiz",reel:q.reel||"予告編クイズ",title:q.title||"予告編クイズ",question:q.question||"",choices,answer:ans,explain:q.explain||"",who:q.who||""};}
+function mkScene(o){return {reel:o.reel||"",rating:o.rating||"",title:o.title||"新しい巻",lead:o.lead||"",cast:Array.isArray(o.cast)?o.cast.filter(Boolean):[],subs:Array.isArray(o.subs)?o.subs.filter(Boolean):[],tagline:o.tagline||"",who:o.who||"",html:false};}
+function parseJSON(t){return JSON.parse(t.replace(/```json|```/g,"").trim());}
+$("#summon").onclick=async()=>{const topic=$("#f-ai").value.trim();const btn=$("#summon");if(!topic){flash("err","お題を入力してください。");return;}
+ const provider=$("#f-provider").value,kind=$("#f-aikind").value;btn.disabled=true;btn.textContent="撮影中…";$("#aiMsg").className="msg";
+ try{const prompt=buildPrompt(topic,kind);const maxT=kind==="lesson"?1600:1000;let obj;
+   if(provider==="openai"){const key=$("#f-key").value.trim();const base=$("#f-base").value.trim().replace(/\/$/,"");const model=$("#f-model").value.trim()||"gpt-4.1-mini";
+     if(!key){flash("err","APIキーを入力してください。");btn.disabled=false;btn.textContent="撮影する";return;}
+     const res=await fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model,max_tokens:maxT,response_format:{type:"json_object"},messages:[{role:"system",content:"JSONのみ返す教材作家"},{role:"user",content:prompt}]})});
+     const data=await res.json();if(data.error)throw new Error(data.error.message||"API error");obj=parseJSON(data.choices[0].message.content);}
+   else{const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxT,messages:[{role:"user",content:prompt}]})});
+     const data=await res.json();obj=parseJSON((data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n"));}
+   let entries,name;
+   if(kind==="lesson"){const sc=mkScene(obj);const qz=mkQuiz(obj.quiz||{});entries=[sc,qz];name="巻「"+sc.title+"」";}
+   else if(kind==="quiz"){entries=[mkQuiz(obj)];name="予告編クイズ「"+(obj.title||obj.question||"")+"」";}
+   else{const sc=mkScene(obj);entries=[sc];name="巻「"+sc.title+"」";}
+   insertBeforeEnd(entries);$("#f-ai").value="";flash("ok",name+"を撮影しました。");
+ }catch(err){flash("err","撮影に失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent="撮影する";}};
+
+/* ====================== 配布 ====================== */
+function studentBaseHTML(){const clone=document.documentElement.cloneNode(true);
+ ["#seats","#page","#sceneList","#libList","#statsBody"].forEach(sel=>{const el=clone.querySelector(sel);if(el)el.innerHTML="";});
+ clone.querySelectorAll(".reel-pop").forEach(e=>e.remove());clone.querySelectorAll("script[src]").forEach(e=>e.remove());
+ const d=clone.querySelector("#dim");if(d)d.className="dim";const p=clone.querySelector("#panel");if(p)p.className="panel";const so=clone.querySelector("#statsOverlay");if(so)so.className="stats-overlay";
+ let out="<!DOCTYPE html>\n"+clone.outerHTML;
+ out=out.replace("\nconst STUDENT_MODE=false;","\nconst STUDENT_MODE=true;");
+ out=out.replace(/<title>[^<]*<\/title>/,"<title>Linux 映画館（観客版） — Cinéma du Terminal</title>");
+ return out;}
+function syncTimeLimit(){const el=$("#timeLimit");if(el){const v=parseInt(el.value||"0",10);timeLimitMin=isNaN(v)?0:Math.max(0,Math.min(600,v));}}
+function bakeFrom(base,deckArr){const clean=deckArr.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;});
+ const dj=JSON.stringify(clean).replace(/<\//g,"<\\/");
+ const inject=`<script>window.BAKED_DECK=${dj};window.BAKED_TIMELIMIT=${Number(timeLimitMin)||0};<\/script>\n`;
+ return base.replace("<script>\nconst STUDENT_MODE",inject+"<script>\nconst STUDENT_MODE");}
+function bakeStudent(){syncTimeLimit();return bakeFrom(studentBaseHTML(),deck);}
+$("#exportStudent").onclick=()=>{try{downloadBlob(new Blob([bakeStudent()],{type:"text/html;charset=utf-8"}),`Cinema_Audience_${stamp()}.html`);flash("ok","観客版を書き出しました。");}catch(e){flash("err","書き出し失敗："+(e.message||e));}};
+$("#exportCertPdf")&&($("#exportCertPdf").onclick=async()=>{await exportCertificatePDF();});
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error("ライブラリ読込失敗（オフライン？）"));document.head.appendChild(s);});}
+
+/* 名前→ASCII */
+const KANA={"きゃ":"kya","きゅ":"kyu","きょ":"kyo","しゃ":"sha","しゅ":"shu","しょ":"sho","ちゃ":"cha","ちゅ":"chu","ちょ":"cho","にゃ":"nya","にゅ":"nyu","にょ":"nyo","ひゃ":"hya","ひゅ":"hyu","ひょ":"hyo","みゃ":"mya","みゅ":"myu","みょ":"myo","りゃ":"rya","りゅ":"ryu","りょ":"ryo","ぎゃ":"gya","ぎゅ":"gyu","ぎょ":"gyo","じゃ":"ja","じゅ":"ju","じょ":"jo","びゃ":"bya","びゅ":"byu","びょ":"byo","ぴゃ":"pya","ぴゅ":"pyu","ぴょ":"pyo","あ":"a","い":"i","う":"u","え":"e","お":"o","か":"ka","き":"ki","く":"ku","け":"ke","こ":"ko","さ":"sa","し":"shi","す":"su","せ":"se","そ":"so","た":"ta","ち":"chi","つ":"tsu","て":"te","と":"to","な":"na","に":"ni","ぬ":"nu","ね":"ne","の":"no","は":"ha","ひ":"hi","ふ":"fu","へ":"he","ほ":"ho","ま":"ma","み":"mi","む":"mu","め":"me","も":"mo","や":"ya","ゆ":"yu","よ":"yo","ら":"ra","り":"ri","る":"ru","れ":"re","ろ":"ro","わ":"wa","を":"o","ん":"n","が":"ga","ぎ":"gi","ぐ":"gu","げ":"ge","ご":"go","ざ":"za","じ":"ji","ず":"zu","ぜ":"ze","ぞ":"zo","だ":"da","ぢ":"ji","づ":"zu","で":"de","ど":"do","ば":"ba","び":"bi","ぶ":"bu","べ":"be","ぼ":"bo","ぱ":"pa","ぴ":"pi","ぷ":"pu","ぺ":"pe","ぽ":"po","ー":"","　":" "};
+function kanaToRomaji(s){s=s.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));let o="",i=0;while(i<s.length){if(s[i]==="っ"){const one=s[i+1];const r=KANA[s.substr(i+1,2)]||KANA[one]||"";if(r)o+=r[0]||"";i++;continue;}const two=s.substr(i,2);if(KANA[two]!==undefined){o+=KANA[two];i+=2;continue;}const one=s[i];if(KANA[one]!==undefined){o+=KANA[one];i++;continue;}o+=one;i++;}return o;}
+function toAsciiName(n){let s=(n||"").trim();try{s=s.normalize("NFKC");}catch(e){}s=kanaToRomaji(s);s=s.replace(/[^A-Za-z0-9]+/g,"_").replace(/^_+|_+$/g,"");return s||"audience";}
+
+/* 上映作品集＋ZIP */
+let library=[];function slug(s){return toAsciiName(s)||"deck";}
+function renderLib(){const L=$("#libList");if(!L)return;L.innerHTML="";library.forEach((it,i)=>{const r=document.createElement('div');r.className='lib-row';
+  r.innerHTML=`<span class="nm">${i+1}. ${esc(it.name)}（${it.deck.filter(s=>s.type!=="certificate").length}巻）</span><button data-x>🗑</button>`;r.querySelector('[data-x]').onclick=()=>{library.splice(i,1);renderLib();};L.appendChild(r);});}
+$("#libAdd")&&($("#libAdd").onclick=()=>{const nm=($("#libName").value||"").trim()||`作品${library.length+1}`;library.push({name:nm,deck:JSON.parse(JSON.stringify(deck))});$("#libName").value="";renderLib();flash("ok",`「${nm}」を上映作品集に追加（計${library.length}）`);});
+$("#exportZip")&&($("#exportZip").onclick=async()=>{const btn=$("#exportZip"),lab=btn.textContent;btn.disabled=true;btn.textContent="生成中…";syncTimeLimit();
+ try{if(!window.JSZip)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  const items=library.length?library:[{name:"Linux入門",deck:JSON.parse(JSON.stringify(deck))}];const base=studentBaseHTML();const zip=new window.JSZip();const used={};const man=[];
+  items.forEach(it=>{let nm=slug(it.name);if(used[nm])nm+="_"+(++used[nm]);else used[nm]=1;zip.file(`Cinema_${nm}_Audience.html`,bakeFrom(base,it.deck));man.push(`${it.name}\tCinema_${nm}_Audience.html\t${it.deck.filter(s=>s.type!=="certificate").length} reels`);});
+  zip.file("README.txt",`${APP_VERSION}\nLinux Cinema (Cinema du Terminal)\nGenerated: ${new Date().toISOString()}\n\nName\tFile\tReels\n`+man.join("\n"));
+  downloadBlob(await zip.generateAsync({type:"blob"}),`Cinema_Distribution_${stamp()}.zip`);flash("ok",`ZIP書き出し（${items.length}件）`);}
+ catch(err){flash("err","ZIP失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+$("#exportFullPack")&&($("#exportFullPack").onclick=async()=>{const btn=$("#exportFullPack"),lab=btn.textContent;btn.disabled=true;btn.textContent="生成中…";syncTimeLimit();
+ try{if(!window.JSZip)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  const items=library.length?library:[{name:"Linux入門",deck:JSON.parse(JSON.stringify(deck))}];const base=studentBaseHTML();const zip=new window.JSZip();const used={};const man=[];
+  let certBlob=null;try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+  try{const c=await buildCertCanvasWithScore({name:"",acc:"",rank:""});certBlob=await new Promise(r=>c.toBlob(b=>r(b),"image/png"));}catch(e){}
+  for(const it of items){let nm=slug(it.name);if(used[nm])nm+="_"+(++used[nm]);else used[nm]=1;const f=zip.folder(nm);
+   const clean=it.deck.filter(s=>s.type!=="certificate").map(s=>{const c={...s};delete c.qid;return c;});
+   f.file(`Cinema_${nm}_Audience.html`,bakeFrom(base,it.deck));f.file(`Cinema_${nm}_Deck.json`,JSON.stringify(clean,null,2));if(certBlob)f.file(`Cinema_Ticket_Template.png`,certBlob);man.push(`${it.name}\t${nm}/\t${clean.length} reels`);}
+  const rec=zip.folder("_結果回収");rec.file("ここに結果JSONを集めてください.txt",`観客が鑑賞証明書画面の「結果を提出」で保存したJSON（例：Result_yamada_Cinema_${stamp()}.json）をこのフォルダに集め、上映作品編集の「興行成績の集計」で読み込んでください。`);
+  zip.file("運用手順.txt",`【運用手順】${APP_VERSION}\n1. 各フォルダの *_Audience.html を配布（ブラウザで開くだけ）\n2. 上映→予告編クイズに回答→鑑賞証明書で氏名入力・PNG/PDF保存\n3. 「結果を提出」のJSONを _結果回収/ に集約\n4. 上映作品編集→興行成績の集計でJSONを読み込み、合否判定・合格者鑑賞証明書PDF\n※HTML/鑑賞証明書/結果JSON/集計はオフライン動作。ZIPのみオンライン。`);
+  zip.file("README.txt",`${APP_VERSION} フル配布パック\nGenerated: ${new Date().toISOString()}\n\n各フォルダ: *_Audience.html / *_Deck.json / Ticket_Template.png\nName\tFolder\tReels\n`+man.join("\n"));
+  downloadBlob(await zip.generateAsync({type:"blob"}),`Cinema_FullPack_${stamp()}.zip`);flash("ok",`フルパック書き出し（${items.length}件）`);}
+ catch(err){flash("err","フルパック失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+
+/* ====================== 進捗保存 ====================== */
+function deckSig(){let n=0,s=0;deck.forEach(d=>{if(d.type==="quiz")n++;const t=(d.title||d.titleGrand||"")+"";for(let i=0;i<t.length;i++)s=(s*31+t.charCodeAt(i))>>>0;});return "cinema_"+deck.length+"_"+n+"_"+s.toString(16);}
+function saveProgress(){try{localStorage.setItem(deckSig(),JSON.stringify({idx,results,attempts,startedAt,learnerName,t:Date.now()}));}catch(e){}}
+function loadProgress(){try{const r=localStorage.getItem(deckSig());return r?JSON.parse(r):null;}catch(e){return null;}}
+function clearProgress(){try{localStorage.removeItem(deckSig());}catch(e){}}
+
+/* ====================== タイマー ====================== */
+let timeUpFired=false;
+function fmtClock(sec){sec=Math.max(0,sec);const m=Math.floor(sec/60),s=sec%60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;}
+function tickTimer(){if(!STUDENT_MODE||!timeLimitMin)return;const el=$("#timer");const remain=Math.round((startedAt+timeLimitMin*60000-Date.now())/1000);el.classList.add('show');
+ if(remain>0){el.textContent="残り "+fmtClock(remain);el.classList.toggle('warn',remain<=60);el.classList.remove('over');}
+ else{el.textContent="上映終了の時間";el.classList.remove('warn');el.classList.add('over');if(!timeUpFired){timeUpFired=true;const last=deck.length-1;if(deck[last]&&deck[last].type==="certificate"&&idx!==last){setTimeout(()=>{if(confirm("制限時間になりました。鑑賞証明書へ進みますか？"))go(last);},100);}}}}
+
+/* ====================== 興行成績の集計 ====================== */
+let classData=null;
+$("#loadResults")&&($("#loadResults").onclick=()=>$("#resultsFile").click());
+$("#resultsFile")&&($("#resultsFile").onchange=async()=>{const files=[...($("#resultsFile").files||[])];const m=$("#statsMsg");m.className="msg";if(!files.length)return;
+ try{const recs=[];for(const f of files){const txt=await f.text();try{const o=JSON.parse(txt);if(Array.isArray(o))o.forEach(x=>recs.push(x));else recs.push(o);}catch(e){}}
+  if(!recs.length)throw new Error("有効な結果JSONがありません");classData=aggregate(recs);renderStats(classData);$("#resultsFile").value="";}
+ catch(err){m.className="msg err";m.textContent="読み込み失敗："+(err.message||err);}});
+function passLine(){const v=parseInt(($("#passLine")&&$("#passLine").value)||"80",10);return isNaN(v)?80:Math.max(0,Math.min(100,v));}
+function aggregate(recs){const students=(Array.isArray(recs)?recs:[]).map(r=>{r=r||{};const sc=r.score||{};let acc=Number(sc.accuracy_percent);if(!isFinite(acc))acc=0;acc=Math.max(0,Math.min(100,Math.round(acc)));return {name:(r.learner||"(無名)"),acc,rank:r.rank||"",details:Array.isArray(r.details)?r.details:[]};});
+ const qmap=new Map();students.forEach(st=>st.details.forEach(d=>{const key=`${d.reel||d.lesson||""}｜${d.title||""}`;if(!qmap.has(key))qmap.set(key,{reel:d.reel||d.lesson||"",title:d.title||"",correct:0,incorrect:0,unanswered:0});const e=qmap.get(key);if(d.result==="correct")e.correct++;else if(d.result==="incorrect")e.incorrect++;else e.unanswered++;}));
+ const questions=[...qmap.values()].map(e=>{const n=e.correct+e.incorrect+e.unanswered;return {...e,n,rate:n?Math.round(e.correct/n*100):0};});
+ const avg=students.length?Math.round(students.reduce((a,s)=>a+s.acc,0)/students.length):0;return {students,questions,avg,count:students.length};}
+function heatColor(r){return `hsl(${Math.round(r*1.1+350)} 50% 80%)`;}
+function renderStats(d){const body=$("#statsBody");const line=passLine();d.students.forEach(s=>s.pass=s.acc>=line);
+ const passed=d.students.filter(s=>s.pass).length;const prate=d.count?Math.round(passed/d.count*100):0;
+ $("#statsTitle").textContent=`興行成績（${d.count}名・合格ライン${line}%）`;
+ const rows=d.questions.map(q=>`<tr><td class="lsn">${esc(q.reel)}</td><td>${esc(q.title)}</td><td class="rate" style="background:${heatColor(q.rate)}">${q.rate}%</td><td class="num">◯${q.correct} ✕${q.incorrect} —${q.unanswered}</td></tr>`).join("");
+ const studs=d.students.slice().sort((a,b)=>b.acc-a.acc).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.rank)}</td><td><div class="bar"><i style="width:${s.acc}%;background:${heatColor(s.acc)}"></i></div></td><td class="num">${s.acc}%</td><td class="num" style="font-weight:800;color:${s.pass?'#3a5018':'#7a2233'}">${s.pass?'合格':'再'}</td></tr>`).join("");
+ const weak=d.questions.slice().sort((a,b)=>a.rate-b.rate).slice(0,3).map(q=>`${q.reel} ${q.title}（${q.rate}%）`);
+ body.innerHTML=`<div class="stats-kpi"><div class="kpi"><b>${d.count}</b><span>提出人数</span></div><div class="kpi"><b>${d.avg}%</b><span>平均正答率</span></div><div class="kpi"><b>${passed}</b><span>合格（≥${line}%）</span></div><div class="kpi"><b>${prate}%</b><span>合格率</span></div></div>
+  ${weak.length?`<div class="stats-sub">つまずいた予告編クイズ（正答率ワースト）</div><div style="font-size:.86rem;line-height:1.7;color:var(--ink-2)">・ ${weak.join("<br>・ ")}</div>`:""}
+  <div class="stats-sub">巻別ヒートマップ（正答率）</div><table class="heat"><thead><tr><th>巻</th><th>予告編クイズ</th><th>正答率</th><th>内訳</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="stats-sub">観客別（合格ライン ${line}%）</div><table class="heat"><thead><tr><th>氏名</th><th>称号</th><th>正答率</th><th></th><th>判定</th></tr></thead><tbody>${studs}</tbody></table>`;
+ $("#statsOverlay").classList.add('show');}
+$("#passLine")&&($("#passLine").onchange=()=>{if(classData)renderStats(classData);});
+$("#statsClose")&&($("#statsClose").onclick=()=>$("#statsOverlay").classList.remove('show'));
+$("#statsCsv")&&($("#statsCsv").onclick=()=>{if(!classData)return;const line=passLine();const e2=s=>`"${String(s).replace(/"/g,'""')}"`;
+ let csv="\uFEFF合格ライン(%),"+line+"\n\n巻別\n巻,予告編クイズ,正答率(%),正解,不正解,未回答\n";classData.questions.forEach(q=>csv+=[e2(q.reel),e2(q.title),q.rate,q.correct,q.incorrect,q.unanswered].join(",")+"\n");
+ csv+="\n観客別\n氏名,称号,正答率(%),判定\n";classData.students.slice().sort((a,b)=>b.acc-a.acc).forEach(s=>csv+=[e2(s.name),e2(s.rank),s.acc,(s.acc>=line?"合格":"再")].join(",")+"\n");
+ downloadBlob(new Blob([csv],{type:"text/csv;charset=utf-8"}),`Cinema_Report_${stamp()}.csv`);});
+$("#statsPass")&&($("#statsPass").onclick=()=>{if(!classData)return;const line=passLine();const e2=s=>`"${String(s).replace(/"/g,'""')}"`;
+ const ps=classData.students.filter(s=>s.acc>=line).sort((a,b)=>b.acc-a.acc);let csv="\uFEFF合格者一覧,Linux 映画館,合格ライン "+line+"%\n\n番号,氏名,称号,正答率(%)\n";
+ ps.forEach((s,i)=>csv+=[i+1,e2(s.name),e2(s.rank),s.acc].join(",")+"\n");csv+=`\n合格 ${ps.length} 名 / 提出 ${classData.count} 名\n`;
+ downloadBlob(new Blob([csv],{type:"text/csv;charset=utf-8"}),`Cinema_PassList_${stamp()}.csv`);});
+
+/* 合格者の鑑賞証明書を一括PDF */
+function buildJpegPDFMulti(jpegs){const PW=842,PH=595;const enc=s=>new TextEncoder().encode(s);const parts=[];let len=0;const off=[];const push=u=>{parts.push(u);len+=u.length;};
+ push(enc("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n"));const N=jpegs.length;const pg=i=>3+i*3,ct=i=>4+i*3,im=i=>5+i*3,tot=2+N*3;const obj=(n,b)=>{off[n]=len;push(enc(n+" 0 obj\n"+b+"\nendobj\n"));};
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,`<< /Type /Pages /Kids [${Array.from({length:N},(_,i)=>pg(i)+" 0 R").join(" ")}] /Count ${N} >>`);
+ jpegs.forEach((j,i)=>{obj(pg(i),`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 ${im(i)} 0 R >> >> /Contents ${ct(i)} 0 R >>`);const c=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;obj(ct(i),`<< /Length ${c.length} >>\nstream\n${c}\nendstream`);
+   off[im(i)]=len;push(enc(`${im(i)} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${j.iw} /Height ${j.ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${j.bytes.length} >>\nstream\n`));push(j.bytes);push(enc("\nendstream\nendobj\n"));});
+ const xp=len;let x=`xref\n0 ${tot+1}\n0000000000 65535 f \n`;for(let i=1;i<=tot;i++)x+=String(off[i]||0).padStart(10,"0")+" 00000 n \n";push(enc(x));push(enc(`trailer\n<< /Size ${tot+1} /Root 1 0 R >>\nstartxref\n${xp}\n%%EOF`));
+ const out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length;}return out;}
+async function buildCertCanvasWithScore(st){try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+ const W=1684,H=1190,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+ const C={ink:"#241f17",ink2:"#4a4031",gold:"#cfa64a",goldD:"#9a7a2e",goldL:"#f0d384",velvet:"#7a1322",velvetD:"#56091a",green:"#5f8a3a"};
+ const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#fffdf3");bg.addColorStop(1,"#efe7cf");g.fillStyle=bg;g.fillRect(0,0,W,H);
+ g.strokeStyle=C.velvet;g.lineWidth=6;g.setLineDash([18,12]);g.strokeRect(60,60,W-120,H-120);g.setLineDash([]);
+ g.lineWidth=2;g.strokeStyle=C.gold;g.strokeRect(80,80,W-160,H-160);
+ const cx=W/2;g.textAlign="center";g.fillStyle=C.velvet;g.font='30px "Oswald",sans-serif';g.fillText("A D M I T   O N E   —   鑑 賞 証 明 書",cx,196);
+ g.fillStyle=C.ink;g.font='900 104px "Bebas Neue","Shippori Mincho",sans-serif';g.fillText("鑑 賞 証 明 書",cx,310);
+ g.strokeStyle=C.goldD;g.lineWidth=2;g.beginPath();g.moveTo(cx-200,348);g.lineTo(cx+200,348);g.stroke();
+ g.fillStyle=C.ink2;g.font='600 30px "Shippori Mincho",serif';g.fillText("次の観客に、これを贈る",cx,418);
+ g.fillStyle=C.velvet;g.font='700 74px "Shippori Mincho",serif';g.fillText((st.name||"あなた")+"　様",cx,506);
+ g.strokeStyle="rgba(122,19,34,.4)";g.lineWidth=2;g.beginPath();g.moveTo(cx-340,528);g.lineTo(cx+340,528);g.stroke();
+ g.fillStyle=C.ink2;g.font='500 30px "Shippori Mincho",serif';g.fillText("Linux 映画館 の全巻を観終え、黒き銀幕の名作を鑑賞し修めり。",cx,582);
+ if(st.acc!==""&&st.acc!=null){g.fillStyle=C.ink;g.font='800 46px "Shippori Mincho",serif';g.fillText(`正答率 ${st.acc}%`,cx,660);g.fillStyle=C.goldD;g.font='italic 38px "Oswald",sans-serif';g.fillText("称号 ── "+(st.rank||""),cx,714);}
+ const d=new Date();g.fillStyle=C.ink2;g.font='28px "Oswald",sans-serif';g.fillText(`${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日　—　Cinema du Terminal`,cx,H-150);
+ g.beginPath();g.arc(W-250,H-205,64,0,7);g.fillStyle=C.velvet;g.fill();g.lineWidth=4;g.strokeStyle=C.goldL;g.stroke();g.font='52px serif';g.fillStyle="#fff";g.fillText("🎬",W-250,H-188);return c;}
+$("#statsCertsPdf")&&($("#statsCertsPdf").onclick=async()=>{if(!classData)return;const line=passLine();const ps=classData.students.filter(s=>s.acc>=line).sort((a,b)=>b.acc-a.acc);
+ if(!ps.length){alert("合格者がいません（合格ラインを下げてください）。");return;}const btn=$("#statsCertsPdf"),lab=btn.textContent;btn.disabled=true;btn.textContent="生成中…";
+ try{const jpegs=[];for(const s of ps){const c=await buildCertCanvasWithScore(s);jpegs.push({bytes:dataURLToBytes(c.toDataURL("image/jpeg",0.92)),iw:c.width,ih:c.height});}
+   downloadBlob(new Blob([buildJpegPDFMulti(jpegs)],{type:"application/pdf"}),`Cinema_Tickets_${stamp()}.pdf`);}
+ catch(err){alert("鑑賞証明書PDFの生成に失敗："+(err.message||err));}finally{btn.disabled=false;btn.textContent=lab;}});
+
+/* 結果JSON提出 */
+function exportResultsJSON(){const {total,answered,correct}=stats();const [rank]=rankOf(total?correct/total:0);
+ const data={course:"Linux Cinema (Cinema du Terminal)",learner:learnerName||"",issued_at:new Date().toISOString(),
+  score:{total_quizzes:total,answered,first_try_correct:correct,accuracy_percent:total?Math.round(correct/total*100):0},rank,
+  details:breakdown().map(b=>({reel:b.reel,title:b.title,result:b.state==="ok"?"correct":(b.state==="miss"?"incorrect":"unanswered")}))};
+ downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),`Result_${toAsciiName(learnerName)}_Cinema_${stamp()}.json`);flash&&flash("ok","結果をJSONで提出（保存）しました。");}
+
+/* ---------- マーキーの電飾 ---------- */
+(function(){const m=$("#marquee");const bulbs=10;for(let i=0;i<bulbs;i++){const b=document.createElement('span');b.className='bulb';b.style.animationDelay=(i*0.12)+"s";m.appendChild(b);}
+ const lab=document.createElement('span');lab.className='label';lab.textContent="CINÉMA DU TERMINAL";m.insertBefore(lab,m.children[Math.floor(bulbs/2)]);})();
+
+/* ---------- 投影光の埃（粒子） ---------- */
+const cv=$("#dust"),dx=cv.getContext('2d');let W,H,P;
+function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;}size();addEventListener('resize',size);
+function spawn(){return{x:Math.random()*W,y:Math.random()*H*0.7,s:Math.random()*.3+.05,r:Math.random()*1.4+.4,tw:Math.random()*6.28};}
+P=Array.from({length:50},spawn);
+function loop(){dx.clearRect(0,0,W,H);for(const p of P){p.y+=p.s;p.x+=Math.sin(p.tw)*.25;p.tw+=.015;
+ if(p.y>H*0.72){p.y=-10;p.x=Math.random()*W;}const fl=.25+.45*Math.abs(Math.sin(p.tw*2));
+ const g=dx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*5);g.addColorStop(0,`rgba(255,245,210,${fl})`);g.addColorStop(.5,`rgba(240,211,132,${fl*.4})`);g.addColorStop(1,"rgba(240,211,132,0)");
+ dx.fillStyle=g;dx.beginPath();dx.arc(p.x,p.y,p.r*5,0,7);dx.fill();}requestAnimationFrame(loop);}loop();
+
+/* ---------- init ---------- */
+assignIds();ensureCert();
+if(STUDENT_MODE){const sv=loadProgress();
+ if(sv&&(sv.idx>0||(sv.results&&Object.keys(sv.results).length))){setTimeout(()=>{
+   if(confirm("前回の続きから再開しますか？\n（「キャンセル」で最初から）")){results=sv.results||{};attempts=sv.attempts||{};if(sv.startedAt)startedAt=sv.startedAt;learnerName=sv.learnerName||"";idx=Math.max(0,Math.min(sv.idx||0,deck.length-1));paint();}
+   else{clearProgress();startedAt=Date.now();}},500);}
+ if(timeLimitMin){tickTimer();setInterval(tickTimer,1000);}}
+buildSeats();paint();
+$("#ver").textContent=APP_VERSION+(STUDENT_MODE?" · 観客版":"");
+if(STUDENT_MODE){const tb=$(".toolbar");if(tb)tb.style.display="none";}
+$("#f-type")&&$("#f-type").onchange();
+</script>
+</body>
+</html>
